@@ -417,6 +417,80 @@ tasks.register("setupAndroidSdk") {
     }
 }
 
+// Make `build` compile/link every configured target. Without this, the default
+// Gradle `build` task skips the Apple device test binaries, Linux arm64, every
+// androidNative*TestBinaries, the XCFramework assemblies, and the Android
+// device-test assemble path — leaving the gate silently fake-green for those
+// targets. See the 2026-05-19 build-gate incident in the workspace runbook.
+val fullTargetBuildTaskNames = setOf(
+    "compileAndroidMain",
+    "compileAndroidHostTest",
+    "compileAndroidDeviceTest",
+    "assembleAndroidMain",
+    "assembleUnitTest",
+    "assembleAndroidTest",
+    "jvmMainClasses",
+    "jvmTestClasses",
+    "jsMainClasses",
+    "jsTestClasses",
+    "wasmJsMainClasses",
+    "wasmJsTestClasses",
+    "wasmWasiMainClasses",
+    "wasmWasiTestClasses",
+    "androidNativeArm32Binaries",
+    "androidNativeArm32TestBinaries",
+    "androidNativeArm64Binaries",
+    "androidNativeArm64TestBinaries",
+    "androidNativeX64Binaries",
+    "androidNativeX64TestBinaries",
+    "androidNativeX86Binaries",
+    "androidNativeX86TestBinaries",
+    "iosArm64Binaries",
+    "iosArm64TestBinaries",
+    "iosSimulatorArm64Binaries",
+    "iosSimulatorArm64TestBinaries",
+    "iosX64Binaries",
+    "iosX64TestBinaries",
+    "linuxArm64Binaries",
+    "linuxArm64TestBinaries",
+    "linuxX64Binaries",
+    "linuxX64TestBinaries",
+    "macosArm64Binaries",
+    "macosArm64TestBinaries",
+    "mingwX64Binaries",
+    "mingwX64TestBinaries",
+    "tvosArm64Binaries",
+    "tvosArm64TestBinaries",
+    "tvosSimulatorArm64Binaries",
+    "tvosSimulatorArm64TestBinaries",
+    "watchosArm32Binaries",
+    "watchosArm32TestBinaries",
+    "watchosArm64Binaries",
+    "watchosArm64TestBinaries",
+    "watchosDeviceArm64Binaries",
+    "watchosDeviceArm64TestBinaries",
+    "watchosSimulatorArm64Binaries",
+    "watchosSimulatorArm64TestBinaries",
+    "assembleImageXCFramework",
+)
+
+tasks.named("build") {
+    dependsOn(fullTargetBuildTaskNames)
+}
+
+afterEvaluate {
+    tasks.named("build") {
+        dependsOn(
+            tasks.matching {
+                name.endsWith("MainClasses") ||
+                    name.endsWith("TestClasses") ||
+                    name.endsWith("Binaries") ||
+                    name.endsWith("XCFramework")
+            },
+        )
+    }
+}
+
 tasks.register("test") {
     group = "verification"
     description =
