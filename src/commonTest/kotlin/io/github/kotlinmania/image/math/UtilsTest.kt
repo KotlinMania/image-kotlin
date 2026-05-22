@@ -1,11 +1,76 @@
 // port-lint: source math/utils.rs
 package io.github.kotlinmania.image.math
 
+import kotlin.math.roundToLong
+import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class UtilsTest {
+    /**
+     * Translated from upstream's `quickcheck!` block. The original Rust
+     * property test ranges over arbitrary `u32` pairs; the Kotlin port
+     * exercises the same invariant over a deterministic sample drawn with
+     * a fixed-seed `kotlin.random.Random`, plus boundary values that the
+     * Rust generator is statistically unlikely to hit.
+     */
+    @Test
+    fun resizeBoundsCorrectlyWidth() {
+        val random = Random(seed = 0xC0FFEEL)
+        val samples = buildList {
+            add(0u to 0u)
+            add(0u to 1u)
+            add(1u to 0u)
+            add(1u to 1u)
+            add(1u to UInt.MAX_VALUE)
+            add(UInt.MAX_VALUE to 1u)
+            add(UInt.MAX_VALUE to UInt.MAX_VALUE)
+            repeat(256) { add(random.nextInt().toUInt() to random.nextInt().toUInt()) }
+        }
+        for ((oldW, newW) in samples) {
+            if (oldW == 0u || newW == 0u) continue
+            // In this case, the scaling is limited by scaling of height.
+            // We could check that case separately but it does not conform to the same expectation.
+            if (newW.toULong() * 400UL >= oldW.toULong() * UInt.MAX_VALUE.toULong()) continue
+
+            val result = resizeDimensions(oldW, 400u, newW, UInt.MAX_VALUE, false)
+            val exact = (400.0 * newW.toDouble() / oldW.toDouble()).roundToLong().toUInt()
+            assertEquals(newW, result.first)
+            assertEquals(maxOf(exact, 1u), result.second)
+        }
+    }
+
+    /**
+     * Translated from upstream's `quickcheck!` block. See the note on
+     * [resizeBoundsCorrectlyWidth].
+     */
+    @Test
+    fun resizeBoundsCorrectlyHeight() {
+        val random = Random(seed = 0xBADF00DL)
+        val samples = buildList {
+            add(0u to 0u)
+            add(0u to 1u)
+            add(1u to 0u)
+            add(1u to 1u)
+            add(1u to UInt.MAX_VALUE)
+            add(UInt.MAX_VALUE to 1u)
+            add(UInt.MAX_VALUE to UInt.MAX_VALUE)
+            repeat(256) { add(random.nextInt().toUInt() to random.nextInt().toUInt()) }
+        }
+        for ((oldH, newH) in samples) {
+            if (oldH == 0u || newH == 0u) continue
+            // In this case, the scaling is limited by scaling of width.
+            // We could check that case separately but it does not conform to the same expectation.
+            if (400UL * newH.toULong() >= oldH.toULong() * UInt.MAX_VALUE.toULong()) continue
+
+            val result = resizeDimensions(400u, oldH, UInt.MAX_VALUE, newH, false)
+            val exact = (400.0 * newH.toDouble() / oldH.toDouble()).roundToLong().toUInt()
+            assertEquals(newH, result.second)
+            assertEquals(maxOf(exact, 1u), result.first)
+        }
+    }
+
     @Test
     fun resizeHandlesFill() {
         var result = resizeDimensions(100u, 200u, 200u, 500u, true)
