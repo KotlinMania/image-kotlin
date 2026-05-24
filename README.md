@@ -239,7 +239,7 @@ image::save_buffer("image.png", buffer, 800, 600, image::ExtendedColorType::Rgb8
 
 ```kotlin
 dependencies {
-    implementation("io.github.kotlinmania:image-kotlin:0.1.0")
+    implementation("io.github.kotlinmania:image-kotlin:0.1.2")
 }
 ```
 
