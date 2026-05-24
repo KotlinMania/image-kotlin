@@ -1,6 +1,5 @@
 {
   "type": "port",
-  "parity_mode": false,
   "name": "image-kotlin",
   "source": {
     "path": "tmp/image/src",
