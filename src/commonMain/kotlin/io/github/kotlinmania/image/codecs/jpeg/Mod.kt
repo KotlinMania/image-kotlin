@@ -19,6 +19,7 @@ package io.github.kotlinmania.image.codecs.jpeg
  *
  * Items parceled out of `src/codecs/jpeg/mod.rs`:
  *   - submodule `entropy` -> Entropy.kt
+ *   - submodule `transform` -> Transform.kt
  *
  * Callers migrated:
  */
