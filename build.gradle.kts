@@ -28,7 +28,7 @@ plugins {
 }
 
 group = "io.github.kotlinmania"
-version = "0.1.2"
+version = "0.1.3"
 
 val androidCommandLineToolsRevision = "14742923"
 val projectCompileSdk = "34"
@@ -507,10 +507,70 @@ afterEvaluate {
     }
 }
 
+// Runs the `swift test` harness against the Kotlin → Swift Export → SPM
+// package produced by `embedSwiftExportForXcode`. Skipped automatically on
+// non-macOS hosts because the SPM bridge is macOS-only. Failures in
+// `swift test` propagate as Gradle task failures so Swift Export bridge
+// regressions surface locally rather than waiting for remote CI.
+//
+// The embed task itself reads Xcode-injected env vars (BUILT_PRODUCTS_DIR,
+// SDK_NAME, ARCHS, ...) at configuration time. To satisfy them without
+// requiring the caller to wrap every Gradle invocation in an env-var
+// preamble, this task spawns a sub-Gradle process (via `./gradlew`) with
+// the env vars set in the child, then runs `swift test` against the
+// produced SPM package.
+val swiftTestHarness = tasks.register<Exec>("swiftTestHarness") {
+    group = "verification"
+    description =
+        "Build the Kotlin Swift Export SPM package and run swift test against it. " +
+        "macOS hosts only."
+
+    onlyIf {
+        val osName = System.getProperty("os.name").orEmpty().lowercase()
+        val isMac = osName.contains("mac") || osName.contains("darwin")
+        if (!isMac) {
+            logger.lifecycle("swiftTestHarness skipped: host is not macOS ($osName).")
+        }
+        isMac
+    }
+
+    val builtProductsDir = layout.buildDirectory.dir("swift-test").get().asFile.absolutePath
+    val gradlewPath = rootProject.file("gradlew").absolutePath
+    val harnessDir = file("swift-test-harness").absolutePath
+
+    workingDir = rootProject.projectDir
+    commandLine(
+        "bash",
+        "-c",
+        """
+        set -euo pipefail
+        BUILT_PRODUCTS_DIR='$builtProductsDir' \
+        TARGET_BUILD_DIR='$builtProductsDir' \
+        SDK_NAME=macosx \
+        CONFIGURATION=Debug \
+        ARCHS=arm64 \
+        FRAMEWORKS_FOLDER_PATH=Frameworks \
+        MACOSX_DEPLOYMENT_TARGET=14.0 \
+        DEPLOYMENT_TARGET_SETTING_NAME=MACOSX_DEPLOYMENT_TARGET \
+        '$gradlewPath' embedSwiftExportForXcode --no-configuration-cache --no-daemon --console=plain
+        cd '$harnessDir'
+        swift test
+        """.trimIndent(),
+    )
+
+    inputs.dir("swift-test-harness/Tests")
+    inputs.file("swift-test-harness/Package.swift")
+    inputs.files(fileTree("src/commonMain"))
+    // The harness produces an .xctest bundle whose path varies by Swift
+    // toolchain; mark non-cacheable so a stale cache cannot mask a real
+    // bridge regression.
+    outputs.upToDateWhen { false }
+}
+
 tasks.register("test") {
     group = "verification"
     description =
-        "Runs the host-portable test suite (macOS + JS + WasmJS + Android unit). " +
+        "Runs the host-portable test suite (macOS + JS + WasmJS + Android unit + Swift Export). " +
         "Non-host native targets (mingwX64, linuxX64) only run on their own host."
 
     val defaultTestTasks = listOf(
@@ -520,6 +580,7 @@ tasks.register("test") {
         "wasmJsNodeTest",
         "compileAndroidMain",
         "assembleUnitTest",
+        "swiftTestHarness",
     )
 
     dependsOn(defaultTestTasks.mapNotNull { taskName -> tasks.findByName(taskName) })
