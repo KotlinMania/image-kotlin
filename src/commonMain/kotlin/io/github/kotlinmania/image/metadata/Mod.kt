@@ -32,3 +32,5 @@ package io.github.kotlinmania.image.metadata
  *
  * Callers migrated:
  */
+
+private const val MODULE_LEDGER = true

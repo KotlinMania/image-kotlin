@@ -17,3 +17,5 @@ package io.github.kotlinmania.image.math
  */
 
 // Callers migrated:
+
+private const val MODULE_LEDGER = true

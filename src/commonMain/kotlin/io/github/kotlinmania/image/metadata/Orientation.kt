@@ -39,32 +39,34 @@ enum class Orientation {
     /**
      * Converts into [Exif orientation](https://web.archive.org/web/20200412005226/https://www.impulseadventure.com/photo/exif-orientation.html).
      */
-    fun toExif(): Int = when (this) {
-        NoTransforms -> 1
-        FlipHorizontal -> 2
-        Rotate180 -> 3
-        FlipVertical -> 4
-        Rotate90FlipH -> 5
-        Rotate90 -> 6
-        Rotate270FlipH -> 7
-        Rotate270 -> 8
-    }
+    fun toExif(): Int =
+        when (this) {
+            NoTransforms -> 1
+            FlipHorizontal -> 2
+            Rotate180 -> 3
+            FlipVertical -> 4
+            Rotate90FlipH -> 5
+            Rotate90 -> 6
+            Rotate270FlipH -> 7
+            Rotate270 -> 8
+        }
 
     companion object {
         /**
          * Converts from [Exif orientation](https://web.archive.org/web/20200412005226/https://www.impulseadventure.com/photo/exif-orientation.html).
          */
-        fun fromExif(exifOrientation: Int): Orientation? = when (exifOrientation) {
-            1 -> NoTransforms
-            2 -> FlipHorizontal
-            3 -> Rotate180
-            4 -> FlipVertical
-            5 -> Rotate90FlipH
-            6 -> Rotate90
-            7 -> Rotate270FlipH
-            8 -> Rotate270
-            else -> null
-        }
+        fun fromExif(exifOrientation: Int): Orientation? =
+            when (exifOrientation) {
+                1 -> NoTransforms
+                2 -> FlipHorizontal
+                3 -> Rotate180
+                4 -> FlipVertical
+                5 -> Rotate90FlipH
+                6 -> Rotate90
+                7 -> Rotate270FlipH
+                8 -> Rotate270
+                else -> null
+            }
 
         /**
          * Extracts the image orientation from a raw Exif chunk.
@@ -146,7 +148,7 @@ enum class Orientation {
                 pos += 4
                 val value = readU16(chunk, pos, endian) ?: return null
                 pos += 2
-                val _padding = readU16(chunk, pos, endian) ?: return null
+                val padding = readU16(chunk, pos, endian) ?: return null
                 pos += 2
                 if (tag == 0x112 && format == 3 && count == 1u) {
                     // we've read 4 bytes (2 * u16) past the start of the value

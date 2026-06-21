@@ -69,36 +69,39 @@ enum class ImageFormat {
      *  - The QOI MIME type is still a work in progress. This method returns `image/x-qoi` for
      *    that format.
      */
-    fun toMimeType(): String = when (this) {
-        Avif -> "image/avif"
-        Jpeg -> "image/jpeg"
-        Png -> "image/png"
-        Gif -> "image/gif"
-        WebP -> "image/webp"
-        Tiff -> "image/tiff"
-        Tga -> "image/x-targa"
-        Dds -> "image/vnd-ms.dds"
-        Bmp -> "image/bmp"
-        Ico -> "image/x-icon"
-        Hdr -> "image/vnd.radiance"
-        OpenExr -> "image/x-exr"
-        Pnm -> "image/x-portable-anymap"
-        Qoi -> "image/x-qoi"
-        Farbfeld -> "application/octet-stream"
-        Pcx -> "image/vnd.zbrush.pcx"
-    }
+    fun toMimeType(): String =
+        when (this) {
+            Avif -> "image/avif"
+            Jpeg -> "image/jpeg"
+            Png -> "image/png"
+            Gif -> "image/gif"
+            WebP -> "image/webp"
+            Tiff -> "image/tiff"
+            Tga -> "image/x-targa"
+            Dds -> "image/vnd-ms.dds"
+            Bmp -> "image/bmp"
+            Ico -> "image/x-icon"
+            Hdr -> "image/vnd.radiance"
+            OpenExr -> "image/x-exr"
+            Pnm -> "image/x-portable-anymap"
+            Qoi -> "image/x-qoi"
+            Farbfeld -> "application/octet-stream"
+            Pcx -> "image/vnd.zbrush.pcx"
+        }
 
     /** Returns whether this `ImageFormat` can in principle be decoded by the library. */
-    fun canRead(): Boolean = when (this) {
-        Png, Gif, Jpeg, WebP, Tiff, Tga, Bmp, Ico, Hdr, OpenExr, Pnm, Farbfeld, Avif, Qoi -> true
-        Dds, Pcx -> false
-    }
+    fun canRead(): Boolean =
+        when (this) {
+            Png, Gif, Jpeg, WebP, Tiff, Tga, Bmp, Ico, Hdr, OpenExr, Pnm, Farbfeld, Avif, Qoi -> true
+            Dds, Pcx -> false
+        }
 
     /** Returns whether this `ImageFormat` can in principle be encoded by the library. */
-    fun canWrite(): Boolean = when (this) {
-        Gif, Ico, Jpeg, Png, Bmp, Tiff, Tga, Pnm, Farbfeld, Avif, WebP, Hdr, OpenExr, Qoi -> true
-        Dds, Pcx -> false
-    }
+    fun canWrite(): Boolean =
+        when (this) {
+            Gif, Ico, Jpeg, Png, Bmp, Tiff, Tga, Pnm, Farbfeld, Avif, WebP, Hdr, OpenExr, Qoi -> true
+            Dds, Pcx -> false
+        }
 
     /**
      * Returns the list of applicable extensions for this format.
@@ -108,24 +111,25 @@ enum class ImageFormat {
      * no recognized file representation, for example in case it is used as a purely transient
      * memory format.
      */
-    fun extensionsStr(): List<String> = when (this) {
-        Png -> listOf("png")
-        Jpeg -> listOf("jpg", "jpeg")
-        Gif -> listOf("gif")
-        WebP -> listOf("webp")
-        Pnm -> listOf("pbm", "pam", "ppm", "pgm", "pnm")
-        Tiff -> listOf("tiff", "tif")
-        Tga -> listOf("tga")
-        Dds -> listOf("dds")
-        Bmp -> listOf("bmp")
-        Ico -> listOf("ico")
-        Hdr -> listOf("hdr")
-        OpenExr -> listOf("exr")
-        Farbfeld -> listOf("ff")
-        Avif -> listOf("avif")
-        Qoi -> listOf("qoi")
-        Pcx -> listOf("pcx")
-    }
+    fun extensionsStr(): List<String> =
+        when (this) {
+            Png -> listOf("png")
+            Jpeg -> listOf("jpg", "jpeg")
+            Gif -> listOf("gif")
+            WebP -> listOf("webp")
+            Pnm -> listOf("pbm", "pam", "ppm", "pgm", "pnm")
+            Tiff -> listOf("tiff", "tif")
+            Tga -> listOf("tga")
+            Dds -> listOf("dds")
+            Bmp -> listOf("bmp")
+            Ico -> listOf("ico")
+            Hdr -> listOf("hdr")
+            OpenExr -> listOf("exr")
+            Farbfeld -> listOf("ff")
+            Avif -> listOf("avif")
+            Qoi -> listOf("qoi")
+            Pcx -> listOf("pcx")
+        }
 
     // Upstream `reading_enabled` / `writing_enabled` are gated on Cargo `feature = "..."` flags.
     // The Kotlin port has no feature-gating mechanism, so each format reports whether the
@@ -146,24 +150,25 @@ enum class ImageFormat {
          *
          * Returns `null` if the extension is not recognized.
          */
-        fun fromExtension(ext: String): ImageFormat? = when (ext.lowercase()) {
-            "avif" -> Avif
-            "jpg", "jpeg", "jfif" -> Jpeg
-            "png", "apng" -> Png
-            "gif" -> Gif
-            "webp" -> WebP
-            "tif", "tiff" -> Tiff
-            "tga" -> Tga
-            "dds" -> Dds
-            "bmp" -> Bmp
-            "ico" -> Ico
-            "hdr" -> Hdr
-            "exr" -> OpenExr
-            "pbm", "pam", "ppm", "pgm", "pnm" -> Pnm
-            "ff" -> Farbfeld
-            "qoi" -> Qoi
-            else -> null
-        }
+        fun fromExtension(ext: String): ImageFormat? =
+            when (ext.lowercase()) {
+                "avif" -> Avif
+                "jpg", "jpeg", "jfif" -> Jpeg
+                "png", "apng" -> Png
+                "gif" -> Gif
+                "webp" -> WebP
+                "tif", "tiff" -> Tiff
+                "tga" -> Tga
+                "dds" -> Dds
+                "bmp" -> Bmp
+                "ico" -> Ico
+                "hdr" -> Hdr
+                "exr" -> OpenExr
+                "pbm", "pam", "ppm", "pgm", "pnm" -> Pnm
+                "ff" -> Farbfeld
+                "qoi" -> Qoi
+                else -> null
+            }
 
         /**
          * Returns the image format inferred from the file extension of the given path string.
@@ -187,45 +192,48 @@ enum class ImageFormat {
          * Returns the image format specified by a MIME type, or `null` if the MIME type is not
          * recognized.
          */
-        fun fromMimeType(mimeType: String): ImageFormat? = when (mimeType) {
-            "image/avif" -> Avif
-            "image/jpeg" -> Jpeg
-            "image/png" -> Png
-            "image/gif" -> Gif
-            "image/webp" -> WebP
-            "image/tiff" -> Tiff
-            "image/x-targa", "image/x-tga" -> Tga
-            "image/vnd-ms.dds" -> Dds
-            "image/bmp" -> Bmp
-            "image/x-icon", "image/vnd.microsoft.icon" -> Ico
-            "image/vnd.radiance" -> Hdr
-            "image/x-exr" -> OpenExr
-            "image/x-portable-bitmap",
-            "image/x-portable-graymap",
-            "image/x-portable-pixmap",
-            "image/x-portable-anymap" -> Pnm
-            "image/x-qoi" -> Qoi
-            else -> null
-        }
+        fun fromMimeType(mimeType: String): ImageFormat? =
+            when (mimeType) {
+                "image/avif" -> Avif
+                "image/jpeg" -> Jpeg
+                "image/png" -> Png
+                "image/gif" -> Gif
+                "image/webp" -> WebP
+                "image/tiff" -> Tiff
+                "image/x-targa", "image/x-tga" -> Tga
+                "image/vnd-ms.dds" -> Dds
+                "image/bmp" -> Bmp
+                "image/x-icon", "image/vnd.microsoft.icon" -> Ico
+                "image/vnd.radiance" -> Hdr
+                "image/x-exr" -> OpenExr
+                "image/x-portable-bitmap",
+                "image/x-portable-graymap",
+                "image/x-portable-pixmap",
+                "image/x-portable-anymap",
+                -> Pnm
+                "image/x-qoi" -> Qoi
+                else -> null
+            }
 
         /** Returns all `ImageFormat` variants. */
-        fun all(): Sequence<ImageFormat> = sequenceOf(
-            Gif,
-            Ico,
-            Jpeg,
-            Png,
-            Bmp,
-            Tiff,
-            Tga,
-            Pnm,
-            Farbfeld,
-            Avif,
-            WebP,
-            OpenExr,
-            Qoi,
-            Dds,
-            Hdr,
-            Pcx,
-        )
+        fun all(): Sequence<ImageFormat> =
+            sequenceOf(
+                Gif,
+                Ico,
+                Jpeg,
+                Png,
+                Bmp,
+                Tiff,
+                Tga,
+                Pnm,
+                Farbfeld,
+                Avif,
+                WebP,
+                OpenExr,
+                Qoi,
+                Dds,
+                Hdr,
+                Pcx,
+            )
     }
 }

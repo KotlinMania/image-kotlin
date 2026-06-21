@@ -43,3 +43,5 @@ package io.github.kotlinmania.image.io
  *
  * Callers migrated:
  */
+
+private const val MODULE_LEDGER = true

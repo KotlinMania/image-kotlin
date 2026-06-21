@@ -18,16 +18,17 @@ class UtilsTest {
     @Test
     fun resizeBoundsCorrectlyWidth() {
         val random = Random(seed = 0xC0FFEEL)
-        val samples = buildList {
-            add(0u to 0u)
-            add(0u to 1u)
-            add(1u to 0u)
-            add(1u to 1u)
-            add(1u to UInt.MAX_VALUE)
-            add(UInt.MAX_VALUE to 1u)
-            add(UInt.MAX_VALUE to UInt.MAX_VALUE)
-            repeat(256) { add(random.nextInt().toUInt() to random.nextInt().toUInt()) }
-        }
+        val samples =
+            buildList {
+                add(0u to 0u)
+                add(0u to 1u)
+                add(1u to 0u)
+                add(1u to 1u)
+                add(1u to UInt.MAX_VALUE)
+                add(UInt.MAX_VALUE to 1u)
+                add(UInt.MAX_VALUE to UInt.MAX_VALUE)
+                repeat(256) { add(random.nextInt().toUInt() to random.nextInt().toUInt()) }
+            }
         for ((oldW, newW) in samples) {
             if (oldW == 0u || newW == 0u) continue
             // In this case, the scaling is limited by scaling of height.
@@ -48,16 +49,17 @@ class UtilsTest {
     @Test
     fun resizeBoundsCorrectlyHeight() {
         val random = Random(seed = 0xBADF00DL)
-        val samples = buildList {
-            add(0u to 0u)
-            add(0u to 1u)
-            add(1u to 0u)
-            add(1u to 1u)
-            add(1u to UInt.MAX_VALUE)
-            add(UInt.MAX_VALUE to 1u)
-            add(UInt.MAX_VALUE to UInt.MAX_VALUE)
-            repeat(256) { add(random.nextInt().toUInt() to random.nextInt().toUInt()) }
-        }
+        val samples =
+            buildList {
+                add(0u to 0u)
+                add(0u to 1u)
+                add(1u to 0u)
+                add(1u to 1u)
+                add(1u to UInt.MAX_VALUE)
+                add(UInt.MAX_VALUE to 1u)
+                add(UInt.MAX_VALUE to UInt.MAX_VALUE)
+                repeat(256) { add(random.nextInt().toUInt() to random.nextInt().toUInt()) }
+            }
         for ((oldH, newH) in samples) {
             if (oldH == 0u || newH == 0u) continue
             // In this case, the scaling is limited by scaling of width.

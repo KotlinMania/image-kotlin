@@ -10,11 +10,12 @@ internal fun expandBits(bitDepth: Int, rowSize: UInt, buf: ByteArray): ByteArray
     val mask = (1 shl bitDepth) - 1
     val scalingFactor = 255 / ((1 shl bitDepth) - 1)
     val bitWidth = rowSize * bitDepth.toUInt()
-    val skip = if (bitWidth % 8u == 0u) {
-        0u
-    } else {
-        (8u - bitWidth % 8u) / bitDepth.toUInt()
-    }
+    val skip =
+        if (bitWidth % 8u == 0u) {
+            0u
+        } else {
+            (8u - bitWidth % 8u) / bitDepth.toUInt()
+        }
     val rowLen = rowSize + skip
     val p = mutableListOf<Byte>()
     var i = 0

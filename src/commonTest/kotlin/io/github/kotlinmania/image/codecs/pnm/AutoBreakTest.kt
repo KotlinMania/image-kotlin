@@ -7,7 +7,6 @@ import kotlin.test.Test
 import kotlin.test.assertContentEquals
 
 class AutoBreakTest {
-
     @Test
     fun testAlignedWrites() {
         val output = BufferIoWrite()

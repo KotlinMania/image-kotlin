@@ -6,7 +6,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
 class OrientationTest {
-
     @Test
     fun exifRoundTripCoversAllVariants() {
         for (variant in Orientation.entries) {
@@ -76,28 +75,42 @@ class OrientationTest {
         val header = byteArrayOf(0x49, 0x49, 0x2a, 0x00, 0x08, 0x00, 0x00, 0x00)
         // IFD entry count = 1 (u16 little-endian).
         val count = byteArrayOf(0x01, 0x00)
-        val entry = byteArrayOf(
-            (tag and 0xff).toByte(), ((tag shr 8) and 0xff).toByte(),
-            0x03, 0x00,                          // format = 3 (u16) little-endian
-            0x01, 0x00, 0x00, 0x00,              // count = 1 (u32) little-endian
-            (orientation and 0xff).toByte(),
-            ((orientation shr 8) and 0xff).toByte(),
-            0x00, 0x00,                          // padding (u16) little-endian
-        )
+        val entry =
+            byteArrayOf(
+                (tag and 0xff).toByte(),
+                ((tag shr 8) and 0xff).toByte(),
+                0x03,
+                0x00, // format = 3 (u16) little-endian
+                0x01,
+                0x00,
+                0x00,
+                0x00, // count = 1 (u32) little-endian
+                (orientation and 0xff).toByte(),
+                ((orientation shr 8) and 0xff).toByte(),
+                0x00,
+                0x00, // padding (u16) little-endian
+            )
         return header + count + entry
     }
 
     private fun exifChunkBigEndian(orientation: Int): ByteArray {
         val header = byteArrayOf(0x4d, 0x4d, 0x00, 0x2a, 0x00, 0x00, 0x00, 0x08)
         val count = byteArrayOf(0x00, 0x01)
-        val entry = byteArrayOf(
-            0x01, 0x12,                          // tag = 0x112 (u16) big-endian
-            0x00, 0x03,                          // format = 3 (u16) big-endian
-            0x00, 0x00, 0x00, 0x01,              // count = 1 (u32) big-endian
-            ((orientation shr 8) and 0xff).toByte(),
-            (orientation and 0xff).toByte(),
-            0x00, 0x00,                          // padding
-        )
+        val entry =
+            byteArrayOf(
+                0x01,
+                0x12, // tag = 0x112 (u16) big-endian
+                0x00,
+                0x03, // format = 3 (u16) big-endian
+                0x00,
+                0x00,
+                0x00,
+                0x01, // count = 1 (u32) big-endian
+                ((orientation shr 8) and 0xff).toByte(),
+                (orientation and 0xff).toByte(),
+                0x00,
+                0x00, // padding
+            )
         return header + count + entry
     }
 }

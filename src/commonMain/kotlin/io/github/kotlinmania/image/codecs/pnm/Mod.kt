@@ -23,3 +23,5 @@ package io.github.kotlinmania.image.codecs.pnm
  *
  * Callers migrated:
  */
+
+private const val MODULE_LEDGER = true

@@ -38,11 +38,12 @@ internal fun resizeDimensions(
     val wratio = nwidth.toDouble() / width.toDouble()
     val hratio = nheight.toDouble() / height.toDouble()
 
-    val ratio = if (fill) {
-        maxOf(wratio, hratio)
-    } else {
-        minOf(wratio, hratio)
-    }
+    val ratio =
+        if (fill) {
+            maxOf(wratio, hratio)
+        } else {
+            minOf(wratio, hratio)
+        }
 
     val nw = maxOf((width.toDouble() * ratio).roundToLong(), 1L)
     val nh = maxOf((height.toDouble() * ratio).roundToLong(), 1L)

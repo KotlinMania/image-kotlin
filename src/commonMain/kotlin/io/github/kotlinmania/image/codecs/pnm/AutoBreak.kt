@@ -15,8 +15,8 @@ import io.github.kotlinmania.image.io.IoWrite
 internal class AutoBreak(
     private val wrapped: IoWrite,
     private val lineCapacity: Int,
-) : IoWrite, AutoCloseable {
-
+) : IoWrite,
+    AutoCloseable {
     private val line: MutableList<Byte> = ArrayList(lineCapacity + 1)
     private var hasNewline: Boolean = false
 
@@ -40,16 +40,17 @@ internal class AutoBreak(
         while (written < len) {
             val remaining = ByteArray(len - written) { line[written + it] }
             panicked = true
-            val written0: Int = try {
-                wrapped.write(remaining, 0, remaining.size)
-            } catch (e: IoException) {
-                panicked = false
-                // Common-Kotlin sinks do not surface OS-signal-interrupted
-                // retries the way the upstream platform's IO layer can, so
-                // every IoException propagates straight to the caller.
-                failure = e
-                break
-            }
+            val written0: Int =
+                try {
+                    wrapped.write(remaining, 0, remaining.size)
+                } catch (e: IoException) {
+                    panicked = false
+                    // Common-Kotlin sinks do not surface OS-signal-interrupted
+                    // retries the way the upstream platform's IO layer can, so
+                    // every IoException propagates straight to the caller.
+                    failure = e
+                    break
+                }
             panicked = false
             if (written0 == 0) {
                 failure = IoException(IoErrorKind.WriteZero, "failed to write the buffered data")

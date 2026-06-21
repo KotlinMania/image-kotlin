@@ -47,11 +47,12 @@ private fun deriveCodesAndSizes(bits: UByteArray): Pair<UByteArray, UShortArray>
 
         // FIXME there is something wrong with this code
         val diff: UByte = (huffsize[k].toInt() - size.toInt()).toUByte()
-        code = if (diff < 16.toUByte()) {
-            (code.toInt() shl diff.toInt()).toUShort()
-        } else {
-            0.toUShort()
-        }
+        code =
+            if (diff < 16.toUByte()) {
+                (code.toInt() shl diff.toInt()).toUShort()
+            } else {
+                0.toUShort()
+            }
 
         size = (size.toInt() + diff.toInt()).toUByte()
     }

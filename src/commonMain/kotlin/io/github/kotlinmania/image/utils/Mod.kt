@@ -26,3 +26,5 @@ package io.github.kotlinmania.image.utils
  *     a byte slice. Porting this item requires a separate `bytemuck-kotlin`
  *     port to land first.
  */
+
+private const val MODULE_LEDGER = true

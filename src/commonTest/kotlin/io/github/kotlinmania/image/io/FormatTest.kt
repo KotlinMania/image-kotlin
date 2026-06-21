@@ -35,12 +35,23 @@ class FormatTest {
 
     @Test
     fun imageFormatsAreRecognized() {
-        val allFormats = listOf(
-            ImageFormat.Avif, ImageFormat.Png, ImageFormat.Jpeg, ImageFormat.Gif,
-            ImageFormat.WebP, ImageFormat.Pnm, ImageFormat.Tiff, ImageFormat.Tga,
-            ImageFormat.Dds, ImageFormat.Bmp, ImageFormat.Ico, ImageFormat.Hdr,
-            ImageFormat.Farbfeld, ImageFormat.OpenExr,
-        )
+        val allFormats =
+            listOf(
+                ImageFormat.Avif,
+                ImageFormat.Png,
+                ImageFormat.Jpeg,
+                ImageFormat.Gif,
+                ImageFormat.WebP,
+                ImageFormat.Pnm,
+                ImageFormat.Tiff,
+                ImageFormat.Tga,
+                ImageFormat.Dds,
+                ImageFormat.Bmp,
+                ImageFormat.Ico,
+                ImageFormat.Hdr,
+                ImageFormat.Farbfeld,
+                ImageFormat.OpenExr,
+            )
         for (format in allFormats) {
             for (ext in format.extensionsStr()) {
                 val result = ImageFormat.fromPath("file.$ext")
