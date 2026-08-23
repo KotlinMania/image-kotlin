@@ -1,14 +1,10 @@
 // port-lint: source imageops/mod.rs
 package io.github.kotlinmania.image.imageops
 
-import io.github.kotlinmania.image.Luma
-import io.github.kotlinmania.image.LumaA
 import io.github.kotlinmania.image.Rgb
-import io.github.kotlinmania.image.Rgba
 import io.github.kotlinmania.image.images.ImageBuffer
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 class ImageopsTest {
     @Test

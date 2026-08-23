@@ -19,8 +19,8 @@ public fun <P> crop(
     width: UInt,
     height: UInt,
 ): SubImage<P> {
-    val (cx, cy, cw, ch) = cropDimms(image, x, y, width, height)
-    return SubImage(image, cx, cy, cw, ch)
+    val dimms = cropDimms(image, x, y, width, height)
+    return SubImage(image, dimms.x, dimms.y, dimms.width, dimms.height)
 }
 
 /**
@@ -34,9 +34,9 @@ public fun <P> cropImm(
     width: UInt,
     height: UInt,
 ): SubImage<P> {
-    val (cx, cy, cw, ch) = cropDimms(image, x, y, width, height)
+    val dimms = cropDimms(image, x, y, width, height)
     @Suppress("UNCHECKED_CAST")
-    return SubImage(image as GenericImage<P>, cx, cy, cw, ch)
+    return SubImage(image as GenericImage<P>, dimms.x, dimms.y, dimms.width, dimms.height)
 }
 
 /**

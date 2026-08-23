@@ -20,6 +20,8 @@ package io.github.kotlinmania.image.codecs.pnm
  * Items parceled out of `src/codecs/pnm/`:
  *   - autobreak::AutoBreak (line-wrapping writer adapter)
  *       -> AutoBreak.kt (+ AutoBreakTest.kt under commonTest)
+ *   - header::* (PNM headers, subtypes, sample encodings, tuple types)
+ *       -> Header.kt (+ HeaderTest.kt under commonTest)
  *
  * Callers migrated:
  */
