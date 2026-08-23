@@ -1,4 +1,4 @@
-// port-lint: source src/utils/mod.rs
+// port-lint: source utils/mod.rs
 package io.github.kotlinmania.image.utils
 
 internal fun <N : Comparable<N>> clamp(a: N, min: N, max: N): N =

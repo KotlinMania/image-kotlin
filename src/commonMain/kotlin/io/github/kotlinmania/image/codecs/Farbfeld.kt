@@ -19,9 +19,17 @@ import io.github.kotlinmania.image.io.readExact
 import io.github.kotlinmania.image.io.writeAll
 import io.github.kotlinmania.image.utils.checkDimensionOverflow
 
-private val FARBFELD_MAGIC = byteArrayOf(
-    0x66, 0x61, 0x72, 0x62, 0x66, 0x65, 0x6c, 0x64, // "farbfeld"
-)
+private val FARBFELD_MAGIC =
+    byteArrayOf(
+        0x66,
+        0x61,
+        0x72,
+        0x62,
+        0x66,
+        0x65,
+        0x6c,
+        0x64, // "farbfeld"
+    )
 
 /**
  * Farbfeld image decoder.
@@ -68,21 +76,27 @@ public class FarbfeldDecoder internal constructor(
             )
         }
 
-        val w = ((dimBuf[0].toLong() and 0xFF shl 24) or
-            (dimBuf[1].toLong() and 0xFF shl 16) or
-            (dimBuf[2].toLong() and 0xFF shl 8) or
-            (dimBuf[3].toLong() and 0xFF)).toUInt()
+        val w =
+            (
+                (dimBuf[0].toLong() and 0xFF shl 24) or
+                    (dimBuf[1].toLong() and 0xFF shl 16) or
+                    (dimBuf[2].toLong() and 0xFF shl 8) or
+                    (dimBuf[3].toLong() and 0xFF)
+            ).toUInt()
 
-        val h = ((dimBuf[4].toLong() and 0xFF shl 24) or
-            (dimBuf[5].toLong() and 0xFF shl 16) or
-            (dimBuf[6].toLong() and 0xFF shl 8) or
-            (dimBuf[7].toLong() and 0xFF)).toUInt()
+        val h =
+            (
+                (dimBuf[4].toLong() and 0xFF shl 24) or
+                    (dimBuf[5].toLong() and 0xFF shl 16) or
+                    (dimBuf[6].toLong() and 0xFF shl 8) or
+                    (dimBuf[7].toLong() and 0xFF)
+            ).toUInt()
 
         if (checkDimensionOverflow(w, h, 8u)) {
             throw ImageError.Unsupported(
                 UnsupportedError(
                     ImageFormatHint.Exact(ImageFormat.Farbfeld),
-                    UnsupportedErrorKind.GenericFeature("Image dimensions (${w}x${h}) are too large"),
+                    UnsupportedErrorKind.GenericFeature("Image dimensions (${w}x$h) are too large"),
                 ),
             )
         }
@@ -118,7 +132,7 @@ public class FarbfeldEncoder internal constructor(
     public fun encode(data: ByteArray, width: UInt, height: UInt) {
         val expectedLen = (width.toULong() * height.toULong() * 8uL).toLong()
         require(data.size.toLong() == expectedLen) {
-            "Invalid buffer length: expected $expectedLen got ${data.size} for ${width}x${height} image"
+            "Invalid buffer length: expected $expectedLen got ${data.size} for ${width}x$height image"
         }
 
         writer.writeAll(FARBFELD_MAGIC)

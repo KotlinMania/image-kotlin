@@ -1,4 +1,4 @@
-// port-lint: source codecs/farbfeld.rs
+// port-lint: tests codecs/farbfeld.rs
 package io.github.kotlinmania.image.codecs
 
 import io.github.kotlinmania.image.ColorType
@@ -12,11 +12,25 @@ import kotlin.test.assertTrue
 class FarbfeldTest {
     @Test
     fun testDimensionOverflow() {
-        val header = byteArrayOf(
-            0x66, 0x61, 0x72, 0x62, 0x66, 0x65, 0x6c, 0x64, // farbfeld
-            0xFF.toByte(), 0xFF.toByte(), 0xFF.toByte(), 0xFF.toByte(),
-            0xFF.toByte(), 0xFF.toByte(), 0xFF.toByte(), 0xFF.toByte(),
-        )
+        val header =
+            byteArrayOf(
+                0x66,
+                0x61,
+                0x72,
+                0x62,
+                0x66,
+                0x65,
+                0x6c,
+                0x64, // farbfeld
+                0xFF.toByte(),
+                0xFF.toByte(),
+                0xFF.toByte(),
+                0xFF.toByte(),
+                0xFF.toByte(),
+                0xFF.toByte(),
+                0xFF.toByte(),
+                0xFF.toByte(),
+            )
         assertFailsWith<ImageError> {
             FarbfeldDecoder(header)
         }

@@ -42,24 +42,26 @@ public class ImageReader(
     }
 
     public fun intoDecoder(): ImageDecoder {
-        val fmt = format ?: guessFormatImpl(data) ?: throw ImageError.Unsupported(
-            UnsupportedError(
-                ImageFormatHint.Unknown,
-                UnsupportedErrorKind.Format(ImageFormatHint.Unknown),
-            ),
-        )
-
-        val decoder: ImageDecoder = when (fmt) {
-            ImageFormat.Tga -> TgaDecoder(data)
-            ImageFormat.Farbfeld -> FarbfeldDecoder(data)
-            ImageFormat.Qoi -> QoiDecoder(data)
-            else -> throw ImageError.Unsupported(
+        val fmt =
+            format ?: guessFormatImpl(data) ?: throw ImageError.Unsupported(
                 UnsupportedError(
-                    ImageFormatHint.Exact(fmt),
-                    UnsupportedErrorKind.Format(ImageFormatHint.Name(fmt.name)),
+                    ImageFormatHint.Unknown,
+                    UnsupportedErrorKind.Format(ImageFormatHint.Unknown),
                 ),
             )
-        }
+
+        val decoder: ImageDecoder =
+            when (fmt) {
+                ImageFormat.Tga -> TgaDecoder(data)
+                ImageFormat.Farbfeld -> FarbfeldDecoder(data)
+                ImageFormat.Qoi -> QoiDecoder(data)
+                else -> throw ImageError.Unsupported(
+                    UnsupportedError(
+                        ImageFormatHint.Exact(fmt),
+                        UnsupportedErrorKind.Format(ImageFormatHint.Name(fmt.name)),
+                    ),
+                )
+            }
 
         decoder.setLimits(limits)
         return decoder

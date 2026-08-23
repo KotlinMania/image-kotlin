@@ -1,4 +1,4 @@
-// port-lint: source src/codecs/jpeg/entropy.rs
+// port-lint: source codecs/jpeg/entropy.rs
 package io.github.kotlinmania.image.codecs.jpeg
 
 /**

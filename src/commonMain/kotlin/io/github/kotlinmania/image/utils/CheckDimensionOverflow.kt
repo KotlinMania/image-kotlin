@@ -1,4 +1,4 @@
-// port-lint: source src/utils/mod.rs
+// port-lint: source utils/mod.rs
 package io.github.kotlinmania.image.utils
 
 /** Checks if the provided dimensions would cause an overflow. */

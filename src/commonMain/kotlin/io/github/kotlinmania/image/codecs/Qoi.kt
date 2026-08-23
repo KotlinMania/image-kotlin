@@ -3,7 +3,6 @@ package io.github.kotlinmania.image.codecs
 
 import io.github.kotlinmania.image.ColorType
 import io.github.kotlinmania.image.DecodingError
-import io.github.kotlinmania.image.EncodingError
 import io.github.kotlinmania.image.ExtendedColorType
 import io.github.kotlinmania.image.ImageError
 import io.github.kotlinmania.image.ImageFormatHint
@@ -61,8 +60,10 @@ public class QoiDecoder internal constructor(
             )
         }
 
-        if (header[0] != QOI_MAGIC_0 || header[1] != QOI_MAGIC_1 ||
-            header[2] != QOI_MAGIC_2 || header[3] != QOI_MAGIC_3
+        if (header[0] != QOI_MAGIC_0 ||
+            header[1] != QOI_MAGIC_1 ||
+            header[2] != QOI_MAGIC_2 ||
+            header[3] != QOI_MAGIC_3
         ) {
             throw ImageError.Decoding(
                 DecodingError(
@@ -72,15 +73,21 @@ public class QoiDecoder internal constructor(
             )
         }
 
-        val w = ((header[4].toInt() and 0xFF shl 24) or
-            (header[5].toInt() and 0xFF shl 16) or
-            (header[6].toInt() and 0xFF shl 8) or
-            (header[7].toInt() and 0xFF)).toUInt()
+        val w =
+            (
+                (header[4].toInt() and 0xFF shl 24) or
+                    (header[5].toInt() and 0xFF shl 16) or
+                    (header[6].toInt() and 0xFF shl 8) or
+                    (header[7].toInt() and 0xFF)
+            ).toUInt()
 
-        val h = ((header[8].toInt() and 0xFF shl 24) or
-            (header[9].toInt() and 0xFF shl 16) or
-            (header[10].toInt() and 0xFF shl 8) or
-            (header[11].toInt() and 0xFF)).toUInt()
+        val h =
+            (
+                (header[8].toInt() and 0xFF shl 24) or
+                    (header[9].toInt() and 0xFF shl 16) or
+                    (header[10].toInt() and 0xFF shl 8) or
+                    (header[11].toInt() and 0xFF)
+            ).toUInt()
 
         val ch = header[12].toInt() and 0xFF
         val cs = header[13].toInt() and 0xFF
@@ -301,16 +308,17 @@ public class QoiEncoder internal constructor(
         height: UInt,
         colorType: ExtendedColorType,
     ) {
-        val channels = when (colorType) {
-            ExtendedColorType.Rgb8 -> 3
-            ExtendedColorType.Rgba8 -> 4
-            else -> throw ImageError.Unsupported(
-                UnsupportedError(
-                    ImageFormatHint.Exact(ImageFormat.Qoi),
-                    UnsupportedErrorKind.Color(colorType),
-                ),
-            )
-        }
+        val channels =
+            when (colorType) {
+                ExtendedColorType.Rgb8 -> 3
+                ExtendedColorType.Rgba8 -> 4
+                else -> throw ImageError.Unsupported(
+                    UnsupportedError(
+                        ImageFormatHint.Exact(ImageFormat.Qoi),
+                        UnsupportedErrorKind.Color(colorType),
+                    ),
+                )
+            }
         encode(buf, width, height, channels)
     }
 }
