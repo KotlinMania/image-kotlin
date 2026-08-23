@@ -252,3 +252,18 @@ public data class CicpRgb(
             CicpColorPrimaries.Unspecified -> null
         }
 }
+
+/**
+ * A transform between two Cicp color spaces.
+ */
+public data class CicpTransform(
+    public val from: Cicp,
+    public val into: Cicp,
+) {
+    public companion object {
+        public fun new(from: Cicp, into: Cicp): CicpTransform? {
+            if (!from.qualifyStability() || !into.qualifyStability()) return null
+            return CicpTransform(from, into)
+        }
+    }
+}

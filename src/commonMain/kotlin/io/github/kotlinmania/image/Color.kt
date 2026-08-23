@@ -1,8 +1,6 @@
 // port-lint: source color.rs
 package io.github.kotlinmania.image
 
-import kotlin.math.roundToInt
-
 /**
  * An enumeration over supported color types and bit depths.
  */
@@ -367,9 +365,10 @@ public data class LumaA<T>(
 }
 
 public fun Rgba<UByte>.blendUByte(other: Rgba<UByte>) {
-    val otherAlpha = other.a.toInt()
-    if (otherAlpha == 0) return
-    if (otherAlpha == 255) {
+    if (other.a == 0u.toUByte()) {
+        return
+    }
+    if (other.a == 255u.toUByte()) {
         r = other.r
         g = other.g
         b = other.b
@@ -391,17 +390,37 @@ public fun Rgba<UByte>.blendUByte(other: Rgba<UByte>) {
     val alphaFinal = bgA + fgA - bgA * fgA
     if (alphaFinal == 0.0f) return
 
-    val outRA = fgR * fgA + bgR * bgA * (1.0f - fgA)
-    val outGA = fgG * fgA + bgG * bgA * (1.0f - fgA)
-    val outBA = fgB * fgA + bgB * bgA * (1.0f - fgA)
+    val bgRA = bgR * bgA
+    val bgGA = bgG * bgA
+    val bgBA = bgB * bgA
+    val fgRA = fgR * fgA
+    val fgGA = fgG * fgA
+    val fgBA = fgB * fgA
 
-    r = ((outRA / alphaFinal) * maxT).roundToInt().coerceIn(0, 255).toUByte()
-    g = ((outGA / alphaFinal) * maxT).roundToInt().coerceIn(0, 255).toUByte()
-    b = ((outBA / alphaFinal) * maxT).roundToInt().coerceIn(0, 255).toUByte()
-    a = (alphaFinal * maxT).roundToInt().coerceIn(0, 255).toUByte()
+    val outRA = fgRA + bgRA * (1.0f - fgA)
+    val outGA = fgGA + bgGA * (1.0f - fgA)
+    val outBA = fgBA + bgBA * (1.0f - fgA)
+
+    val outR = outRA / alphaFinal
+    val outG = outGA / alphaFinal
+    val outB = outBA / alphaFinal
+
+    r = (maxT * outR).toInt().coerceIn(0, 255).toUByte()
+    g = (maxT * outG).toInt().coerceIn(0, 255).toUByte()
+    b = (maxT * outB).toInt().coerceIn(0, 255).toUByte()
+    a = (maxT * alphaFinal).toInt().coerceIn(0, 255).toUByte()
 }
 
 public fun LumaA<UByte>.blendUByte(other: LumaA<UByte>) {
+    if (other.a == 0u.toUByte()) {
+        return
+    }
+    if (other.a == 255u.toUByte()) {
+        l = other.l
+        a = other.a
+        return
+    }
+
     val maxT = 255.0f
     val bgLuma = l.toFloat() / maxT
     val bgA = a.toFloat() / maxT
@@ -416,8 +435,8 @@ public fun LumaA<UByte>.blendUByte(other: LumaA<UByte>) {
     val outLumaA = fgLumaA + bgLumaA * (1.0f - fgA)
     val outLuma = outLumaA / alphaFinal
 
-    l = (maxT * outLuma).roundToInt().coerceIn(0, 255).toUByte()
-    a = (maxT * alphaFinal).roundToInt().coerceIn(0, 255).toUByte()
+    l = (maxT * outLuma).toInt().coerceIn(0, 255).toUByte()
+    a = (maxT * alphaFinal).toInt().coerceIn(0, 255).toUByte()
 }
 
 public fun Rgb<UByte>.toLuma(): Luma<UByte> {

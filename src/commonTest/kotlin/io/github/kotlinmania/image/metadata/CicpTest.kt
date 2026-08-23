@@ -34,4 +34,12 @@ class CicpTest {
         assertTrue(res.isSuccess)
         assertEquals(srgb, res.getOrThrow().toCicp())
     }
+
+    @Test
+    fun testCanCreateTransforms() {
+        assertNotNull(CicpTransform.new(Cicp.SRGB, Cicp.SRGB))
+        assertNotNull(CicpTransform.new(Cicp.SRGB, Cicp.DISPLAY_P3))
+        assertNotNull(CicpTransform.new(Cicp.DISPLAY_P3, Cicp.SRGB))
+        assertNotNull(CicpTransform.new(Cicp.DISPLAY_P3, Cicp.DISPLAY_P3))
+    }
 }

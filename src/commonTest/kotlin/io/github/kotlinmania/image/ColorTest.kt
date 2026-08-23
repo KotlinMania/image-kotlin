@@ -184,4 +184,27 @@ class ColorTest {
         val luma = pixel.toLuma()
         assertEquals(13u.toUByte(), luma.l)
     }
+
+    @Test
+    fun testLosslessConversions() {
+        val luma8 = Luma(63u.toUByte())
+        val luma16 = Luma((63u * 65535u / 255u).toUShort())
+        val luma8Back = Luma((luma16.l.toUInt() * 255u / 65535u).toUByte())
+        assertEquals(luma8.channels(), luma8Back.channels())
+
+        val lumaA8 = LumaA(63u.toUByte(), 63u.toUByte())
+        val lumaA16 = LumaA((63u * 65535u / 255u).toUShort(), (63u * 65535u / 255u).toUShort())
+        val lumaA8Back = LumaA((lumaA16.l.toUInt() * 255u / 65535u).toUByte(), (lumaA16.a.toUInt() * 255u / 65535u).toUByte())
+        assertEquals(lumaA8.channels(), lumaA8Back.channels())
+
+        val rgb8 = Rgb(63u.toUByte(), 63u.toUByte(), 63u.toUByte())
+        val rgb16 = Rgb((63u * 65535u / 255u).toUShort(), (63u * 65535u / 255u).toUShort(), (63u * 65535u / 255u).toUShort())
+        val rgb8Back = Rgb((rgb16.r.toUInt() * 255u / 65535u).toUByte(), (rgb16.g.toUInt() * 255u / 65535u).toUByte(), (rgb16.b.toUInt() * 255u / 65535u).toUByte())
+        assertEquals(rgb8.channels(), rgb8Back.channels())
+
+        val rgba8 = Rgba(63u.toUByte(), 63u.toUByte(), 63u.toUByte(), 63u.toUByte())
+        val rgba16 = Rgba((63u * 65535u / 255u).toUShort(), (63u * 65535u / 255u).toUShort(), (63u * 65535u / 255u).toUShort(), (63u * 65535u / 255u).toUShort())
+        val rgba8Back = Rgba((rgba16.r.toUInt() * 255u / 65535u).toUByte(), (rgba16.g.toUInt() * 255u / 65535u).toUByte(), (rgba16.b.toUInt() * 255u / 65535u).toUByte(), (rgba16.a.toUInt() * 255u / 65535u).toUByte())
+        assertEquals(rgba8.channels(), rgba8Back.channels())
+    }
 }
