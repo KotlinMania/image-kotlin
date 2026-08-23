@@ -532,6 +532,7 @@ public class PnmDecoder(
     }
 
     private fun readU8Samples(components: Int, buf: ByteArray) {
+        require(components > 0)
         when (subtype().sampleEncoding()) {
             SampleEncoding.Binary -> {
                 reader.readExact(buf)
@@ -547,6 +548,7 @@ public class PnmDecoder(
     }
 
     private fun readU16Samples(components: Int, buf: ByteArray) {
+        require(components > 0)
         when (subtype().sampleEncoding()) {
             SampleEncoding.Binary -> {
                 val temp = ByteArray(buf.size)
@@ -611,6 +613,7 @@ public class PnmDecoder(
     }
 
     private fun readBWBitSamples(components: Int, buf: ByteArray) {
+        require(components > 0)
         reader.readExact(buf)
         for (i in buf.indices) {
             val v = buf[i].toInt() and 0xFF
