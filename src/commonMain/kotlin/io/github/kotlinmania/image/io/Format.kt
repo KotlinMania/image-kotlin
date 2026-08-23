@@ -6,7 +6,7 @@ package io.github.kotlinmania.image.io
  *
  * Not all formats support both encoding and decoding.
  */
-enum class ImageFormat {
+public enum class ImageFormat {
     /** An image in PNG format. */
     Png,
 
@@ -69,7 +69,7 @@ enum class ImageFormat {
      *  - The QOI MIME type is still a work in progress. This method returns `image/x-qoi` for
      *    that format.
      */
-    fun toMimeType(): String =
+    public fun toMimeType(): String =
         when (this) {
             Avif -> "image/avif"
             Jpeg -> "image/jpeg"
@@ -90,14 +90,14 @@ enum class ImageFormat {
         }
 
     /** Returns whether this `ImageFormat` can in principle be decoded by the library. */
-    fun canRead(): Boolean =
+    public fun canRead(): Boolean =
         when (this) {
             Png, Gif, Jpeg, WebP, Tiff, Tga, Bmp, Ico, Hdr, OpenExr, Pnm, Farbfeld, Avif, Qoi -> true
             Dds, Pcx -> false
         }
 
     /** Returns whether this `ImageFormat` can in principle be encoded by the library. */
-    fun canWrite(): Boolean =
+    public fun canWrite(): Boolean =
         when (this) {
             Gif, Ico, Jpeg, Png, Bmp, Tiff, Tga, Pnm, Farbfeld, Avif, WebP, Hdr, OpenExr, Qoi -> true
             Dds, Pcx -> false
@@ -105,13 +105,8 @@ enum class ImageFormat {
 
     /**
      * Returns the list of applicable extensions for this format.
-     *
-     * All currently recognized image formats specify at least one extension, but for future
-     * compatibility callers should not rely on this fact. The list may be empty if the format has
-     * no recognized file representation, for example in case it is used as a purely transient
-     * memory format.
      */
-    fun extensionsStr(): List<String> =
+    public fun extensionsStr(): List<String> =
         when (this) {
             Png -> listOf("png")
             Jpeg -> listOf("jpg", "jpeg")
@@ -131,26 +126,17 @@ enum class ImageFormat {
             Pcx -> listOf("pcx")
         }
 
-    // Upstream `reading_enabled` / `writing_enabled` are gated on Cargo `feature = "..."` flags.
-    // The Kotlin port has no feature-gating mechanism, so each format reports whether the
-    // library is willing to attempt decoding/encoding it in principle. `Dds` and `Pcx` remain
-    // false (they were unconditionally false in upstream regardless of features).
-
     /** Returns whether reading is enabled for this `ImageFormat`. */
-    fun readingEnabled(): Boolean = canRead()
+    public fun readingEnabled(): Boolean = canRead()
 
     /** Returns whether writing is enabled for this `ImageFormat`. */
-    fun writingEnabled(): Boolean = canWrite()
+    public fun writingEnabled(): Boolean = canWrite()
 
-    companion object {
+    public companion object {
         /**
          * Returns the image format specified by a file extension.
-         *
-         * The extension is matched case-insensitively.
-         *
-         * Returns `null` if the extension is not recognized.
          */
-        fun fromExtension(ext: String): ImageFormat? =
+        public fun fromExtension(ext: String): ImageFormat? =
             when (ext.lowercase()) {
                 "avif" -> Avif
                 "jpg", "jpeg", "jfif" -> Jpeg
@@ -172,16 +158,8 @@ enum class ImageFormat {
 
         /**
          * Returns the image format inferred from the file extension of the given path string.
-         *
-         * The extension is the substring after the last `.`. Returns `null` if no extension is
-         * present or the extension is not recognized.
-         *
-         * Upstream `from_path` returns `ImageResult<ImageFormat>` (an error of variant
-         * `ImageError::Unsupported` when the extension is missing or unrecognized). The Kotlin
-         * counterpart will move to a sealed `ImageResult` once `error.rs` is ported; for now this
-         * helper returns `null` for any failure, matching the shape of [fromExtension].
          */
-        fun fromPath(path: String): ImageFormat? {
+        public fun fromPath(path: String): ImageFormat? {
             val name = path.substringAfterLast('/').substringAfterLast('\\')
             val dot = name.lastIndexOf('.')
             if (dot < 0 || dot == name.length - 1) return null
@@ -192,7 +170,7 @@ enum class ImageFormat {
          * Returns the image format specified by a MIME type, or `null` if the MIME type is not
          * recognized.
          */
-        fun fromMimeType(mimeType: String): ImageFormat? =
+        public fun fromMimeType(mimeType: String): ImageFormat? =
             when (mimeType) {
                 "image/avif" -> Avif
                 "image/jpeg" -> Jpeg
@@ -216,7 +194,7 @@ enum class ImageFormat {
             }
 
         /** Returns all `ImageFormat` variants. */
-        fun all(): Sequence<ImageFormat> =
+        public fun all(): Sequence<ImageFormat> =
             sequenceOf(
                 Gif,
                 Ico,
