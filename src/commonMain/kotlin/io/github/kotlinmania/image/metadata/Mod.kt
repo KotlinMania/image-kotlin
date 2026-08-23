@@ -29,6 +29,8 @@ package io.github.kotlinmania.image.metadata
  *   - `ExifEndian` helper enum and the private `from_exif_chunk_inner` /
  *     `locate_orientation_entry` helpers travel with Orientation.kt because
  *     they are private to the orientation parsing logic.
+ *   - `Cicp` + `CicpColorPrimaries` + `CicpTransferCharacteristics` +
+ *     `CicpMatrixCoefficients` + `CicpVideoFullRangeFlag` + `CicpRgb` -> Cicp.kt
  *
  * Callers migrated:
  */

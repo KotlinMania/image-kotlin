@@ -40,6 +40,7 @@ package io.github.kotlinmania.image.io
  *   - `ImageFormat` enum + `from_extension` / `from_path` / `from_mime_type` /
  *     `to_mime_type` / `can_read` / `can_write` / `extensions_str` /
  *     `reading_enabled` / `writing_enabled` / `all` -> Format.kt
+ *   - `Limits` + `LimitSupport` -> Limits.kt
  *
  * Callers migrated:
  */
