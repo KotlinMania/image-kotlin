@@ -7,6 +7,8 @@ import io.github.kotlinmania.image.ParameterError
 import io.github.kotlinmania.image.ParameterErrorKind
 import io.github.kotlinmania.image.UnsupportedError
 import io.github.kotlinmania.image.UnsupportedErrorKind
+import io.github.kotlinmania.image.codecs.FarbfeldEncoder
+import io.github.kotlinmania.image.codecs.QoiEncoder
 import io.github.kotlinmania.image.codecs.tga.TgaEncoder
 
 private data class MagicSpec(
@@ -89,6 +91,8 @@ public fun guessFormatImpl(buffer: ByteArray): ImageFormat? {
 internal fun encoderForFormat(format: ImageFormat, writer: IoWrite): ImageEncoder =
     when (format) {
         ImageFormat.Tga -> TgaEncoder(writer)
+        ImageFormat.Farbfeld -> FarbfeldEncoder(writer)
+        ImageFormat.Qoi -> QoiEncoder(writer)
         else -> throw ImageError.Unsupported(
             UnsupportedError(
                 ImageFormatHint.Exact(format),
