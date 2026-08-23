@@ -1,4 +1,4 @@
-// port-lint: source src/metadata.rs
+// port-lint: tests metadata.rs
 package io.github.kotlinmania.image.metadata
 
 import kotlin.test.Test

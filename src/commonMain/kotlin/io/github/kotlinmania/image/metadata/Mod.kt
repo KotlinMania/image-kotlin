@@ -1,4 +1,4 @@
-// port-lint: source src/metadata.rs
+// port-lint: source metadata.rs
 package io.github.kotlinmania.image.metadata
 
 /*
@@ -7,7 +7,7 @@ package io.github.kotlinmania.image.metadata
  * Translation ledger for `src/metadata.rs`. Per the workspace mod.rs rule,
  * an upstream file that mixes submodule declarations with concrete items may
  * be parceled into focused Kotlin files; this file is the tracking ledger and
- * each parceled file carries `// port-lint: source src/metadata.rs`.
+ * each parceled file carries `// port-lint: source metadata.rs`.
  *
  * Upstream submodule declarations:
  *
@@ -29,6 +29,8 @@ package io.github.kotlinmania.image.metadata
  *   - `ExifEndian` helper enum and the private `from_exif_chunk_inner` /
  *     `locate_orientation_entry` helpers travel with Orientation.kt because
  *     they are private to the orientation parsing logic.
+ *   - `Cicp` + `CicpColorPrimaries` + `CicpTransferCharacteristics` +
+ *     `CicpMatrixCoefficients` + `CicpVideoFullRangeFlag` + `CicpRgb` -> Cicp.kt
  *
  * Callers migrated:
  */

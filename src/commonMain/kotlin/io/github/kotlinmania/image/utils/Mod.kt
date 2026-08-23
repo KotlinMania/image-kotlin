@@ -1,4 +1,4 @@
-// port-lint: source src/utils/mod.rs
+// port-lint: source utils/mod.rs
 package io.github.kotlinmania.image.utils
 
 /*
@@ -7,7 +7,7 @@ package io.github.kotlinmania.image.utils
  * Translation ledger for `src/utils/mod.rs`. Per the workspace mod.rs rule,
  * an upstream `mod.rs` with real implementation may be parceled into focused
  * Kotlin files; this file is the tracking ledger and each parceled file
- * carries `// port-lint: source src/utils/mod.rs`.
+ * carries `// port-lint: source utils/mod.rs`.
  *
  * Items parceled out of `src/utils/mod.rs`:
  *   - `expand_packed`               function -> ExpandPacked.kt

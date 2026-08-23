@@ -1,4 +1,4 @@
-// port-lint: source src/metadata.rs
+// port-lint: source metadata.rs
 package io.github.kotlinmania.image.metadata
 
 /**
