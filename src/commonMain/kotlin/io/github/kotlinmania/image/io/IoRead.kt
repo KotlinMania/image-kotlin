@@ -4,7 +4,7 @@ package io.github.kotlinmania.image.io
  * Minimal byte-oriented source modelling [`std::io::Read`][std-io-Read] in
  * Kotlin Multiplatform commonMain.
  */
-internal interface IoRead {
+public interface IoRead {
     /**
      * Reads up to [count] bytes into [buffer], starting at [offset], and returns
      * the number of bytes read, or 0 on end-of-stream.
@@ -18,7 +18,8 @@ internal interface IoRead {
 internal class BufferIoRead(
     private val data: ByteArray,
     private var position: Int = 0,
-) : IoRead {
+) : IoRead,
+    IoSeek {
     val remaining: Int get() = data.size - position
 
     override fun read(buffer: ByteArray, offset: Int, count: Int): Int {
@@ -32,6 +33,20 @@ internal class BufferIoRead(
         data.copyInto(buffer, destinationOffset = offset, startIndex = position, endIndex = position + toRead)
         position += toRead
         return toRead
+    }
+
+    override fun seek(pos: SeekFrom): Long {
+        val newPos =
+            when (pos) {
+                is SeekFrom.Start -> pos.offset
+                is SeekFrom.End -> (data.size.toLong() + pos.offset)
+                is SeekFrom.Current -> (position.toLong() + pos.offset)
+            }
+        if (newPos < 0 || newPos > data.size) {
+            throw IoException(IoErrorKind.InvalidInput, "invalid seek to $newPos for buffer of size ${data.size}")
+        }
+        position = newPos.toInt()
+        return position.toLong()
     }
 }
 

@@ -2,13 +2,11 @@ package io.github.kotlinmania.image.io
 
 /**
  * Minimal byte-oriented sink modelling [`std::io::Write`][std-io-Write] in
- * Kotlin Multiplatform commonMain. Crate-internal until the broader IO
- * layer arrives — public consumers of `image-kotlin` should not depend on
- * this surface.
+ * Kotlin Multiplatform commonMain.
  *
  * [std-io-Write]: https://doc.rust-lang.org/std/io/trait.Write.html
  */
-internal interface IoWrite {
+public interface IoWrite {
     /**
      * Writes up to [count] bytes from [buffer], starting at [offset], to
      * this sink and returns the number of bytes actually consumed.
@@ -58,6 +56,9 @@ internal enum class IoErrorKind {
     /** End-of-stream reached before the requested byte count. */
     UnexpectedEof,
 
+    /** A parameter was incorrect. */
+    InvalidInput,
+
     /** Any other failure surfaced by the underlying sink. */
     Other,
 }
@@ -67,11 +68,11 @@ internal enum class IoErrorKind {
  * useful for tests that need to inspect the byte stream produced by an
  * [IoWrite] consumer.
  */
-internal class BufferIoWrite : IoWrite {
+public class BufferIoWrite : IoWrite {
     private val storage: MutableList<Byte> = ArrayList()
 
     /** Snapshot of bytes written so far. */
-    fun toByteArray(): ByteArray = storage.toByteArray()
+    public fun toByteArray(): ByteArray = storage.toByteArray()
 
     override fun write(buffer: ByteArray, offset: Int, count: Int): Int {
         require(offset >= 0 && count >= 0 && offset + count <= buffer.size) {
@@ -94,7 +95,7 @@ internal class BufferIoWrite : IoWrite {
  * cannot accept further bytes. Mirrors the standard library's
  * `Write::write_all` convenience.
  */
-internal fun IoWrite.writeAll(buffer: ByteArray, offset: Int = 0, count: Int = buffer.size - offset) {
+public fun IoWrite.writeAll(buffer: ByteArray, offset: Int = 0, count: Int = buffer.size - offset) {
     var written = 0
     while (written < count) {
         val n = write(buffer, offset + written, count - written)

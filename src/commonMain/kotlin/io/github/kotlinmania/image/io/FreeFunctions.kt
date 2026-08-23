@@ -1,14 +1,18 @@
 // port-lint: source io/free_functions.rs
 package io.github.kotlinmania.image.io
 
+import io.github.kotlinmania.image.ExtendedColorType
 import io.github.kotlinmania.image.ImageError
 import io.github.kotlinmania.image.ImageFormatHint
+import io.github.kotlinmania.image.LimitError
+import io.github.kotlinmania.image.LimitErrorKind
 import io.github.kotlinmania.image.ParameterError
 import io.github.kotlinmania.image.ParameterErrorKind
 import io.github.kotlinmania.image.UnsupportedError
 import io.github.kotlinmania.image.UnsupportedErrorKind
 import io.github.kotlinmania.image.codecs.FarbfeldEncoder
 import io.github.kotlinmania.image.codecs.QoiEncoder
+import io.github.kotlinmania.image.codecs.bmp.BmpEncoder
 import io.github.kotlinmania.image.codecs.tga.TgaEncoder
 
 private data class MagicSpec(
@@ -90,6 +94,7 @@ public fun guessFormatImpl(buffer: ByteArray): ImageFormat? {
  */
 internal fun encoderForFormat(format: ImageFormat, writer: IoWrite): ImageEncoder =
     when (format) {
+        ImageFormat.Bmp -> BmpEncoder(writer)
         ImageFormat.Tga -> TgaEncoder(writer)
         ImageFormat.Farbfeld -> FarbfeldEncoder(writer)
         ImageFormat.Qoi -> QoiEncoder(writer)
@@ -100,6 +105,34 @@ internal fun encoderForFormat(format: ImageFormat, writer: IoWrite): ImageEncode
             ),
         )
     }
+
+/**
+ * Saves the supplied buffer to a sink given the desired format.
+ */
+public fun saveBufferWithFormat(
+    writer: IoWrite,
+    buf: ByteArray,
+    width: UInt,
+    height: UInt,
+    color: ExtendedColorType,
+    format: ImageFormat,
+) {
+    val encoder = encoderForFormat(format, writer)
+    encoder.writeImage(buf, width, height, color)
+}
+
+/**
+ * Decodes all bytes from an [ImageDecoder] into a [ByteArray].
+ */
+public fun decoderToVec(decoder: ImageDecoder): ByteArray {
+    val totalBytes = decoder.totalBytes()
+    if (totalBytes > Int.MAX_VALUE.toULong()) {
+        throw ImageError.Limits(LimitError(LimitErrorKind.InsufficientMemory))
+    }
+    val buf = ByteArray(totalBytes.toInt())
+    decoder.readImage(buf)
+    return buf
+}
 
 /**
  * Decodes a specific region of the image into [buf].

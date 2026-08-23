@@ -10,11 +10,7 @@ import kotlin.time.Duration.Companion.nanoseconds
  */
 public class Frames(
     private val iterator: Iterator<Frame>,
-) : Iterator<Frame> {
-    override fun hasNext(): Boolean = iterator.hasNext()
-
-    override fun next(): Frame = iterator.next()
-
+) : Iterator<Frame> by iterator {
     /**
      * Collects all frames into a List.
      */

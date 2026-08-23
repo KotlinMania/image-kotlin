@@ -38,7 +38,10 @@ private enum class ImageType {
     Bitfields32,
 }
 
-private data class Bitfield(val len: Int, val shift: Int)
+private data class Bitfield(
+    val len: Int,
+    val shift: Int,
+)
 
 private data class Bitfields(
     val r: Bitfield,
@@ -47,26 +50,29 @@ private data class Bitfields(
     val a: Bitfield,
 )
 
-private val R5_G5_B5_COLOR_MASK = Bitfields(
-    r = Bitfield(5, 10),
-    g = Bitfield(5, 5),
-    b = Bitfield(5, 0),
-    a = Bitfield(0, 0),
-)
+private val R5_G5_B5_COLOR_MASK =
+    Bitfields(
+        r = Bitfield(5, 10),
+        g = Bitfield(5, 5),
+        b = Bitfield(5, 0),
+        a = Bitfield(0, 0),
+    )
 
-private val R8_G8_B8_COLOR_MASK = Bitfields(
-    r = Bitfield(8, 16),
-    g = Bitfield(8, 8),
-    b = Bitfield(8, 0),
-    a = Bitfield(0, 0),
-)
+private val R8_G8_B8_COLOR_MASK =
+    Bitfields(
+        r = Bitfield(8, 16),
+        g = Bitfield(8, 8),
+        b = Bitfield(8, 0),
+        a = Bitfield(0, 0),
+    )
 
-private val R8_G8_B8_A8_COLOR_MASK = Bitfields(
-    r = Bitfield(8, 16),
-    g = Bitfield(8, 8),
-    b = Bitfield(8, 0),
-    a = Bitfield(8, 24),
-)
+private val R8_G8_B8_A8_COLOR_MASK =
+    Bitfields(
+        r = Bitfield(8, 16),
+        g = Bitfield(8, 8),
+        b = Bitfield(8, 0),
+        a = Bitfield(8, 24),
+    )
 
 /**
  * A BMP decoder.
@@ -143,35 +149,40 @@ public class BmpDecoder internal constructor(
 
         var parsedBitfields: Bitfields? = null
 
-        imageType = when (bpp) {
-            1, 2, 4, 8 -> when (compression) {
-                0L -> ImageType.Palette
-                1L -> if (bpp == 8) ImageType.RLE8 else throw ImageError.Decoding(DecodingError(ImageFormatHint.Exact(ImageFormat.Bmp), "Invalid RLE"))
-                2L -> if (bpp == 4) ImageType.RLE4 else throw ImageError.Decoding(DecodingError(ImageFormatHint.Exact(ImageFormat.Bmp), "Invalid RLE"))
-                else -> throw ImageError.Unsupported(UnsupportedError(ImageFormatHint.Exact(ImageFormat.Bmp), UnsupportedErrorKind.GenericFeature("compression $compression")))
+        imageType =
+            when (bpp) {
+                1, 2, 4, 8 ->
+                    when (compression) {
+                        0L -> ImageType.Palette
+                        1L -> if (bpp == 8) ImageType.RLE8 else throw ImageError.Decoding(DecodingError(ImageFormatHint.Exact(ImageFormat.Bmp), "Invalid RLE"))
+                        2L -> if (bpp == 4) ImageType.RLE4 else throw ImageError.Decoding(DecodingError(ImageFormatHint.Exact(ImageFormat.Bmp), "Invalid RLE"))
+                        else -> throw ImageError.Unsupported(UnsupportedError(ImageFormatHint.Exact(ImageFormat.Bmp), UnsupportedErrorKind.GenericFeature("compression $compression")))
+                    }
+                16 ->
+                    when (compression) {
+                        0L -> {
+                            parsedBitfields = R5_G5_B5_COLOR_MASK
+                            ImageType.RGB16
+                        }
+                        3L -> ImageType.Bitfields16
+                        else -> throw ImageError.Unsupported(UnsupportedError(ImageFormatHint.Exact(ImageFormat.Bmp), UnsupportedErrorKind.GenericFeature("compression $compression")))
+                    }
+                24 ->
+                    when (compression) {
+                        0L -> ImageType.RGB24
+                        else -> throw ImageError.Unsupported(UnsupportedError(ImageFormatHint.Exact(ImageFormat.Bmp), UnsupportedErrorKind.GenericFeature("compression $compression")))
+                    }
+                32 ->
+                    when (compression) {
+                        0L -> {
+                            parsedBitfields = R8_G8_B8_COLOR_MASK
+                            ImageType.RGB32
+                        }
+                        3L -> ImageType.Bitfields32
+                        else -> throw ImageError.Unsupported(UnsupportedError(ImageFormatHint.Exact(ImageFormat.Bmp), UnsupportedErrorKind.GenericFeature("compression $compression")))
+                    }
+                else -> throw ImageError.Unsupported(UnsupportedError(ImageFormatHint.Exact(ImageFormat.Bmp), UnsupportedErrorKind.GenericFeature("bpp $bpp")))
             }
-            16 -> when (compression) {
-                0L -> {
-                    parsedBitfields = R5_G5_B5_COLOR_MASK
-                    ImageType.RGB16
-                }
-                3L -> ImageType.Bitfields16
-                else -> throw ImageError.Unsupported(UnsupportedError(ImageFormatHint.Exact(ImageFormat.Bmp), UnsupportedErrorKind.GenericFeature("compression $compression")))
-            }
-            24 -> when (compression) {
-                0L -> ImageType.RGB24
-                else -> throw ImageError.Unsupported(UnsupportedError(ImageFormatHint.Exact(ImageFormat.Bmp), UnsupportedErrorKind.GenericFeature("compression $compression")))
-            }
-            32 -> when (compression) {
-                0L -> {
-                    parsedBitfields = R8_G8_B8_COLOR_MASK
-                    ImageType.RGB32
-                }
-                3L -> ImageType.Bitfields32
-                else -> throw ImageError.Unsupported(UnsupportedError(ImageFormatHint.Exact(ImageFormat.Bmp), UnsupportedErrorKind.GenericFeature("compression $compression")))
-            }
-            else -> throw ImageError.Unsupported(UnsupportedError(ImageFormatHint.Exact(ImageFormat.Bmp), UnsupportedErrorKind.GenericFeature("bpp $bpp")))
-        }
 
         // Read bitfield masks if bitfields compression and not in V4+ header
         var currentBytesRead = 14 + dibHeaderSize.toInt()
@@ -182,23 +193,25 @@ public class BmpDecoder internal constructor(
             val rMask = readU32Le(maskBuf, 0)
             val gMask = readU32Le(maskBuf, 4)
             val bMask = readU32Le(maskBuf, 8)
-            parsedBitfields = Bitfields(
-                r = maskToBitfield(rMask),
-                g = maskToBitfield(gMask),
-                b = maskToBitfield(bMask),
-                a = Bitfield(0, 0),
-            )
+            parsedBitfields =
+                Bitfields(
+                    r = maskToBitfield(rMask),
+                    g = maskToBitfield(gMask),
+                    b = maskToBitfield(bMask),
+                    a = Bitfield(0, 0),
+                )
         } else if (dibHeaderSize >= BITMAPV4HEADER_SIZE) {
             val rMask = readU32Le(dibRest, 36)
             val gMask = readU32Le(dibRest, 40)
             val bMask = readU32Le(dibRest, 44)
             val aMask = readU32Le(dibRest, 48)
-            parsedBitfields = Bitfields(
-                r = maskToBitfield(rMask),
-                g = maskToBitfield(gMask),
-                b = maskToBitfield(bMask),
-                a = maskToBitfield(aMask),
-            )
+            parsedBitfields =
+                Bitfields(
+                    r = maskToBitfield(rMask),
+                    g = maskToBitfield(gMask),
+                    b = maskToBitfield(bMask),
+                    a = maskToBitfield(aMask),
+                )
         }
         bitfields = parsedBitfields
 
@@ -245,13 +258,12 @@ public class BmpDecoder internal constructor(
 
     override fun dimensions(): Pair<UInt, UInt> = Pair(width, height)
 
-    override fun colorType(): ColorType {
-        return if (bitfields?.a?.len ?: 0 > 0 || imageType == ImageType.RGBA32) {
+    override fun colorType(): ColorType =
+        if (bitfields?.a?.len ?: 0 > 0 || imageType == ImageType.RGBA32) {
             ColorType.Rgba8
         } else {
             ColorType.Rgb8
         }
-    }
 
     override fun readImage(buf: ByteArray) {
         val w = width.toInt()
@@ -285,9 +297,12 @@ public class BmpDecoder internal constructor(
                 val byteIdx = bitPos / 8
                 val bitOffset = 8 - bitCount - (bitPos % 8)
                 val mask = (1 shl bitCount) - 1
-                val colorIdx = if (byteIdx < rawImageData.size) {
-                    ((rawImageData[byteIdx].toInt() and 0xFF) ushr bitOffset) and mask
-                } else 0
+                val colorIdx =
+                    if (byteIdx < rawImageData.size) {
+                        ((rawImageData[byteIdx].toInt() and 0xFF) ushr bitOffset) and mask
+                    } else {
+                        0
+                    }
                 bitPos += bitCount
 
                 val dstIdx = dstRowStart + col * outChannels

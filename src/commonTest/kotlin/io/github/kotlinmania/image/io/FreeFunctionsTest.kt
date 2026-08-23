@@ -2,6 +2,7 @@
 package io.github.kotlinmania.image.io
 
 import io.github.kotlinmania.image.ColorType
+import io.github.kotlinmania.image.ExtendedColorType
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
@@ -27,7 +28,29 @@ class FreeFunctionsTest {
 
         override fun colorType(): ColorType = ColorType.L8
 
-        override fun readImage(buf: ByteArray) {}
+        override fun readImage(buf: ByteArray) {
+            for (i in buf.indices) {
+                buf[i] = (i % 256).toByte()
+            }
+        }
+    }
+
+    @Test
+    fun testDecoderToVec() {
+        val decoder = MockDecoder()
+        val vec = decoderToVec(decoder)
+        assertEquals(25, vec.size)
+        assertEquals(0, vec[0])
+        assertEquals(1, vec[1])
+    }
+
+    @Test
+    fun testSaveBufferWithFormat() {
+        val writer = BufferIoWrite()
+        val raw = ByteArray(32) { (it + 1).toByte() }
+        saveBufferWithFormat(writer, raw, 2u, 2u, ExtendedColorType.Rgba16, ImageFormat.Farbfeld)
+        val written = writer.toByteArray()
+        assertEquals(8 + 8 + 32, written.size) // magic (8) + header (8) + 4 rgba16 pixels in farbfeld
     }
 
     @Test
