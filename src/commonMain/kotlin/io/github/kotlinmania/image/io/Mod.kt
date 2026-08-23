@@ -37,12 +37,13 @@ package io.github.kotlinmania.image.io
  * `std::io::{Read, Seek}` and arrive when the IO layer lands.
  *
  * Items parceled out of `src/io.rs` (and the directory):
- *   - `ImageFormat` enum + `from_extension` / `from_path` / `from_mime_type` /
- *     `to_mime_type` / `can_read` / `can_write` / `extensions_str` /
- *     `reading_enabled` / `writing_enabled` / `all` -> Format.kt
+ *   - `ImageFormat` enum -> Format.kt
  *   - `Limits` + `LimitSupport` -> Limits.kt
- *
- * Callers migrated:
+ *   - `ImageDecoder` + `ImageDecoderRect` -> Decoder.kt
+ *   - `ImageEncoder` -> Encoder.kt
+ *   - `guessFormat` + `loadRect` + `encoderForFormat` -> FreeFunctions.kt
+ *   - `IoRead` + `BufferIoRead` -> IoRead.kt
+ *   - `IoWrite` + `BufferIoWrite` -> IoWrite.kt
  */
 
 private const val MODULE_LEDGER = true

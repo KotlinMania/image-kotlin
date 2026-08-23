@@ -110,6 +110,8 @@ public data class DecodingError(
     public val format: ImageFormatHint,
     public val underlying: Throwable? = null,
 ) {
+    public constructor(format: ImageFormatHint, message: String) : this(format, Exception(message))
+
     public fun formatHint(): ImageFormatHint = format
 
     override fun toString(): String =
@@ -131,6 +133,8 @@ public data class EncodingError(
     public val format: ImageFormatHint,
     public val underlying: Throwable? = null,
 ) {
+    public constructor(format: ImageFormatHint, message: String) : this(format, Exception(message))
+
     public fun formatHint(): ImageFormatHint = format
 
     override fun toString(): String =
