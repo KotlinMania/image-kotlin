@@ -11,13 +11,13 @@ import kotlin.time.Duration.Companion.seconds
 
 class AnimationTest {
     @Test
-    fun testDelaySimple() {
+    fun simple() {
         val second = Delay.fromNumerDenomMs(1000u, 1u)
         assertEquals(1.seconds, second.toDuration())
     }
 
     @Test
-    fun testFps30() {
+    fun fps30() {
         val thirtieth = Delay.fromNumerDenomMs(1000u, 30u)
         val duration = thirtieth.toDuration()
         assertEquals(0L, duration.inWholeSeconds)
@@ -26,14 +26,14 @@ class AnimationTest {
     }
 
     @Test
-    fun testDurationOutlier() {
+    fun durationOutlier() {
         val oob = 0xFFFF_FFFFL.seconds
         val delay = Delay.fromSaturatingDuration(oob)
         assertEquals(Pair(0xFFFF_FFFFu, 1u), delay.numerDenomMs())
     }
 
     @Test
-    fun testDurationApprox() {
+    fun durationApprox() {
         val oob = 0xFFFF_FFFFL.milliseconds + 1.microseconds
         val delay1 = Delay.fromSaturatingDuration(oob)
         assertEquals(Pair(0xFFFF_FFFFu, 1u), delay1.numerDenomMs())
@@ -48,14 +48,14 @@ class AnimationTest {
     }
 
     @Test
-    fun testPrecise() {
+    fun precise() {
         val exceed = 333.seconds + 333_333_333.nanoseconds
         val delay = Delay.fromSaturatingDuration(exceed)
         assertEquals(exceed, delay.toDuration())
     }
 
     @Test
-    fun testSmall() {
+    fun small() {
         val delay = Delay.fromNumerDenomMs((1 shl 16).toUInt(), ((1 shl 16) + 1).toUInt())
         val duration = delay.toDuration()
         assertEquals(0L, duration.inWholeMilliseconds)

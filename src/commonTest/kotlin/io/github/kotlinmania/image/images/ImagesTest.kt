@@ -17,22 +17,21 @@ class ImagesTest {
 
     @Test
     fun testSubImageExtraction() {
-        val parentW = 4u
-        val parentH = 4u
-        val channels = 1
         val data = ByteArray(16) { it.toByte() }
-        val sub = SubImage(data, parentW, parentH, channels, 1u, 1u, 2u, 2u)
+        val img = ImageBuffer.createGray(4u, 4u, data)!!
+        val sub = img.subImage(1u, 1u, 2u, 2u)
         assertEquals(Pair(1u, 1u), sub.offsets())
         assertEquals(Pair(2u, 2u), sub.dimensions())
 
         val p00 = sub.getPixel(0u, 0u)
-        assertEquals(5.toByte(), p00[0])
+        assertEquals(5u.toUByte(), p00.l)
 
-        val subData = sub.toByteArray()
-        assertEquals(4, subData.size)
-        assertEquals(5.toByte(), subData[0])
-        assertEquals(6.toByte(), subData[1])
-        assertEquals(9.toByte(), subData[2])
-        assertEquals(10.toByte(), subData[3])
+        val subImg = sub.toImage() as ImageBuffer<*, *>
+        assertEquals(4, subImg.asRaw().size)
+        val raw = subImg.asRaw()
+        assertEquals(5.toByte(), raw[0])
+        assertEquals(6.toByte(), raw[1])
+        assertEquals(9.toByte(), raw[2])
+        assertEquals(10.toByte(), raw[3])
     }
 }
