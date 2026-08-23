@@ -49,43 +49,53 @@ import kotlin.math.sqrt
  * Represents an image whose pixel format is determined at runtime.
  */
 public sealed class DynamicImage : GenericImage<Rgba<UByte>> {
-    public data class ImageLuma8(
+    @ConsistentCopyVisibility
+    public data class ImageLuma8 internal constructor(
         public val image: GrayImage,
     ) : DynamicImage()
 
-    public data class ImageLumaA8(
+    @ConsistentCopyVisibility
+    public data class ImageLumaA8 internal constructor(
         public val image: GrayAlphaImage,
     ) : DynamicImage()
 
-    public data class ImageRgb8(
+    @ConsistentCopyVisibility
+    public data class ImageRgb8 internal constructor(
         public val image: RgbImage,
     ) : DynamicImage()
 
-    public data class ImageRgba8(
+    @ConsistentCopyVisibility
+    public data class ImageRgba8 internal constructor(
         public val image: RgbaImage,
     ) : DynamicImage()
 
-    public data class ImageLuma16(
+    @ConsistentCopyVisibility
+    public data class ImageLuma16 internal constructor(
         public val image: Gray16Image,
     ) : DynamicImage()
 
-    public data class ImageLumaA16(
+    @ConsistentCopyVisibility
+    public data class ImageLumaA16 internal constructor(
         public val image: GrayAlpha16Image,
     ) : DynamicImage()
 
-    public data class ImageRgb16(
+    @ConsistentCopyVisibility
+    public data class ImageRgb16 internal constructor(
         public val image: Rgb16Image,
     ) : DynamicImage()
 
-    public data class ImageRgba16(
+    @ConsistentCopyVisibility
+    public data class ImageRgba16 internal constructor(
         public val image: Rgba16Image,
     ) : DynamicImage()
 
-    public data class ImageRgb32F(
+    @ConsistentCopyVisibility
+    public data class ImageRgb32F internal constructor(
         public val image: Rgb32FImage,
     ) : DynamicImage()
 
-    public data class ImageRgba32F(
+    @ConsistentCopyVisibility
+    public data class ImageRgba32F internal constructor(
         public val image: Rgba32FImage,
     ) : DynamicImage()
 

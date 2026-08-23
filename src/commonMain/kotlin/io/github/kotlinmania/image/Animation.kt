@@ -8,9 +8,11 @@ import kotlin.time.Duration.Companion.nanoseconds
 /**
  * An iterator reading animation frames.
  */
-public class Frames(
+public class Frames internal constructor(
     private val iterator: Iterator<Frame>,
 ) : Iterator<Frame> by iterator {
+    public constructor(frames: List<Frame>) : this(frames.iterator())
+
     /**
      * Collects all frames into a List.
      */
