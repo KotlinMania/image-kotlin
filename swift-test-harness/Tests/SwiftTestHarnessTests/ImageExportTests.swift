@@ -1,4 +1,4 @@
-import XCTest
+import Testing
 import Image
 
 // Parity tests for the Kotlin → Swift Export → SPM → swift test pipeline.
@@ -33,25 +33,25 @@ import Image
 // pointer-identity switch in the synthesized
 // `init(__externalRCRefUnsafe:options:)` for enum-class return values.
 // See SWIFT_EXPORT_ROLLOUT.md for the rationale.
-final class ImageExportTests: XCTestCase {
-    func testSwiftModuleLoads() throws {
-        XCTAssertTrue(true, "Image swift module imported cleanly")
+@Suite struct ImageExportTests {
+    @Test func testSwiftModuleLoads() {
+        #expect(Bool(true), "Image swift module imported cleanly")
     }
 
-    func testRectFieldsRoundTripFromSwift() throws {
+    @Test func testRectFieldsRoundTripFromSwift() {
         let rect = ExportedKotlinPackages.io.github.kotlinmania.image.math.Rect(
             x: 10,
             y: 20,
             width: 100,
             height: 200
         )
-        XCTAssertEqual(rect.x, 10)
-        XCTAssertEqual(rect.y, 20)
-        XCTAssertEqual(rect.width, 100)
-        XCTAssertEqual(rect.height, 200)
+        #expect(rect.x == 10)
+        #expect(rect.y == 20)
+        #expect(rect.width == 100)
+        #expect(rect.height == 200)
     }
 
-    func testRectEqualityFromSwift() throws {
+    @Test func testRectEqualityFromSwift() {
         let lhs = ExportedKotlinPackages.io.github.kotlinmania.image.math.Rect(
             x: 0, y: 0, width: 5, height: 5
         )
@@ -61,46 +61,38 @@ final class ImageExportTests: XCTestCase {
         let diff = ExportedKotlinPackages.io.github.kotlinmania.image.math.Rect(
             x: 1, y: 0, width: 5, height: 5
         )
-        XCTAssertTrue(lhs.equals(other: rhs))
-        XCTAssertFalse(lhs.equals(other: diff))
+        #expect(lhs.equals(other: rhs))
+        #expect(!lhs.equals(other: diff))
     }
 
     // toExif() returns Int32 (mapped from Kotlin Int), which crosses the
     // Swift Export bridge cleanly. The canonical EXIF mapping (1..8) is the
     // contract that the upstream Rust crate and our Kotlin commonTest both
     // exercise.
-    func testOrientationToExifMatchesCanonicalExifMapping() throws {
-        XCTAssertEqual(
-            ExportedKotlinPackages.io.github.kotlinmania.image.metadata.Orientation.NoTransforms.toExif(),
-            1
+    @Test func testOrientationToExifMatchesCanonicalExifMapping() {
+        #expect(
+            ExportedKotlinPackages.io.github.kotlinmania.image.metadata.Orientation.NoTransforms.toExif() == 1
         )
-        XCTAssertEqual(
-            ExportedKotlinPackages.io.github.kotlinmania.image.metadata.Orientation.FlipHorizontal.toExif(),
-            2
+        #expect(
+            ExportedKotlinPackages.io.github.kotlinmania.image.metadata.Orientation.FlipHorizontal.toExif() == 2
         )
-        XCTAssertEqual(
-            ExportedKotlinPackages.io.github.kotlinmania.image.metadata.Orientation.Rotate180.toExif(),
-            3
+        #expect(
+            ExportedKotlinPackages.io.github.kotlinmania.image.metadata.Orientation.Rotate180.toExif() == 3
         )
-        XCTAssertEqual(
-            ExportedKotlinPackages.io.github.kotlinmania.image.metadata.Orientation.FlipVertical.toExif(),
-            4
+        #expect(
+            ExportedKotlinPackages.io.github.kotlinmania.image.metadata.Orientation.FlipVertical.toExif() == 4
         )
-        XCTAssertEqual(
-            ExportedKotlinPackages.io.github.kotlinmania.image.metadata.Orientation.Rotate90FlipH.toExif(),
-            5
+        #expect(
+            ExportedKotlinPackages.io.github.kotlinmania.image.metadata.Orientation.Rotate90FlipH.toExif() == 5
         )
-        XCTAssertEqual(
-            ExportedKotlinPackages.io.github.kotlinmania.image.metadata.Orientation.Rotate90.toExif(),
-            6
+        #expect(
+            ExportedKotlinPackages.io.github.kotlinmania.image.metadata.Orientation.Rotate90.toExif() == 6
         )
-        XCTAssertEqual(
-            ExportedKotlinPackages.io.github.kotlinmania.image.metadata.Orientation.Rotate270FlipH.toExif(),
-            7
+        #expect(
+            ExportedKotlinPackages.io.github.kotlinmania.image.metadata.Orientation.Rotate270FlipH.toExif() == 7
         )
-        XCTAssertEqual(
-            ExportedKotlinPackages.io.github.kotlinmania.image.metadata.Orientation.Rotate270.toExif(),
-            8
+        #expect(
+            ExportedKotlinPackages.io.github.kotlinmania.image.metadata.Orientation.Rotate270.toExif() == 8
         )
     }
 }

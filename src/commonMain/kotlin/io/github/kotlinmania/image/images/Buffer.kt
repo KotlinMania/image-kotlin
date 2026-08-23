@@ -16,8 +16,8 @@ import io.github.kotlinmania.image.metadata.CicpTransferCharacteristics
  * Generic image buffer parameterized by its Pixel type and container.
  */
 public class ImageBuffer<P, Container>(
-    public val width: UInt,
-    public val height: UInt,
+    private val width: UInt,
+    private val height: UInt,
     public val data: ByteArray,
     private val channelCount: Int,
     private val pixelReader: (ByteArray, Int) -> P,
@@ -88,7 +88,7 @@ public class ImageBuffer<P, Container>(
         pixelBlender(data, idx, pixel)
     }
 
-    public fun pixelsMut(): MutableList<P> {
+    public fun pixelsMut(): List<P> {
         val total = (width * height).toInt()
         val list = ArrayList<P>(total)
         for (i in 0 until total) {

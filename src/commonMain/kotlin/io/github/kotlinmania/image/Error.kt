@@ -53,8 +53,6 @@ public data class UnsupportedError(
     public val format: ImageFormatHint,
     public val kind: UnsupportedErrorKind,
 ) {
-    public fun kind(): UnsupportedErrorKind = kind
-
     public fun formatHint(): ImageFormatHint = format
 
     override fun toString(): String =
@@ -152,8 +150,6 @@ public data class ParameterError(
     public val kind: ParameterErrorKind,
     public val underlying: Throwable? = null,
 ) {
-    public fun kind(): ParameterErrorKind = kind
-
     override fun toString(): String {
         val base =
             when (kind) {
@@ -196,8 +192,6 @@ public sealed interface ParameterErrorKind {
 public data class LimitError(
     public val kind: LimitErrorKind,
 ) {
-    public fun kind(): LimitErrorKind = kind
-
     override fun toString(): String =
         when (kind) {
             LimitErrorKind.InsufficientMemory -> "Memory limit exceeded"

@@ -25,7 +25,7 @@ public class GenericReader(
     override fun read(buffer: ByteArray, offset: Int, count: Int): Int =
         reader.read(buffer, offset, count)
 
-    public fun readVectored(bufs: Array<ByteArray>): Int {
+    internal fun readVectored(bufs: Array<ByteArray>): Int {
         var total = 0
         for (buf in bufs) {
             val n = read(buf)
@@ -36,7 +36,7 @@ public class GenericReader(
         return total
     }
 
-    public fun readToEnd(buf: MutableList<Byte>): Int {
+    internal fun readToEnd(buf: MutableList<Byte>): Int {
         val temp = ByteArray(4096)
         var total = 0
         while (true) {
@@ -77,7 +77,7 @@ public class GenericReader(
         }
     }
 
-    public fun readUntil(byte: Byte, buf: MutableList<Byte>): Int {
+    internal fun readUntil(byte: Byte, buf: MutableList<Byte>): Int {
         val temp = ByteArray(1)
         var count = 0
         while (true) {
@@ -146,19 +146,19 @@ private val guessFormatHooks: MutableList<DetectionHook> = mutableListOf()
 /**
  * Register a new decoding hook or returns false if one already exists for the given format.
  */
-public fun registerDecodingHook(extension: String, hook: DecodingHook): Boolean {
-    if (decodingHooks.containsKey(extension)) {
+public fun registerDecodingHook(ext: String, hook: DecodingHook): Boolean {
+    if (decodingHooks.containsKey(ext)) {
         return false
     }
-    decodingHooks[extension] = hook
+    decodingHooks[ext] = hook
     return true
 }
 
 /**
  * Returns whether a decoding hook has been registered for the given format.
  */
-public fun decodingHookRegistered(extension: String): Boolean =
-    decodingHooks.containsKey(extension)
+public fun decodingHookRegistered(ext: String): Boolean =
+    decodingHooks.containsKey(ext)
 
 /**
  * Registers a format detection hook.
@@ -167,7 +167,7 @@ public fun decodingHookRegistered(extension: String): Boolean =
  * detect the format. The [mask] can specify which bytes in the signature should be ignored.
  */
 public fun registerFormatDetectionHook(
-    extension: String,
+    ext: String,
     signature: ByteArray,
     mask: ByteArray? = null,
 ) {
@@ -175,7 +175,7 @@ public fun registerFormatDetectionHook(
         DetectionHook(
             signature = signature,
             mask = mask ?: ByteArray(0),
-            extension = extension,
+            extension = ext,
         )
     guessFormatHooks.add(hook)
 }
