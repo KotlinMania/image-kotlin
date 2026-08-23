@@ -10,10 +10,17 @@ import io.github.kotlinmania.image.ParameterError
 import io.github.kotlinmania.image.ParameterErrorKind
 import io.github.kotlinmania.image.UnsupportedError
 import io.github.kotlinmania.image.UnsupportedErrorKind
+import io.github.kotlinmania.image.codecs.FarbfeldDecoder
 import io.github.kotlinmania.image.codecs.FarbfeldEncoder
+import io.github.kotlinmania.image.codecs.QoiDecoder
 import io.github.kotlinmania.image.codecs.QoiEncoder
+import io.github.kotlinmania.image.codecs.bmp.BmpDecoder
 import io.github.kotlinmania.image.codecs.bmp.BmpEncoder
+import io.github.kotlinmania.image.codecs.pnm.PnmDecoder
+import io.github.kotlinmania.image.codecs.pnm.PnmEncoder
+import io.github.kotlinmania.image.codecs.tga.TgaDecoder
 import io.github.kotlinmania.image.codecs.tga.TgaEncoder
+import io.github.kotlinmania.image.images.DynamicImage
 
 private data class MagicSpec(
     val signature: ByteArray,
@@ -98,6 +105,7 @@ internal fun encoderForFormat(format: ImageFormat, writer: IoWrite): ImageEncode
         ImageFormat.Tga -> TgaEncoder(writer)
         ImageFormat.Farbfeld -> FarbfeldEncoder(writer)
         ImageFormat.Qoi -> QoiEncoder(writer)
+        ImageFormat.Pnm -> PnmEncoder(writer)
         else -> throw ImageError.Unsupported(
             UnsupportedError(
                 ImageFormatHint.Exact(format),
@@ -105,6 +113,32 @@ internal fun encoderForFormat(format: ImageFormat, writer: IoWrite): ImageEncode
             ),
         )
     }
+
+/**
+ * Returns a decoder for the given format reading from [reader].
+ */
+internal fun decoderForFormat(format: ImageFormat, reader: IoRead): ImageDecoder =
+    when (format) {
+        ImageFormat.Bmp -> BmpDecoder(reader)
+        ImageFormat.Tga -> TgaDecoder(reader)
+        ImageFormat.Farbfeld -> FarbfeldDecoder(reader)
+        ImageFormat.Qoi -> QoiDecoder(reader)
+        ImageFormat.Pnm -> PnmDecoder(reader)
+        else -> throw ImageError.Unsupported(
+            UnsupportedError(
+                ImageFormatHint.Exact(format),
+                UnsupportedErrorKind.Format(ImageFormatHint.Name(format.name)),
+            ),
+        )
+    }
+
+/**
+ * Loads an image from the given reader and format.
+ */
+public fun load(reader: IoRead, format: ImageFormat): DynamicImage {
+    val decoder = decoderForFormat(format, reader)
+    return DynamicImage.fromDecoder(decoder)
+}
 
 /**
  * Saves the supplied buffer to a sink given the desired format.

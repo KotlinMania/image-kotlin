@@ -4,14 +4,18 @@ Based on AST analysis, here are the concrete next steps.
 
 ## Summary
 
-- **Files Present:** 49/76 (64.5%)
-- **Function parity:** 336/1428 matched (target 592) — 23.5%
-- **Class/type parity:** 88/286 matched (target 215) — 30.8%
-- **Combined symbol parity:** 424/1714 matched (target 807) — 24.7%
-- **Average inline-code cosine:** 0.30 (function body across 37 matched files)
-- **Average documentation cosine:** 0.51 (doc text across 37 matched files)
+- **Files Present:** 52/71 (73.2%)
+- **Function parity:** 478/1383 matched (target 827) — 34.6%
+- **Class/type parity:** 105/279 matched (targCodebase: src/commonMain/kotlin (kotlin)
+  Files: 88
+  Total imports: 414
+  Most depended: io.IoWrite (9 dependents)
+
+Comparing codebases...
+Computing AST similarities...
+*Average documentation cosine:** 0.52 (doc text across 40 matched files)
 - **Cheat-zeroed Files:** 17
-- **Critical Issues:** 45 files with <0.60 function similarity
+- **Critical Issues:** 48 files with <0.60 function similarity
 
 ## Priority 1: Fix Incomplete High-Dependency Files
 
@@ -29,7 +33,7 @@ Every matched file is listed below with function and type symbol parity.
 
 ### 1. error
 
-- **Target:** `image.Error [PROVENANCE-FALLBACK]`
+- **Target:** `image.Error`
 - **Similarity:** 0.26
 - **Dependents:** 3
 - **Priority Score:** 3072307.5
@@ -38,15 +42,10 @@ Every matched file is listed below with function and type symbol parity.
 - **Types:** 11/12 matched (target 35)
 - **Missing types:** `ImageResult`
 - **Tests:** 0/2 matched
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `error.rs` vs expected `error.rs`
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `tests:error.rs` vs expected `error.rs`
-- **Proposed provenance header:** `// port-lint: source error.rs` (current: `// port-lint: source error.rs`)
-- **Proposed provenance header:** `// port-lint: tests error.rs` (current: `// port-lint: tests error.rs`)
-- **Lint issues:** 2
 
 ### 2. io
 
-- **Target:** `io.Mod [ZERO] [PROVENANCE-FALLBACK]`
+- **Target:** `io.Mod [ZERO]`
 - **Similarity:** 0.00
 - **Dependents:** 3
 - **Priority Score:** 3050510.0
@@ -54,13 +53,10 @@ Every matched file is listed below with function and type symbol parity.
 - **Missing functions:** `read_exact_vec`
 - **Types:** 0/4 matched (target 0)
 - **Missing types:** `Reader`, `Limits`, `LimitSupport`, `ReadExt`
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `io.rs` vs expected `io.rs`
-- **Proposed provenance header:** `// port-lint: source io.rs` (current: `// port-lint: source io.rs`)
-- **Lint issues:** 1
 
 ### 3. math.rect
 
-- **Target:** `math.Rect [PROVENANCE-FALLBACK]`
+- **Target:** `math.Rect`
 - **Similarity:** 1.00
 - **Dependents:** 3
 - **Priority Score:** 3000100.0
@@ -68,13 +64,10 @@ Every matched file is listed below with function and type symbol parity.
 - **Missing functions:** _none_
 - **Types:** 1/1 matched
 - **Missing types:** _none_
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `math/rect.rs` vs expected `math/rect.rs`
-- **Proposed provenance header:** `// port-lint: source math/rect.rs` (current: `// port-lint: source math/rect.rs`)
-- **Lint issues:** 1
 
 ### 4. pnm.autobreak
 
-- **Target:** `pnm.AutoBreak [PROVENANCE-FALLBACK]`
+- **Target:** `pnm.AutoBreak`
 - **Similarity:** 0.54
 - **Dependents:** 2
 - **Priority Score:** 2020804.6
@@ -83,15 +76,10 @@ Every matched file is listed below with function and type symbol parity.
 - **Types:** 1/1 matched (target 2)
 - **Missing types:** _none_
 - **Tests:** 2/2 matched
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `codecs/pnm/autobreak.rs` vs expected `codecs/pnm/autobreak.rs`
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `tests:codecs/pnm/autobreak.rs` vs expected `codecs/pnm/autobreak.rs`
-- **Proposed provenance header:** `// port-lint: source codecs/pnm/autobreak.rs` (current: `// port-lint: source codecs/pnm/autobreak.rs`)
-- **Proposed provenance header:** `// port-lint: tests codecs/pnm/autobreak.rs` (current: `// port-lint: tests codecs/pnm/autobreak.rs`)
-- **Lint issues:** 2
 
 ### 5. images.flat
 
-- **Target:** `images.Flat [PROVENANCE-FALLBACK]`
+- **Target:** `images.Flat`
 - **Similarity:** 0.04
 - **Dependents:** 1
 - **Priority Score:** 1556109.6
@@ -100,15 +88,10 @@ Every matched file is listed below with function and type symbol parity.
 - **Types:** 2/10 matched (target 3)
 - **Missing types:** `Dim`, `View`, `ViewMut`, `Error`, `NormalForm`, `Output`, `Pixel`, `NormalFormRequiredError`
 - **Tests:** 0/4 matched
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `images/flat.rs` vs expected `images/flat.rs`
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `tests:images/flat.rs` vs expected `images/flat.rs`
-- **Proposed provenance header:** `// port-lint: source images/flat.rs` (current: `// port-lint: source images/flat.rs`)
-- **Proposed provenance header:** `// port-lint: tests images/flat.rs` (current: `// port-lint: tests images/flat.rs`)
-- **Lint issues:** 2
 
 ### 6. metadata.cicp
 
-- **Target:** `metadata.Cicp [PROVENANCE-FALLBACK]`
+- **Target:** `metadata.Cicp`
 - **Similarity:** 0.08
 - **Dependents:** 1
 - **Priority Score:** 1364909.2
@@ -117,15 +100,10 @@ Every matched file is listed below with function and type symbol parity.
 - **Types:** 8/13 matched (target 9)
 - **Missing types:** `CicpApplicable`, `RgbTransforms`, `CicpPixelCast`, `ColorComponentForCicp`, `ColorProfile`
 - **Tests:** 0/6 matched
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `metadata/cicp.rs` vs expected `metadata/cicp.rs`
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `tests:metadata/cicp.rs` vs expected `metadata/cicp.rs`
-- **Proposed provenance header:** `// port-lint: source metadata/cicp.rs` (current: `// port-lint: source metadata/cicp.rs`)
-- **Proposed provenance header:** `// port-lint: tests metadata/cicp.rs` (current: `// port-lint: tests metadata/cicp.rs`)
-- **Lint issues:** 2
 
 ### 7. images.sub_image
 
-- **Target:** `images.SubImage [PROVENANCE-FALLBACK]`
+- **Target:** `images.SubImage`
 - **Similarity:** 0.32
 - **Dependents:** 1
 - **Priority Score:** 1132406.9
@@ -134,30 +112,34 @@ Every matched file is listed below with function and type symbol parity.
 - **Types:** 1/6 matched (target 1)
 - **Missing types:** `SubImageInner`, `DerefPixel`, `DerefSubpixel`, `Target`, `Pixel`
 - **Tests:** 0/2 matched
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `images/sub_image.rs` vs expected `images/sub_image.rs`
-- **Proposed provenance header:** `// port-lint: source images/sub_image.rs` (current: `// port-lint: source images/sub_image.rs`)
-- **Lint issues:** 1
 
-### 8. io.free_functions
+### 8. imageops.fast_blur
 
-- **Target:** `io.FreeFunctions [PROVENANCE-FALLBACK]`
-- **Similarity:** 0.42
+- **Target:** `imageops.FastBlur`
+- **Similarity:** 0.17
 - **Dependents:** 1
-- **Priority Score:** 1091705.9
-- **Functions:** 7/16 matched
-- **Missing functions:** `load`, `save_buffer`, `dimensions`, `color_type`, `read_image`, `read_image_boxed`, `seek_scanline`, `read_scanline`, `test_load_rect_single_scanline`
+- **Priority Score:** 1121508.2
+- **Functions:** 3/14 matched (target 8)
+- **Missing functions:** `test_radius_size`, `rounding_saturating_mul`, `box_blur_horizontal_pass_strategy`, `box_blur_vertical_pass_strategy`, `box_blur_horizontal_pass_impl`, `box_blur_vertical_pass_impl`, `new`, `next_u32`, `next_u8`, `next_f32_in_range`, `test_box_blur`
+- **Types:** 0/1 matched
+- **Missing types:** `Rng`
+- **Tests:** 0/5 matched
+
+### 9. io.free_functions
+
+- **Target:** `io.FreeFunctions`
+- **Similarity:** 0.45
+- **Dependents:** 1
+- **Priority Score:** 1081705.5
+- **Functions:** 8/16 matched (target 18)
+- **Missing functions:** `save_buffer`, `dimensions`, `color_type`, `read_image`, `read_image_boxed`, `seek_scanline`, `read_scanline`, `test_load_rect_single_scanline`
 - **Types:** 1/1 matched (target 3)
 - **Missing types:** _none_
 - **Tests:** 1/8 matched
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `io/free_functions.rs` vs expected `io/free_functions.rs`
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `tests:io/free_functions.rs` vs expected `io/free_functions.rs`
-- **Proposed provenance header:** `// port-lint: source io/free_functions.rs` (current: `// port-lint: source io/free_functions.rs`)
-- **Proposed provenance header:** `// port-lint: tests io/free_functions.rs` (current: `// port-lint: tests io/free_functions.rs`)
-- **Lint issues:** 2
 
-### 9. io.limits
+### 10. io.limits
 
-- **Target:** `io.Limits [PROVENANCE-FALLBACK]`
+- **Target:** `io.Limits`
 - **Similarity:** 0.42
 - **Dependents:** 1
 - **Priority Score:** 1031105.8
@@ -165,15 +147,10 @@ Every matched file is listed below with function and type symbol parity.
 - **Missing functions:** `default`, `reserve_usize`, `free_usize`
 - **Types:** 2/2 matched (target 3)
 - **Missing types:** _none_
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `io/limits.rs` vs expected `io/limits.rs`
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `tests:io/limits.rs` vs expected `io/limits.rs`
-- **Proposed provenance header:** `// port-lint: source io/limits.rs` (current: `// port-lint: source io/limits.rs`)
-- **Proposed provenance header:** `// port-lint: tests io/limits.rs` (current: `// port-lint: tests io/limits.rs`)
-- **Lint issues:** 2
 
-### 10. tga.header
+### 11. tga.header
 
-- **Target:** `tga.Header [PROVENANCE-FALLBACK]`
+- **Target:** `tga.Header`
 - **Similarity:** 0.48
 - **Dependents:** 1
 - **Priority Score:** 1010905.1
@@ -181,15 +158,10 @@ Every matched file is listed below with function and type symbol parity.
 - **Missing functions:** `new`
 - **Types:** 2/2 matched (target 3)
 - **Missing types:** _none_
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `codecs/tga/header.rs` vs expected `codecs/tga/header.rs`
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `tests:codecs/tga/header.rs` vs expected `codecs/tga/header.rs`
-- **Proposed provenance header:** `// port-lint: source codecs/tga/header.rs` (current: `// port-lint: source codecs/tga/header.rs`)
-- **Proposed provenance header:** `// port-lint: tests codecs/tga/header.rs` (current: `// port-lint: tests codecs/tga/header.rs`)
-- **Lint issues:** 2
 
-### 11. jpeg.transform
+### 12. jpeg.transform
 
-- **Target:** `jpeg.Transform [ZERO] [PROVENANCE-FALLBACK]`
+- **Target:** `jpeg.Transform [ZERO]`
 - **Similarity:** 0.00
 - **Dependents:** 1
 - **Priority Score:** 1000110.0
@@ -197,30 +169,22 @@ Every matched file is listed below with function and type symbol parity.
 - **Missing functions:** _none_
 - **Types:** 0/0 matched
 - **Missing types:** _none_
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `codecs/jpeg/transform.rs` vs expected `codecs/jpeg/transform.rs`
-- **Proposed provenance header:** `// port-lint: source codecs/jpeg/transform.rs` (current: `// port-lint: source codecs/jpeg/transform.rs`)
-- **Lint issues:** 1
 
-### 12. images.buffer
+### 13. images.buffer
 
-- **Target:** `images.Buffer [PROVENANCE-FALLBACK]`
+- **Target:** `images.Buffer`
 - **Similarity:** 0.12
 - **Dependents:** 0
-- **Priority Score:** 841808.8
-- **Functions:** 30/93 matched (target 50)
-- **Missing functions:** `next`, `size_hint`, `len`, `next_back`, `fmt`, `with_image`, `inner_pixels`, `pixels`, `check_image_fits`, `image_buffer_len`, `pixel_indices`, `pixel_indices_unchecked`, `sample_layout`, `into_flat_samples`, `as_flat_samples`, `as_flat_samples_mut`, `inner_pixels_mut`, `get_pixel_mut`, `get_pixel_mut_checked`, `set_rgb_color_space`, `save`, `save_with_format`, `write_to`, `write_with_encoder`, `default`, `deref`, `deref_mut`, `index`, `index_mut`, `clone_from`, `unsafe_get_pixel`, `unsafe_put_pixel`, `from_pixel`, `from_fn`, `from_vec`, `into_vec`, `copy_color_space_from`, `expand_palette`, `convert`, `as_transform`, `as_transform_fn`, `cast_in_color_space`, `copy_from_color_space`, `to_color_space`, `apply_color_space`, `from`, `slice_buffer`, `mut_iter`, `zero_width_zero_height`, `zero_width_nonzero_height`, `nonzero_width_zero_height`, `pixels_on_large_buffer`, `write_to_with_large_buffer`, `exact_size_iter_size_hint`, `color_conversion`, `gray_conversions`, `rgb_to_gray_conversion`, `apply_color`, `to_color`, `transformation_mismatch`, `conversion`, `image_access_row_by_row`, `image_access_col_by_col`
-- **Types:** 5/25 matched (target 6)
-- **Missing types:** `Pixels`, `Item`, `PixelsMut`, `Rows`, `RowsMut`, `EnumeratePixels`, `EnumerateRows`, `EnumeratePixelsMut`, `EnumerateRowsMut`, `Target`, `Output`, `Pixel`, `ConvertBuffer`, `ConvertColorOptions`, `Rgb16Image`, `Rgba16Image`, `Gray16Image`, `GrayAlpha16Image`, `Rgb32FImage`, `Rgba32FImage`
+- **Priority Score:** 771808.8
+- **Functions:** 31/93 matched (target 92)
+- **Missing functions:** `next`, `size_hint`, `len`, `next_back`, `fmt`, `with_image`, `inner_pixels`, `pixels`, `check_image_fits`, `image_buffer_len`, `pixel_indices`, `pixel_indices_unchecked`, `sample_layout`, `into_flat_samples`, `as_flat_samples`, `as_flat_samples_mut`, `inner_pixels_mut`, `get_pixel_mut`, `get_pixel_mut_checked`, `set_rgb_color_space`, `save`, `save_with_format`, `write_to`, `write_with_encoder`, `default`, `deref`, `deref_mut`, `index`, `index_mut`, `clone_from`, `unsafe_get_pixel`, `unsafe_put_pixel`, `from_pixel`, `from_vec`, `into_vec`, `copy_color_space_from`, `expand_palette`, `convert`, `as_transform`, `as_transform_fn`, `cast_in_color_space`, `copy_from_color_space`, `to_color_space`, `apply_color_space`, `from`, `slice_buffer`, `mut_iter`, `zero_width_zero_height`, `zero_width_nonzero_height`, `nonzero_width_zero_height`, `pixels_on_large_buffer`, `write_to_with_large_buffer`, `exact_size_iter_size_hint`, `color_conversion`, `gray_conversions`, `rgb_to_gray_conversion`, `apply_color`, `to_color`, `transformation_mismatch`, `conversion`, `image_access_row_by_row`, `image_access_col_by_col`
+- **Types:** 11/25 matched (target 12)
+- **Missing types:** `Pixels`, `Item`, `PixelsMut`, `Rows`, `RowsMut`, `EnumeratePixels`, `EnumerateRows`, `EnumeratePixelsMut`, `EnumerateRowsMut`, `Target`, `Output`, `Pixel`, `ConvertBuffer`, `ConvertColorOptions`
 - **Tests:** 5/22 matched
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `images/buffer.rs` vs expected `images/buffer.rs`
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `tests:images/buffer.rs` vs expected `images/buffer.rs`
-- **Proposed provenance header:** `// port-lint: source images/buffer.rs` (current: `// port-lint: source images/buffer.rs`)
-- **Proposed provenance header:** `// port-lint: tests images/buffer.rs` (current: `// port-lint: tests images/buffer.rs`)
-- **Lint issues:** 2
 
-### 13. imageops.sample
+### 14. imageops.sample
 
-- **Target:** `imageops.Sample [PROVENANCE-FALLBACK]`
+- **Target:** `imageops.Sample`
 - **Similarity:** 0.04
 - **Dependents:** 0
 - **Priority Score:** 626809.6
@@ -229,15 +193,22 @@ Every matched file is listed below with function and type symbol parity.
 - **Types:** 1/5 matched (target 2)
 - **Missing types:** `Filter`, `FloatNearest`, `ThumbnailSum`, `GaussianBlurParameters`
 - **Tests:** 0/17 matched
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `imageops/sample.rs` vs expected `imageops/sample.rs`
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `tests:imageops/sample.rs` vs expected `imageops/sample.rs`
-- **Proposed provenance header:** `// port-lint: source imageops/sample.rs` (current: `// port-lint: source imageops/sample.rs`)
-- **Proposed provenance header:** `// port-lint: tests imageops/sample.rs` (current: `// port-lint: tests imageops/sample.rs`)
-- **Lint issues:** 2
 
-### 14. bmp.decoder
+### 15. images.dynimage
 
-- **Target:** `bmp.Decoder [PROVENANCE-FALLBACK]`
+- **Target:** `images.Dynimage`
+- **Similarity:** 0.30
+- **Dependents:** 0
+- **Priority Score:** 585207.0
+- **Functions:** 94/149 matched (target 104)
+- **Missing functions:** `clone`, `clone_from`, `to`, `to_luma32f`, `to_luma_alpha32f`, `as_mut_rgb8`, `as_mut_rgba8`, `as_mut_luma8`, `as_mut_luma_alpha8`, `as_mut_rgb16`, `as_mut_rgba16`, `as_mut_rgb32f`, `as_mut_rgba32f`, `as_mut_luma16`, `as_mut_luma_alpha16`, `as_flat_samples_u8`, `as_flat_samples_u16`, `as_flat_samples_f32`, `set_rgb_primaries`, `set_transfer_function`, `color_space`, `set_color_space`, `blur_advanced`, `flipv_in_place`, `fliph_in_place`, `rotate180_in_place`, `copy_from_color_space`, `apply_color_space`, `convert_color_space`, `write_with_encoder_impl`, `save`, `save_with_format`, `from`, `get_pixel_mut`, `default`, `open`, `image_dimensions`, `bench_conversion`, `open_16bpc_png`, `test_grayscale`, `test_grayscale_alpha_discarded`, `test_grayscale_alpha_preserved`, `test_dynamic_image_default_implementation`, `color_conversion_srgb_p3`, `color_conversion_preserves_sample`, `color_conversion_preserves_sample_in_fastpath`, `color_conversion_rgb_to_luma`, `copy_color_space_coverage`, `apply_color_space_coverage`, `into_luma_is_color_space_aware`, `from_luma_is_color_space_aware`, `from_luma_for_all_chromaticities`, `from_rgb_for_all_chromaticities`, `convert_color_space_coverage`, `color_space_independent_imageops`
+- **Types:** 1/3 matched (target 12)
+- **Missing types:** `Pixel`, `Foo`
+- **Tests:** 14/32 matched
+
+### 16. bmp.decoder
+
+- **Target:** `bmp.Decoder`
 - **Similarity:** 0.04
 - **Dependents:** 0
 - **Priority Score:** 495609.6
@@ -246,13 +217,23 @@ Every matched file is listed below with function and type symbol parity.
 - **Types:** 4/12 matched (target 4)
 - **Missing types:** `BMPHeaderType`, `FormatFullBytes`, `Chunker`, `RowIterator`, `Item`, `DecoderError`, `ChannelWidthError`, `RLEInsn`
 - **Tests:** 0/3 matched
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `codecs/bmp/decoder.rs` vs expected `codecs/bmp/decoder.rs`
-- **Proposed provenance header:** `// port-lint: source codecs/bmp/decoder.rs` (current: `// port-lint: source codecs/bmp/decoder.rs`)
-- **Lint issues:** 1
 
-### 15. imageops.filter_1d
+### 17. pnm.decoder
 
-- **Target:** `imageops.Filter1d [PROVENANCE-FALLBACK]`
+- **Target:** `pnm.Decoder`
+- **Similarity:** 0.34
+- **Dependents:** 0
+- **Priority Score:** 266506.6
+- **Functions:** 33/51 matched (target 49)
+- **Missing functions:** `fmt`, `from`, `source`, `sample_size`, `bytelen`, `new`, `read_magic_constant`, `read_image_boxed`, `read_samples`, `read_ascii`, `read_separated_ascii`, `from_bytes`, `from_ascii`, `tuple_type`, `pbm_binary_ascii_termination`, `read`, `issue_1508`, `issue_1616_overflow`
+- **Types:** 6/14 matched (target 28)
+- **Missing types:** `U8`, `U16`, `PbmBit`, `BWBit`, `DecodableImageHeader`, `HeaderReader`, `Representation`, `FailRead`
+- **Tests:** 19/23 matched
+- **Lint issues:** 3
+
+### 18. imageops.filter_1d
+
+- **Target:** `imageops.Filter1d`
 - **Similarity:** 0.03
 - **Dependents:** 0
 - **Priority Score:** 263009.7
@@ -260,13 +241,22 @@ Every matched file is listed below with function and type symbol parity.
 - **Missing functions:** `make_arena_row`, `make_columns_arenas`, `to_`, `filter_symmetric_column`, `filter_symmetric_row`, `transform`, `prepare_symmetric_kernel`, `filter_2d_separable_ring_queue`, `filter_2d_separable`, `filter_2d_sep_plane`, `filter_2d_sep_la`, `filter_2d_sep_rgb`, `filter_2d_sep_rgba`, `filter_2d_sep_la_f32`, `filter_2d_sep_plane_f32`, `filter_2d_sep_rgb_f32`, `filter_2d_sep_rgba_f32`, `filter_2d_sep_rgb_u16`, `filter_2d_sep_rgba_u16`, `filter_2d_sep_la_u16`, `filter_2d_sep_plane_u16`
 - **Types:** 2/7 matched (target 2)
 - **Missing types:** `SafeMul`, `SafeAdd`, `ArenaColumns`, `ToStorage`, `KernelTransformer`
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `imageops/filter_1d.rs` vs expected `imageops/filter_1d.rs`
-- **Proposed provenance header:** `// port-lint: source imageops/filter_1d.rs` (current: `// port-lint: source imageops/filter_1d.rs`)
-- **Lint issues:** 1
 
-### 16. codecs.farbfeld
+### 19. pnm.encoder
 
-- **Target:** `codecs.Farbfeld [PROVENANCE-FALLBACK]`
+- **Target:** `pnm.Encoder`
+- **Similarity:** 0.37
+- **Dependents:** 0
+- **Priority Score:** 183506.3
+- **Functions:** 14/25 matched (target 23)
+- **Missing functions:** `new`, `check`, `check_header_dimensions`, `check_header_color`, `check_sample_values`, `write_header`, `header`, `write_samples_ascii`, `len`, `encoding_for`, `from`
+- **Types:** 3/10 matched (target 9)
+- **Missing types:** `CheckedImageBuffer`, `UncheckedHeader`, `CheckedDimensions`, `CheckedHeaderColor`, `CheckedHeader`, `TupleEncoding`, `SampleWriter`
+- **Tests:** 3/3 matched
+
+### 20. codecs.farbfeld
+
+- **Target:** `codecs.Farbfeld`
 - **Similarity:** 0.15
 - **Dependents:** 0
 - **Priority Score:** 182508.5
@@ -275,15 +265,10 @@ Every matched file is listed below with function and type symbol parity.
 - **Types:** 2/3 matched
 - **Missing types:** `FarbfeldReader`
 - **Tests:** 0/7 matched
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `codecs/farbfeld.rs` vs expected `codecs/farbfeld.rs`
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `tests:codecs/farbfeld.rs` vs expected `codecs/farbfeld.rs`
-- **Proposed provenance header:** `// port-lint: source codecs/farbfeld.rs` (current: `// port-lint: source codecs/farbfeld.rs`)
-- **Proposed provenance header:** `// port-lint: tests codecs/farbfeld.rs` (current: `// port-lint: tests codecs/farbfeld.rs`)
-- **Lint issues:** 2
 
-### 17. imageops.mod
+### 21. imageops.mod
 
-- **Target:** `imageops.Mod [STUB] [PROVENANCE-FALLBACK]`
+- **Target:** `imageops.Mod [STUB]`
 - **Similarity:** 0.00
 - **Dependents:** 0
 - **Priority Score:** 162610.0
@@ -292,13 +277,10 @@ Every matched file is listed below with function and type symbol parity.
 - **Types:** 0/0 matched (target 2)
 - **Missing types:** _none_
 - **Tests:** 0/16 matched
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `imageops/mod.rs` vs expected `imageops/mod.rs`
-- **Proposed provenance header:** `// port-lint: source imageops/mod.rs` (current: `// port-lint: source imageops/mod.rs`)
-- **Lint issues:** 1
 
-### 18. traits
+### 22. traits
 
-- **Target:** `image.Traits [PROVENANCE-FALLBACK]`
+- **Target:** `image.Traits`
 - **Similarity:** 0.08
 - **Dependents:** 0
 - **Priority Score:** 162609.2
@@ -306,15 +288,10 @@ Every matched file is listed below with function and type symbol parity.
 - **Missing functions:** `from`, `channels`, `layout`, `dispatch_transform_from_sealed`, `double_dispatch_transform_from_sealed`, `transform_on`, `alpha`, `map_without_alpha`, `apply_without_alpha`
 - **Types:** 6/13 matched (target 27)
 - **Missing types:** `Larger`, `Ratio`, `LayoutWithColor`, `PrivateToken`, `SealedPixelWithColorType`, `TransformableSubpixel`, `HelpDispatchTransform`
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `traits.rs` vs expected `traits.rs`
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `tests:traits.rs` vs expected `traits.rs`
-- **Proposed provenance header:** `// port-lint: source traits.rs` (current: `// port-lint: source traits.rs`)
-- **Proposed provenance header:** `// port-lint: tests traits.rs` (current: `// port-lint: tests traits.rs`)
-- **Lint issues:** 2
 
-### 19. animation
+### 23. animation
 
-- **Target:** `image.Animation [PROVENANCE-FALLBACK]`
+- **Target:** `image.Animation`
 - **Similarity:** 0.41
 - **Dependents:** 0
 - **Priority Score:** 143705.9
@@ -323,64 +300,22 @@ Every matched file is listed below with function and type symbol parity.
 - **Types:** 4/5 matched
 - **Missing types:** `Item`
 - **Tests:** 6/6 matched
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `animation.rs` vs expected `animation.rs`
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `tests:animation.rs` vs expected `animation.rs`
-- **Proposed provenance header:** `// port-lint: source animation.rs` (current: `// port-lint: source animation.rs`)
-- **Proposed provenance header:** `// port-lint: tests animation.rs` (current: `// port-lint: tests animation.rs`)
-- **Lint issues:** 2
 
-### 20. color
+### 24. color
 
-- **Target:** `image.Color [PROVENANCE-FALLBACK]`
+- **Target:** `image.Color`
 - **Similarity:** 0.29
 - **Dependents:** 0
 - **Priority Score:** 133607.1
-- **Functions:** 21/28 matched (target 55)
+- **Functions:** 21/28 matched (target 70)
 - **Missing functions:** `try_from`, `from_primitive`, `normalize_float`, `into_color`, `rgb_to_luma`, `from_color`, `invert`
 - **Types:** 2/8 matched (target 35)
 - **Missing types:** `Error`, `FromPrimitive`, `FromColor`, `IntoColor`, `Blend`, `Invert`
 - **Tests:** 12/12 matched
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `color.rs` vs expected `color.rs`
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `tests:color.rs` vs expected `color.rs`
-- **Proposed provenance header:** `// port-lint: source color.rs` (current: `// port-lint: source color.rs`)
-- **Proposed provenance header:** `// port-lint: tests color.rs` (current: `// port-lint: tests color.rs`)
-- **Lint issues:** 2
 
-### 21. bmp.encoder
+### 25. io.image_reader_type
 
-- **Target:** `bmp.BmpTest [PROVENANCE-FALLBACK]`
-- **Similarity:** 0.27
-- **Dependents:** 0
-- **Priority Score:** 131907.3
-- **Functions:** 6/18 matched (target 7)
-- **Missing functions:** `new`, `encode`, `encode_with_palette`, `encode_rgb`, `encode_rgba`, `encode_gray`, `write_row_pad`, `write_image`, `make_compatible_img`, `written_pixel_info`, `round_trip_image`, `huge_files_return_error`
-- **Types:** 0/1 matched
-- **Missing types:** `BmpEncoder`
-- **Tests:** 6/8 matched
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `codecs/bmp/encoder.rs` vs expected `codecs/bmp/encoder.rs`
-- **Proposed provenance header:** `// port-lint: source codecs/bmp/encoder.rs` (current: `// port-lint: source codecs/bmp/encoder.rs`)
-- **Lint issues:** 1
-
-### 22. imageops.fast_blur
-
-- **Target:** `imageops.FastBlur [PROVENANCE-FALLBACK]`
-- **Similarity:** 0.17
-- **Dependents:** 0
-- **Priority Score:** 121508.3
-- **Functions:** 3/14 matched (target 8)
-- **Missing functions:** `test_radius_size`, `rounding_saturating_mul`, `box_blur_horizontal_pass_strategy`, `box_blur_vertical_pass_strategy`, `box_blur_horizontal_pass_impl`, `box_blur_vertical_pass_impl`, `new`, `next_u32`, `next_u8`, `next_f32_in_range`, `test_box_blur`
-- **Types:** 0/1 matched
-- **Missing types:** `Rng`
-- **Tests:** 0/5 matched
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `imageops/fast_blur.rs` vs expected `imageops/fast_blur.rs`
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `tests:imageops/fast_blur.rs` vs expected `imageops/fast_blur.rs`
-- **Proposed provenance header:** `// port-lint: source imageops/fast_blur.rs` (current: `// port-lint: source imageops/fast_blur.rs`)
-- **Proposed provenance header:** `// port-lint: tests imageops/fast_blur.rs` (current: `// port-lint: tests imageops/fast_blur.rs`)
-- **Lint issues:** 2
-
-### 23. io.image_reader_type
-
-- **Target:** `io.ImageReaderType [PROVENANCE-FALLBACK]`
+- **Target:** `io.ImageReaderType`
 - **Similarity:** 0.26
 - **Dependents:** 0
 - **Priority Score:** 111907.4
@@ -388,15 +323,37 @@ Every matched file is listed below with function and type symbol parity.
 - **Missing functions:** `new`, `no_limits`, `limits`, `into_inner`, `make_decoder`, `guess_format`, `into_dimensions`, `require_format`, `open`, `open_impl`
 - **Types:** 1/2 matched
 - **Missing types:** `Format`
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `io/image_reader_type.rs` vs expected `io/image_reader_type.rs`
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `tests:io/image_reader_type.rs` vs expected `io/image_reader_type.rs`
-- **Proposed provenance header:** `// port-lint: source io/image_reader_type.rs` (current: `// port-lint: source io/image_reader_type.rs`)
-- **Proposed provenance header:** `// port-lint: tests io/image_reader_type.rs` (current: `// port-lint: tests io/image_reader_type.rs`)
-- **Lint issues:** 2
 
-### 24. tga.encoder
+### 26. bmp.encoder
 
-- **Target:** `tga.Encoder [PROVENANCE-FALLBACK]`
+- **Target:** `bmp.Encoder`
+- **Similarity:** 0.30
+- **Dependents:** 0
+- **Priority Score:** 111907.0
+- **Functions:** 7/18 matched (target 11)
+- **Missing functions:** `new`, `write_row_pad`, `make_compatible_img`, `round_trip_image`, `round_trip_single_pixel_rgb`, `huge_files_return_error`, `round_trip_single_pixel_rgba`, `round_trip_3px_rgb`, `round_trip_gray`, `round_trip_graya`, `regression_issue_2604`
+- **Types:** 1/1 matched (target 2)
+- **Missing types:** _none_
+- **Tests:** 0/8 matched
+
+### 27. webp.encoder
+
+- **Target:** `bmp.BmpTest [PROVENANCE-FALLBACK]`
+- **Similarity:** 0.00
+- **Dependents:** 0
+- **Priority Score:** 90910.0
+- **Functions:** 0/8 matched (target 7)
+- **Missing functions:** `new_lossless`, `encode`, `write_image`, `set_icc_profile`, `set_exif_metadata`, `make_compatible_img`, `from_webp_encode`, `write_webp`
+- **Types:** 0/1 matched
+- **Missing types:** `WebPEncoder`
+- **Tests:** 0/1 matched
+- **Provenance warning:** port-lint provenance header matched only by basename: `codecs/bmp/encoder.rs` vs expected `codecs/webp/encoder.rs`
+- **Proposed provenance header:** `// port-lint: source codecs/webp/encoder.rs` (current: `// port-lint: source codecs/bmp/encoder.rs`)
+- **Lint issues:** 1
+
+### 28. tga.encoder
+
+- **Target:** `tga.Encoder`
 - **Similarity:** 0.46
 - **Dependents:** 0
 - **Priority Score:** 72805.4
@@ -405,15 +362,10 @@ Every matched file is listed below with function and type symbol parity.
 - **Types:** 3/3 matched (target 7)
 - **Missing types:** _none_
 - **Tests:** 12/15 matched
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `codecs/tga/encoder.rs` vs expected `codecs/tga/encoder.rs`
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `tests:codecs/tga/encoder.rs` vs expected `codecs/tga/encoder.rs`
-- **Proposed provenance header:** `// port-lint: source codecs/tga/encoder.rs` (current: `// port-lint: source codecs/tga/encoder.rs`)
-- **Proposed provenance header:** `// port-lint: tests codecs/tga/encoder.rs` (current: `// port-lint: tests codecs/tga/encoder.rs`)
-- **Lint issues:** 2
 
-### 25. io.decoder
+### 29. io.decoder
 
-- **Target:** `io.Decoder [PROVENANCE-FALLBACK]`
+- **Target:** `io.Decoder`
 - **Similarity:** 0.16
 - **Dependents:** 0
 - **Priority Score:** 71708.4
@@ -422,28 +374,10 @@ Every matched file is listed below with function and type symbol parity.
 - **Types:** 2/4 matched (target 2)
 - **Missing types:** `AnimationDecoder`, `D`
 - **Tests:** 0/1 matched
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `io/decoder.rs` vs expected `io/decoder.rs`
-- **Proposed provenance header:** `// port-lint: source io/decoder.rs` (current: `// port-lint: source io/decoder.rs`)
-- **Lint issues:** 1
 
-### 26. webp.encoder
+### 30. pnm.mod
 
-- **Target:** `bmp.Encoder [PROVENANCE-FALLBACK]`
-- **Similarity:** 0.19
-- **Dependents:** 0
-- **Priority Score:** 70908.1
-- **Functions:** 2/8 matched (target 11)
-- **Missing functions:** `new_lossless`, `set_icc_profile`, `set_exif_metadata`, `make_compatible_img`, `from_webp_encode`, `write_webp`
-- **Types:** 0/1 matched (target 2)
-- **Missing types:** `WebPEncoder`
-- **Tests:** 0/1 matched
-- **Provenance warning:** port-lint provenance header matched only by basename: `codecs/bmp/encoder.rs` vs expected `codecs/webp/encoder.rs`
-- **Proposed provenance header:** `// port-lint: source codecs/webp/encoder.rs` (current: `// port-lint: source codecs/bmp/encoder.rs`)
-- **Lint issues:** 1
-
-### 27. pnm.mod
-
-- **Target:** `pnm.Mod [STUB] [PROVENANCE-FALLBACK]`
+- **Target:** `pnm.Mod [STUB]`
 - **Similarity:** 0.00
 - **Dependents:** 0
 - **Priority Score:** 60610.0
@@ -452,13 +386,10 @@ Every matched file is listed below with function and type symbol parity.
 - **Types:** 0/0 matched
 - **Missing types:** _none_
 - **Tests:** 0/6 matched
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `codecs/pnm/mod.rs` vs expected `codecs/pnm/mod.rs`
-- **Proposed provenance header:** `// port-lint: source codecs/pnm/mod.rs` (current: `// port-lint: source codecs/pnm/mod.rs`)
-- **Lint issues:** 1
 
-### 28. imageops.colorops
+### 31. imageops.colorops
 
-- **Target:** `imageops.Colorops [PROVENANCE-FALLBACK]`
+- **Target:** `imageops.Colorops`
 - **Similarity:** 0.41
 - **Dependents:** 0
 - **Priority Score:** 52805.9
@@ -467,15 +398,11 @@ Every matched file is listed below with function and type symbol parity.
 - **Types:** 2/4 matched (target 3)
 - **Missing types:** `Subpixel`, `Color`
 - **Tests:** 5/6 matched
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `imageops/colorops.rs` vs expected `imageops/colorops.rs`
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `tests:imageops/colorops.rs` vs expected `imageops/colorops.rs`
-- **Proposed provenance header:** `// port-lint: source imageops/colorops.rs` (current: `// port-lint: source imageops/colorops.rs`)
-- **Proposed provenance header:** `// port-lint: tests imageops/colorops.rs` (current: `// port-lint: tests imageops/colorops.rs`)
-- **Lint issues:** 6
+- **Lint issues:** 4
 
-### 29. codecs.qoi
+### 32. codecs.qoi
 
-- **Target:** `codecs.Qoi [ZERO] [PROVENANCE-FALLBACK]`
+- **Target:** `codecs.Qoi [ZERO]`
 - **Similarity:** 0.00
 - **Dependents:** 0
 - **Priority Score:** 51110.0
@@ -484,15 +411,10 @@ Every matched file is listed below with function and type symbol parity.
 - **Types:** 2/2 matched (target 3)
 - **Missing types:** _none_
 - **Tests:** 0/1 matched
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `codecs/qoi.rs` vs expected `codecs/qoi.rs`
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `tests:codecs/qoi.rs` vs expected `codecs/qoi.rs`
-- **Proposed provenance header:** `// port-lint: source codecs/qoi.rs` (current: `// port-lint: source codecs/qoi.rs`)
-- **Proposed provenance header:** `// port-lint: tests codecs/qoi.rs` (current: `// port-lint: tests codecs/qoi.rs`)
-- **Lint issues:** 2
 
-### 30. io.encoder
+### 33. io.encoder
 
-- **Target:** `io.Encoder [PROVENANCE-FALLBACK]`
+- **Target:** `io.Encoder`
 - **Similarity:** 0.28
 - **Dependents:** 0
 - **Priority Score:** 50807.2
@@ -500,13 +422,10 @@ Every matched file is listed below with function and type symbol parity.
 - **Missing functions:** `make_compatible_img`, `write_image`, `dynimage_conversion_8bit`
 - **Types:** 1/3 matched (target 1)
 - **Missing types:** `MethodSealedToImage`, `ImageEncoderBoxed`
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `io/encoder.rs` vs expected `io/encoder.rs`
-- **Proposed provenance header:** `// port-lint: source io/encoder.rs` (current: `// port-lint: source io/encoder.rs`)
-- **Lint issues:** 1
 
-### 31. images.generic_image
+### 34. images.generic_image
 
-- **Target:** `images.GenericImage [PROVENANCE-FALLBACK]`
+- **Target:** `images.GenericImage`
 - **Similarity:** 0.67
 - **Dependents:** 0
 - **Priority Score:** 43603.3
@@ -515,15 +434,10 @@ Every matched file is listed below with function and type symbol parity.
 - **Types:** 3/4 matched
 - **Missing types:** `Item`
 - **Tests:** 17/17 matched
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `images/generic_image.rs` vs expected `images/generic_image.rs`
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `tests:images/generic_image.rs` vs expected `images/generic_image.rs`
-- **Proposed provenance header:** `// port-lint: source images/generic_image.rs` (current: `// port-lint: source images/generic_image.rs`)
-- **Proposed provenance header:** `// port-lint: tests images/generic_image.rs` (current: `// port-lint: tests images/generic_image.rs`)
-- **Lint issues:** 2
 
-### 32. utils.mod
+### 35. utils.mod
 
-- **Target:** `utils.Mod [STUB] [PROVENANCE-FALLBACK]`
+- **Target:** `utils.Mod [STUB]`
 - **Similarity:** 0.00
 - **Dependents:** 0
 - **Priority Score:** 40710.0
@@ -532,19 +446,10 @@ Every matched file is listed below with function and type symbol parity.
 - **Types:** 0/0 matched (target 1)
 - **Missing types:** _none_
 - **Tests:** 1/1 matched
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `utils/mod.rs` vs expected `utils/mod.rs`
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `utils/mod.rs` vs expected `utils/mod.rs`
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `utils/mod.rs` vs expected `utils/mod.rs`
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `tests:utils/mod.rs` vs expected `utils/mod.rs`
-- **Proposed provenance header:** `// port-lint: source utils/mod.rs` (current: `// port-lint: source utils/mod.rs`)
-- **Proposed provenance header:** `// port-lint: source utils/mod.rs` (current: `// port-lint: source utils/mod.rs`)
-- **Proposed provenance header:** `// port-lint: source utils/mod.rs` (current: `// port-lint: source utils/mod.rs`)
-- **Proposed provenance header:** `// port-lint: tests utils/mod.rs` (current: `// port-lint: tests utils/mod.rs`)
-- **Lint issues:** 4
 
-### 33. tga.decoder
+### 36. tga.decoder
 
-- **Target:** `tga.Decoder [PROVENANCE-FALLBACK]`
+- **Target:** `tga.Decoder`
 - **Similarity:** 0.51
 - **Dependents:** 0
 - **Priority Score:** 31504.9
@@ -552,13 +457,10 @@ Every matched file is listed below with function and type symbol parity.
 - **Missing functions:** `new`, `fixup_orientation`, `read_image_boxed`
 - **Types:** 3/3 matched
 - **Missing types:** _none_
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `codecs/tga/decoder.rs` vs expected `codecs/tga/decoder.rs`
-- **Proposed provenance header:** `// port-lint: source codecs/tga/decoder.rs` (current: `// port-lint: source codecs/tga/decoder.rs`)
-- **Lint issues:** 1
 
-### 34. pnm.header
+### 37. pnm.header
 
-- **Target:** `pnm.Header [PROVENANCE-FALLBACK]`
+- **Target:** `pnm.Header`
 - **Similarity:** 0.64
 - **Dependents:** 0
 - **Priority Score:** 22403.6
@@ -566,15 +468,10 @@ Every matched file is listed below with function and type symbol parity.
 - **Missing functions:** `fmt`
 - **Types:** 9/10 matched (target 22)
 - **Missing types:** `TupltypeWriter`
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `codecs/pnm/header.rs` vs expected `codecs/pnm/header.rs`
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `tests:codecs/pnm/header.rs` vs expected `codecs/pnm/header.rs`
-- **Proposed provenance header:** `// port-lint: source codecs/pnm/header.rs` (current: `// port-lint: source codecs/pnm/header.rs`)
-- **Proposed provenance header:** `// port-lint: tests codecs/pnm/header.rs` (current: `// port-lint: tests codecs/pnm/header.rs`)
-- **Lint issues:** 2
 
-### 35. imageops.affine
+### 38. imageops.affine
 
-- **Target:** `imageops.Affine [PROVENANCE-FALLBACK]`
+- **Target:** `imageops.Affine`
 - **Similarity:** 0.55
 - **Dependents:** 0
 - **Priority Score:** 12204.5
@@ -583,15 +480,10 @@ Every matched file is listed below with function and type symbol parity.
 - **Types:** 0/0 matched (target 1)
 - **Missing types:** _none_
 - **Tests:** 8/9 matched
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `imageops/affine.rs` vs expected `imageops/affine.rs`
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `tests:imageops/affine.rs` vs expected `imageops/affine.rs`
-- **Proposed provenance header:** `// port-lint: source imageops/affine.rs` (current: `// port-lint: source imageops/affine.rs`)
-- **Proposed provenance header:** `// port-lint: tests imageops/affine.rs` (current: `// port-lint: tests imageops/affine.rs`)
-- **Lint issues:** 2
 
-### 36. io.format
+### 39. io.format
 
-- **Target:** `io.Format [PROVENANCE-FALLBACK]`
+- **Target:** `io.Format`
 - **Similarity:** 0.39
 - **Dependents:** 0
 - **Priority Score:** 11406.1
@@ -600,15 +492,10 @@ Every matched file is listed below with function and type symbol parity.
 - **Types:** 1/1 matched (target 2)
 - **Missing types:** _none_
 - **Tests:** 2/2 matched
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `io/format.rs` vs expected `io/format.rs`
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `tests:io/format.rs` vs expected `io/format.rs`
-- **Proposed provenance header:** `// port-lint: source io/format.rs` (current: `// port-lint: source io/format.rs`)
-- **Proposed provenance header:** `// port-lint: tests io/format.rs` (current: `// port-lint: tests io/format.rs`)
-- **Lint issues:** 2
 
-### 37. metadata
+### 40. metadata
 
-- **Target:** `metadata.Mod [ZERO] [PROVENANCE-FALLBACK]`
+- **Target:** `metadata.Mod [ZERO]`
 - **Similarity:** 0.00
 - **Dependents:** 0
 - **Priority Score:** 10910.0
@@ -616,17 +503,10 @@ Every matched file is listed below with function and type symbol parity.
 - **Missing functions:** `test_extraction_and_clearing`
 - **Types:** 2/2 matched (target 3)
 - **Missing types:** _none_
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `metadata.rs` vs expected `metadata.rs`
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `metadata.rs` vs expected `metadata.rs`
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `tests:metadata.rs` vs expected `metadata.rs`
-- **Proposed provenance header:** `// port-lint: source metadata.rs` (current: `// port-lint: source metadata.rs`)
-- **Proposed provenance header:** `// port-lint: source metadata.rs` (current: `// port-lint: source metadata.rs`)
-- **Proposed provenance header:** `// port-lint: tests metadata.rs` (current: `// port-lint: tests metadata.rs`)
-- **Lint issues:** 3
 
-### 38. hooks
+### 41. hooks
 
-- **Target:** `image.Hooks [PROVENANCE-FALLBACK]`
+- **Target:** `image.Hooks`
 - **Similarity:** 0.55
 - **Dependents:** 0
 - **Priority Score:** 1904.5
@@ -634,15 +514,10 @@ Every matched file is listed below with function and type symbol parity.
 - **Missing functions:** _none_
 - **Types:** 4/4 matched (target 7)
 - **Missing types:** _none_
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `hooks.rs` vs expected `hooks.rs`
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `tests:hooks.rs` vs expected `hooks.rs`
-- **Proposed provenance header:** `// port-lint: source hooks.rs` (current: `// port-lint: source hooks.rs`)
-- **Proposed provenance header:** `// port-lint: tests hooks.rs` (current: `// port-lint: tests hooks.rs`)
-- **Lint issues:** 2
 
-### 39. math.utils
+### 42. math.utils
 
-- **Target:** `math.Utils [PROVENANCE-FALLBACK]`
+- **Target:** `math.Utils`
 - **Similarity:** 0.73
 - **Dependents:** 0
 - **Priority Score:** 702.7
@@ -651,15 +526,10 @@ Every matched file is listed below with function and type symbol parity.
 - **Types:** 0/0 matched (target 1)
 - **Missing types:** _none_
 - **Tests:** 5/5 matched
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `math/utils.rs` vs expected `math/utils.rs`
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `tests:math/utils.rs` vs expected `math/utils.rs`
-- **Proposed provenance header:** `// port-lint: source math/utils.rs` (current: `// port-lint: source math/utils.rs`)
-- **Proposed provenance header:** `// port-lint: tests math/utils.rs` (current: `// port-lint: tests math/utils.rs`)
-- **Lint issues:** 2
 
-### 40. jpeg.entropy
+### 43. jpeg.entropy
 
-- **Target:** `jpeg.Entropy [STUB] [PROVENANCE-FALLBACK]`
+- **Target:** `jpeg.Entropy [STUB]`
 - **Similarity:** 0.00
 - **Dependents:** 0
 - **Priority Score:** 210.0
@@ -667,15 +537,10 @@ Every matched file is listed below with function and type symbol parity.
 - **Missing functions:** _none_
 - **Types:** 0/0 matched (target 1)
 - **Missing types:** _none_
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `codecs/jpeg/entropy.rs` vs expected `codecs/jpeg/entropy.rs`
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `tests:codecs/jpeg/entropy.rs` vs expected `codecs/jpeg/entropy.rs`
-- **Proposed provenance header:** `// port-lint: source codecs/jpeg/entropy.rs` (current: `// port-lint: source codecs/jpeg/entropy.rs`)
-- **Proposed provenance header:** `// port-lint: tests codecs/jpeg/entropy.rs` (current: `// port-lint: tests codecs/jpeg/entropy.rs`)
-- **Lint issues:** 2
 
-### 41. jpeg.mod
+### 44. jpeg.mod
 
-- **Target:** `jpeg.Mod [STUB] [PROVENANCE-FALLBACK]`
+- **Target:** `jpeg.Mod [STUB]`
 - **Similarity:** 0.00
 - **Dependents:** 0
 - **Priority Score:** 10.0
@@ -683,27 +548,10 @@ Every matched file is listed below with function and type symbol parity.
 - **Missing functions:** _none_
 - **Types:** 0/0 matched
 - **Missing types:** _none_
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `codecs/jpeg/mod.rs` vs expected `codecs/jpeg/mod.rs`
-- **Proposed provenance header:** `// port-lint: source codecs/jpeg/mod.rs` (current: `// port-lint: source codecs/jpeg/mod.rs`)
-- **Lint issues:** 1
 
-### 42. bmp.mod
+### 45. tga.mod
 
-- **Target:** `bmp.Mod [STUB] [PROVENANCE-FALLBACK]`
-- **Similarity:** 0.00
-- **Dependents:** 0
-- **Priority Score:** 10.0
-- **Functions:** 0/0 matched
-- **Missing functions:** _none_
-- **Types:** 0/0 matched
-- **Missing types:** _none_
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `codecs/bmp/mod.rs` vs expected `codecs/bmp/mod.rs`
-- **Proposed provenance header:** `// port-lint: source codecs/bmp/mod.rs` (current: `// port-lint: source codecs/bmp/mod.rs`)
-- **Lint issues:** 1
-
-### 43. tga.mod
-
-- **Target:** `tga.Mod [STUB] [PROVENANCE-FALLBACK]`
+- **Target:** `tga.Mod [STUB]`
 - **Similarity:** 0.00
 - **Dependents:** 0
 - **Priority Score:** 10.0
@@ -711,13 +559,10 @@ Every matched file is listed below with function and type symbol parity.
 - **Missing functions:** _none_
 - **Types:** 0/0 matched (target 1)
 - **Missing types:** _none_
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `codecs/tga/mod.rs` vs expected `codecs/tga/mod.rs`
-- **Proposed provenance header:** `// port-lint: source codecs/tga/mod.rs` (current: `// port-lint: source codecs/tga/mod.rs`)
-- **Lint issues:** 1
 
-### 44. images
+### 46. bmp.mod
 
-- **Target:** `images.Images [ZERO] [PROVENANCE-FALLBACK]`
+- **Target:** `bmp.Mod [STUB]`
 - **Similarity:** 0.00
 - **Dependents:** 0
 - **Priority Score:** 10.0
@@ -725,27 +570,32 @@ Every matched file is listed below with function and type symbol parity.
 - **Missing functions:** _none_
 - **Types:** 0/0 matched
 - **Missing types:** _none_
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `images.rs` vs expected `images.rs`
-- **Proposed provenance header:** `// port-lint: source images.rs` (current: `// port-lint: source images.rs`)
-- **Lint issues:** 1
 
-### 45. avif.mod
+### 47. images
 
-- **Target:** `utils.Clamp [STUB] [PROVENANCE-FALLBACK]`
+- **Target:** `images.Images [ZERO]`
 - **Similarity:** 0.00
 - **Dependents:** 0
 - **Priority Score:** 10.0
-- **Functions:** 0/0 matched (target 1)
+- **Functions:** 0/0 matched
 - **Missing functions:** _none_
 - **Types:** 0/0 matched
 - **Missing types:** _none_
-- **Provenance warning:** port-lint provenance header matched only by basename: `utils/mod.rs` vs expected `codecs/avif/mod.rs`
-- **Proposed provenance header:** `// port-lint: source codecs/avif/mod.rs` (current: `// port-lint: source utils/mod.rs`)
-- **Lint issues:** 1
 
-### 46. webp.mod
+### 48. math.mod
 
-- **Target:** `utils.ExpandBits [STUB] [PROVENANCE-FALLBACK]`
+- **Target:** `math.Mod [STUB]`
+- **Similarity:** 0.00
+- **Dependents:** 0
+- **Priority Score:** 10.0
+- **Functions:** 0/0 matched
+- **Missing functions:** _none_
+- **Types:** 0/0 matched
+- **Missing types:** _none_
+
+### 49. webp.mod
+
+- **Target:** `utils.Clamp [STUB] [PROVENANCE-FALLBACK]`
 - **Similarity:** 0.00
 - **Dependents:** 0
 - **Priority Score:** 10.0
@@ -757,23 +607,9 @@ Every matched file is listed below with function and type symbol parity.
 - **Proposed provenance header:** `// port-lint: source codecs/webp/mod.rs` (current: `// port-lint: source utils/mod.rs`)
 - **Lint issues:** 1
 
-### 47. math.mod
+### 50. hdr.mod
 
-- **Target:** `math.Mod [STUB] [PROVENANCE-FALLBACK]`
-- **Similarity:** 0.00
-- **Dependents:** 0
-- **Priority Score:** 10.0
-- **Functions:** 0/0 matched
-- **Missing functions:** _none_
-- **Types:** 0/0 matched
-- **Missing types:** _none_
-- **Provenance warning:** port-lint provenance header matched only after fallback normalization: `math/mod.rs` vs expected `math/mod.rs`
-- **Proposed provenance header:** `// port-lint: source math/mod.rs` (current: `// port-lint: source math/mod.rs`)
-- **Lint issues:** 1
-
-### 48. hdr.mod
-
-- **Target:** `utils.ExpandPacked [STUB] [PROVENANCE-FALLBACK]`
+- **Target:** `utils.ExpandBits [STUB] [PROVENANCE-FALLBACK]`
 - **Similarity:** 0.00
 - **Dependents:** 0
 - **Priority Score:** 10.0
@@ -785,7 +621,21 @@ Every matched file is listed below with function and type symbol parity.
 - **Proposed provenance header:** `// port-lint: source codecs/hdr/mod.rs` (current: `// port-lint: source utils/mod.rs`)
 - **Lint issues:** 1
 
-### 49. ico.mod
+### 51. avif.mod
+
+- **Target:** `utils.ExpandPacked [STUB] [PROVENANCE-FALLBACK]`
+- **Similarity:** 0.00
+- **Dependents:** 0
+- **Priority Score:** 10.0
+- **Functions:** 0/0 matched (target 1)
+- **Missing functions:** _none_
+- **Types:** 0/0 matched
+- **Missing types:** _none_
+- **Provenance warning:** port-lint provenance header matched only by basename: `utils/mod.rs` vs expected `codecs/avif/mod.rs`
+- **Proposed provenance header:** `// port-lint: source codecs/avif/mod.rs` (current: `// port-lint: source utils/mod.rs`)
+- **Lint issues:** 1
+
+### 52. ico.mod
 
 - **Target:** `imageops.ImageopsTest [STUB] [PROVENANCE-FALLBACK]`
 - **Similarity:** 0.00
@@ -819,5 +669,9 @@ do not treat them as the next implementation target by default.
 
 | Source | Expected target | Deps | Source path | Expected path |
 |--------|-----------------|------|-------------|---------------|
-| `lib` | `Lib` | 0 | `src/lib.rs` | `Lib.kt` |
+| `lib` | `Lib` | 0 | `lib.rs` | `Lib.kt` |
 
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             ✅ Generated: NEXT_ACTIONS.md
+✅ Generated: port_lint_proposed_changes.md
+
+📁 All reports generated successfully!

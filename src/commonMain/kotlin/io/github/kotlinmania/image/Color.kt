@@ -439,7 +439,40 @@ public fun LumaA<UByte>.blendUByte(other: LumaA<UByte>) {
     a = (maxT * alphaFinal).toInt().coerceIn(0, 255).toUByte()
 }
 
+public fun Rgb<UByte>.toRgb(): Rgb<UByte> = this
+
+public fun Rgb<UByte>.toRgba(): Rgba<UByte> = Rgba(r, g, b, 255u)
+
 public fun Rgb<UByte>.toLuma(): Luma<UByte> {
     val l = (2126u * r.toUInt() + 7152u * g.toUInt() + 722u * b.toUInt()) / 10000u
     return Luma(l.toUByte())
 }
+
+public fun Rgb<UByte>.toLumaAlpha(): LumaA<UByte> = LumaA(toLuma().l, 255u)
+
+public fun Rgba<UByte>.toRgb(): Rgb<UByte> = Rgb(r, g, b)
+
+public fun Rgba<UByte>.toRgba(): Rgba<UByte> = this
+
+public fun Rgba<UByte>.toLuma(): Luma<UByte> {
+    val l = (2126u * r.toUInt() + 7152u * g.toUInt() + 722u * b.toUInt()) / 10000u
+    return Luma(l.toUByte())
+}
+
+public fun Rgba<UByte>.toLumaAlpha(): LumaA<UByte> = LumaA(toLuma().l, a)
+
+public fun Luma<UByte>.toRgb(): Rgb<UByte> = Rgb(l, l, l)
+
+public fun Luma<UByte>.toRgba(): Rgba<UByte> = Rgba(l, l, l, 255u)
+
+public fun Luma<UByte>.toLuma(): Luma<UByte> = this
+
+public fun Luma<UByte>.toLumaAlpha(): LumaA<UByte> = LumaA(l, 255u)
+
+public fun LumaA<UByte>.toRgb(): Rgb<UByte> = Rgb(l, l, l)
+
+public fun LumaA<UByte>.toRgba(): Rgba<UByte> = Rgba(l, l, l, a)
+
+public fun LumaA<UByte>.toLuma(): Luma<UByte> = Luma(l)
+
+public fun LumaA<UByte>.toLumaAlpha(): LumaA<UByte> = this
