@@ -354,10 +354,336 @@ public class ImageBuffer<P, Container>(
                     arr[idx + 1] = cur.a.toByte()
                 },
             )
+
+        public fun <P> fromFn(
+            width: UInt,
+            height: UInt,
+            channels: Int,
+            reader: (ByteArray, Int) -> P,
+            writer: (ByteArray, Int, P) -> Unit,
+            blender: (ByteArray, Int, P) -> Unit = writer,
+            f: (UInt, UInt) -> P,
+        ): ImageBuffer<P, ByteArray> {
+            val img = new(width, height, channels, reader, writer, blender)
+            for (y in 0u until height) {
+                for (x in 0u until width) {
+                    img.putPixel(x, y, f(x, y))
+                }
+            }
+            return img
+        }
+
+        public fun createRgb(width: UInt, height: UInt, f: (UInt, UInt) -> Rgb<UByte>): RgbImage =
+            fromFn(
+                width,
+                height,
+                3,
+                { arr, idx -> Rgb(arr[idx].toUByte(), arr[idx + 1].toUByte(), arr[idx + 2].toUByte()) },
+                { arr, idx, p ->
+                    arr[idx] = p.r.toByte()
+                    arr[idx + 1] = p.g.toByte()
+                    arr[idx + 2] = p.b.toByte()
+                },
+                f = f,
+            )
+
+        public fun createRgba(width: UInt, height: UInt, f: (UInt, UInt) -> Rgba<UByte>): RgbaImage =
+            fromFn(
+                width,
+                height,
+                4,
+                { arr, idx -> Rgba(arr[idx].toUByte(), arr[idx + 1].toUByte(), arr[idx + 2].toUByte(), arr[idx + 3].toUByte()) },
+                { arr, idx, p ->
+                    arr[idx] = p.r.toByte()
+                    arr[idx + 1] = p.g.toByte()
+                    arr[idx + 2] = p.b.toByte()
+                    arr[idx + 3] = p.a.toByte()
+                },
+                { arr, idx, p ->
+                    val cur = Rgba(arr[idx].toUByte(), arr[idx + 1].toUByte(), arr[idx + 2].toUByte(), arr[idx + 3].toUByte())
+                    cur.blendUByte(p)
+                    arr[idx] = cur.r.toByte()
+                    arr[idx + 1] = cur.g.toByte()
+                    arr[idx + 2] = cur.b.toByte()
+                    arr[idx + 3] = cur.a.toByte()
+                },
+                f = f,
+            )
+
+        public fun createGray(width: UInt, height: UInt, f: (UInt, UInt) -> Luma<UByte>): GrayImage =
+            fromFn(
+                width,
+                height,
+                1,
+                { arr, idx -> Luma(arr[idx].toUByte()) },
+                { arr, idx, p -> arr[idx] = p.l.toByte() },
+                f = f,
+            )
+
+        public fun createGrayAlpha(width: UInt, height: UInt, f: (UInt, UInt) -> LumaA<UByte>): GrayAlphaImage =
+            fromFn(
+                width,
+                height,
+                2,
+                { arr, idx -> LumaA(arr[idx].toUByte(), arr[idx + 1].toUByte()) },
+                { arr, idx, p ->
+                    arr[idx] = p.l.toByte()
+                    arr[idx + 1] = p.a.toByte()
+                },
+                { arr, idx, p ->
+                    val cur = LumaA(arr[idx].toUByte(), arr[idx + 1].toUByte())
+                    cur.blendUByte(p)
+                    arr[idx] = cur.l.toByte()
+                    arr[idx + 1] = cur.a.toByte()
+                },
+                f = f,
+            )
+
+        public fun createRgb16(width: UInt, height: UInt): Rgb16Image =
+            new(
+                width,
+                height,
+                6,
+                { arr, idx -> Rgb(readU16LE(arr, idx), readU16LE(arr, idx + 2), readU16LE(arr, idx + 4)) },
+                { arr, idx, p ->
+                    writeU16LE(arr, idx, p.r)
+                    writeU16LE(arr, idx + 2, p.g)
+                    writeU16LE(arr, idx + 4, p.b)
+                },
+            )
+
+        public fun createRgb16(width: UInt, height: UInt, buf: ByteArray): Rgb16Image? =
+            fromRaw(
+                width,
+                height,
+                buf,
+                6,
+                { arr, idx -> Rgb(readU16LE(arr, idx), readU16LE(arr, idx + 2), readU16LE(arr, idx + 4)) },
+                { arr, idx, p ->
+                    writeU16LE(arr, idx, p.r)
+                    writeU16LE(arr, idx + 2, p.g)
+                    writeU16LE(arr, idx + 4, p.b)
+                },
+            )
+
+        public fun createRgba16(width: UInt, height: UInt): Rgba16Image =
+            new(
+                width,
+                height,
+                8,
+                { arr, idx -> Rgba(readU16LE(arr, idx), readU16LE(arr, idx + 2), readU16LE(arr, idx + 4), readU16LE(arr, idx + 6)) },
+                { arr, idx, p ->
+                    writeU16LE(arr, idx, p.r)
+                    writeU16LE(arr, idx + 2, p.g)
+                    writeU16LE(arr, idx + 4, p.b)
+                    writeU16LE(arr, idx + 6, p.a)
+                },
+            )
+
+        public fun createRgba16(width: UInt, height: UInt, buf: ByteArray): Rgba16Image? =
+            fromRaw(
+                width,
+                height,
+                buf,
+                8,
+                { arr, idx -> Rgba(readU16LE(arr, idx), readU16LE(arr, idx + 2), readU16LE(arr, idx + 4), readU16LE(arr, idx + 6)) },
+                { arr, idx, p ->
+                    writeU16LE(arr, idx, p.r)
+                    writeU16LE(arr, idx + 2, p.g)
+                    writeU16LE(arr, idx + 4, p.b)
+                    writeU16LE(arr, idx + 6, p.a)
+                },
+            )
+
+        public fun createGray16(width: UInt, height: UInt): Gray16Image =
+            new(
+                width,
+                height,
+                2,
+                { arr, idx -> Luma(readU16LE(arr, idx)) },
+                { arr, idx, p -> writeU16LE(arr, idx, p.l) },
+            )
+
+        public fun createGray16(width: UInt, height: UInt, buf: ByteArray): Gray16Image? =
+            fromRaw(
+                width,
+                height,
+                buf,
+                2,
+                { arr, idx -> Luma(readU16LE(arr, idx)) },
+                { arr, idx, p -> writeU16LE(arr, idx, p.l) },
+            )
+
+        public fun createGrayAlpha16(width: UInt, height: UInt): GrayAlpha16Image =
+            new(
+                width,
+                height,
+                4,
+                { arr, idx -> LumaA(readU16LE(arr, idx), readU16LE(arr, idx + 2)) },
+                { arr, idx, p ->
+                    writeU16LE(arr, idx, p.l)
+                    writeU16LE(arr, idx + 2, p.a)
+                },
+            )
+
+        public fun createGrayAlpha16(width: UInt, height: UInt, buf: ByteArray): GrayAlpha16Image? =
+            fromRaw(
+                width,
+                height,
+                buf,
+                4,
+                { arr, idx -> LumaA(readU16LE(arr, idx), readU16LE(arr, idx + 2)) },
+                { arr, idx, p ->
+                    writeU16LE(arr, idx, p.l)
+                    writeU16LE(arr, idx + 2, p.a)
+                },
+            )
+
+        public fun createRgb32F(width: UInt, height: UInt): Rgb32FImage =
+            new(
+                width,
+                height,
+                12,
+                { arr, idx -> Rgb(readF32LE(arr, idx), readF32LE(arr, idx + 4), readF32LE(arr, idx + 8)) },
+                { arr, idx, p ->
+                    writeF32LE(arr, idx, p.r)
+                    writeF32LE(arr, idx + 4, p.g)
+                    writeF32LE(arr, idx + 8, p.b)
+                },
+            )
+
+        public fun createRgb32F(width: UInt, height: UInt, buf: ByteArray): Rgb32FImage? =
+            fromRaw(
+                width,
+                height,
+                buf,
+                12,
+                { arr, idx -> Rgb(readF32LE(arr, idx), readF32LE(arr, idx + 4), readF32LE(arr, idx + 8)) },
+                { arr, idx, p ->
+                    writeF32LE(arr, idx, p.r)
+                    writeF32LE(arr, idx + 4, p.g)
+                    writeF32LE(arr, idx + 8, p.b)
+                },
+            )
+
+        public fun createRgba32F(width: UInt, height: UInt): Rgba32FImage =
+            new(
+                width,
+                height,
+                16,
+                { arr, idx -> Rgba(readF32LE(arr, idx), readF32LE(arr, idx + 4), readF32LE(arr, idx + 8), readF32LE(arr, idx + 12)) },
+                { arr, idx, p ->
+                    writeF32LE(arr, idx, p.r)
+                    writeF32LE(arr, idx + 4, p.g)
+                    writeF32LE(arr, idx + 8, p.b)
+                    writeF32LE(arr, idx + 12, p.a)
+                },
+            )
+
+        public fun createRgba32F(width: UInt, height: UInt, buf: ByteArray): Rgba32FImage? =
+            fromRaw(
+                width,
+                height,
+                buf,
+                16,
+                { arr, idx -> Rgba(readF32LE(arr, idx), readF32LE(arr, idx + 4), readF32LE(arr, idx + 8), readF32LE(arr, idx + 12)) },
+                { arr, idx, p ->
+                    writeF32LE(arr, idx, p.r)
+                    writeF32LE(arr, idx + 4, p.g)
+                    writeF32LE(arr, idx + 8, p.b)
+                    writeF32LE(arr, idx + 12, p.a)
+                },
+            )
     }
+
+    public fun copy(): ImageBuffer<P, ByteArray> = clone()
+}
+
+public fun createRgb(width: UInt, height: UInt): RgbImage = ImageBuffer.createRgb(width, height)
+
+public fun createRgb(width: UInt, height: UInt, buf: ByteArray): RgbImage =
+    ImageBuffer.createRgb(width, height, buf) ?: ImageBuffer.createRgb(width, height)
+
+public fun createRgba(width: UInt, height: UInt): RgbaImage = ImageBuffer.createRgba(width, height)
+
+public fun createRgba(width: UInt, height: UInt, buf: ByteArray): RgbaImage =
+    ImageBuffer.createRgba(width, height, buf) ?: ImageBuffer.createRgba(width, height)
+
+public fun createGray(width: UInt, height: UInt): GrayImage = ImageBuffer.createGray(width, height)
+
+public fun createGray(width: UInt, height: UInt, buf: ByteArray): GrayImage =
+    ImageBuffer.createGray(width, height, buf) ?: ImageBuffer.createGray(width, height)
+
+public fun createGrayAlpha(width: UInt, height: UInt): GrayAlphaImage = ImageBuffer.createGrayAlpha(width, height)
+
+public fun createGrayAlpha(width: UInt, height: UInt, buf: ByteArray): GrayAlphaImage =
+    ImageBuffer.createGrayAlpha(width, height, buf) ?: ImageBuffer.createGrayAlpha(width, height)
+
+public fun createRgb16(width: UInt, height: UInt): Rgb16Image = ImageBuffer.createRgb16(width, height)
+
+public fun createRgb16(width: UInt, height: UInt, buf: ByteArray): Rgb16Image =
+    ImageBuffer.createRgb16(width, height, buf) ?: ImageBuffer.createRgb16(width, height)
+
+public fun createRgba16(width: UInt, height: UInt): Rgba16Image = ImageBuffer.createRgba16(width, height)
+
+public fun createRgba16(width: UInt, height: UInt, buf: ByteArray): Rgba16Image =
+    ImageBuffer.createRgba16(width, height, buf) ?: ImageBuffer.createRgba16(width, height)
+
+public fun createGray16(width: UInt, height: UInt): Gray16Image = ImageBuffer.createGray16(width, height)
+
+public fun createGray16(width: UInt, height: UInt, buf: ByteArray): Gray16Image =
+    ImageBuffer.createGray16(width, height, buf) ?: ImageBuffer.createGray16(width, height)
+
+public fun createGrayAlpha16(width: UInt, height: UInt): GrayAlpha16Image = ImageBuffer.createGrayAlpha16(width, height)
+
+public fun createGrayAlpha16(width: UInt, height: UInt, buf: ByteArray): GrayAlpha16Image =
+    ImageBuffer.createGrayAlpha16(width, height, buf) ?: ImageBuffer.createGrayAlpha16(width, height)
+
+public fun createRgb32F(width: UInt, height: UInt): Rgb32FImage = ImageBuffer.createRgb32F(width, height)
+
+public fun createRgb32F(width: UInt, height: UInt, buf: ByteArray): Rgb32FImage =
+    ImageBuffer.createRgb32F(width, height, buf) ?: ImageBuffer.createRgb32F(width, height)
+
+public fun createRgba32F(width: UInt, height: UInt): Rgba32FImage = ImageBuffer.createRgba32F(width, height)
+
+public fun createRgba32F(width: UInt, height: UInt, buf: ByteArray): Rgba32FImage =
+    ImageBuffer.createRgba32F(width, height, buf) ?: ImageBuffer.createRgba32F(width, height)
+
+private fun readU16LE(arr: ByteArray, idx: Int): UShort =
+    ((arr[idx].toInt() and 0xFF) or ((arr[idx + 1].toInt() and 0xFF) shl 8)).toUShort()
+
+private fun writeU16LE(arr: ByteArray, idx: Int, v: UShort) {
+    val vInt = v.toInt()
+    arr[idx] = (vInt and 0xFF).toByte()
+    arr[idx + 1] = ((vInt ushr 8) and 0xFF).toByte()
+}
+
+private fun readF32LE(arr: ByteArray, idx: Int): Float {
+    val bits =
+        (arr[idx].toInt() and 0xFF) or
+            ((arr[idx + 1].toInt() and 0xFF) shl 8) or
+            ((arr[idx + 2].toInt() and 0xFF) shl 16) or
+            ((arr[idx + 3].toInt() and 0xFF) shl 24)
+    return Float.fromBits(bits)
+}
+
+private fun writeF32LE(arr: ByteArray, idx: Int, v: Float) {
+    val bits = v.toRawBits()
+    arr[idx] = (bits and 0xFF).toByte()
+    arr[idx + 1] = ((bits ushr 8) and 0xFF).toByte()
+    arr[idx + 2] = ((bits ushr 16) and 0xFF).toByte()
+    arr[idx + 3] = ((bits ushr 24) and 0xFF).toByte()
 }
 
 public typealias RgbImage = ImageBuffer<Rgb<UByte>, ByteArray>
 public typealias RgbaImage = ImageBuffer<Rgba<UByte>, ByteArray>
 public typealias GrayImage = ImageBuffer<Luma<UByte>, ByteArray>
 public typealias GrayAlphaImage = ImageBuffer<LumaA<UByte>, ByteArray>
+
+public typealias Rgb16Image = ImageBuffer<Rgb<UShort>, ByteArray>
+public typealias Rgba16Image = ImageBuffer<Rgba<UShort>, ByteArray>
+public typealias Gray16Image = ImageBuffer<Luma<UShort>, ByteArray>
+public typealias GrayAlpha16Image = ImageBuffer<LumaA<UShort>, ByteArray>
+
+public typealias Rgb32FImage = ImageBuffer<Rgb<Float>, ByteArray>
+public typealias Rgba32FImage = ImageBuffer<Rgba<Float>, ByteArray>

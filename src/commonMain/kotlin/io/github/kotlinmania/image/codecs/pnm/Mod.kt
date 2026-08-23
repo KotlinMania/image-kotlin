@@ -22,6 +22,10 @@ package io.github.kotlinmania.image.codecs.pnm
  *       -> AutoBreak.kt (+ AutoBreakTest.kt under commonTest)
  *   - header::* (PNM headers, subtypes, sample encodings, tuple types)
  *       -> Header.kt (+ HeaderTest.kt under commonTest)
+ *   - decoder::* (PNM decoder for PBM, PGM, PPM, PAM)
+ *       -> Decoder.kt (+ DecoderTests.kt under commonTest)
+ *   - encoder::* (PNM encoder for PBM, PGM, PPM, PAM)
+ *       -> Encoder.kt (+ EncoderTests.kt under commonTest)
  *
  * Callers migrated:
  */
