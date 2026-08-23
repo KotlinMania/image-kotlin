@@ -1,4 +1,4 @@
-// port-lint: source src/utils/mod.rs (#[cfg(test)] mod test::gray_to_luma8_skip)
+// port-lint: tests utils/mod.rs
 package io.github.kotlinmania.image.utils
 
 import kotlin.test.Test

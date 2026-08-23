@@ -1,4 +1,4 @@
-// port-lint: source src/metadata.rs
+// port-lint: source metadata.rs
 package io.github.kotlinmania.image.metadata
 
 /*
@@ -7,7 +7,7 @@ package io.github.kotlinmania.image.metadata
  * Translation ledger for `src/metadata.rs`. Per the workspace mod.rs rule,
  * an upstream file that mixes submodule declarations with concrete items may
  * be parceled into focused Kotlin files; this file is the tracking ledger and
- * each parceled file carries `// port-lint: source src/metadata.rs`.
+ * each parceled file carries `// port-lint: source metadata.rs`.
  *
  * Upstream submodule declarations:
  *

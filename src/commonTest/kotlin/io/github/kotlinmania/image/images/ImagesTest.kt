@@ -1,4 +1,4 @@
-// port-lint: source images/flat.rs
+// port-lint: tests images/flat.rs
 package io.github.kotlinmania.image.images
 
 import kotlin.test.Test

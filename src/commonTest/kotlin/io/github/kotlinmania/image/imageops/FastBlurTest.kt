@@ -1,4 +1,4 @@
-// port-lint: source imageops/fast_blur.rs
+// port-lint: tests imageops/fast_blur.rs
 package io.github.kotlinmania.image.imageops
 
 import kotlin.test.Test
