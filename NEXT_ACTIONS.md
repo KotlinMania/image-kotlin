@@ -6,14 +6,10 @@ Based on AST analysis, here are the concrete next steps.
 
 - **Files Present:** 52/71 (73.2%)
 - **Function parity:** 478/1383 matched (target 827) — 34.6%
-- **Class/type parity:** 105/279 matched (targCodebase: src/commonMain/kotlin (kotlin)
-  Files: 88
-  Total imports: 414
-  Most depended: io.IoWrite (9 dependents)
-
-Comparing codebases...
-Computing AST similarities...
-*Average documentation cosine:** 0.52 (doc text across 40 matched files)
+- **Class/type parity:** 105/279 matched (target 270) — 37.6%
+- **Combined symbol parity:** 583/1662 matched (target 1097) — 35.1%
+- **Average inline-code cosine:** 0.30 (function body across 40 matched files)
+- **Average documentation cosine:** 0.52 (doc text across 40 matched files)
 - **Cheat-zeroed Files:** 17
 - **Critical Issues:** 48 files with <0.60 function similarity
 
