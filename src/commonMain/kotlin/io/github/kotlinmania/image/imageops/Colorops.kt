@@ -62,6 +62,7 @@ public fun contrast(
     channels: Int,
     contrast: Float,
 ): ByteArray {
+    require(width >= 0 && height >= 0)
     val out = image.copyOf()
     contrastInPlace(out, channels, contrast)
     return out
@@ -97,6 +98,7 @@ public fun brighten(
     channels: Int,
     value: Int,
 ): ByteArray {
+    require(width >= 0 && height >= 0)
     val out = image.copyOf()
     brightenInPlace(out, channels, value)
     return out

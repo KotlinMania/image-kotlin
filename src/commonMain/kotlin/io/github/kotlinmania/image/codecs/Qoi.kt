@@ -18,10 +18,10 @@ import io.github.kotlinmania.image.io.IoWrite
 import io.github.kotlinmania.image.io.readExact
 import io.github.kotlinmania.image.io.writeAll
 
-private const val QOI_MAGIC_0 = 0x71.toByte() // 'q'
-private const val QOI_MAGIC_1 = 0x6F.toByte() // 'o'
-private const val QOI_MAGIC_2 = 0x69.toByte() // 'i'
-private const val QOI_MAGIC_3 = 0x66.toByte() // 'f'
+private const val QOI_MAGIC_0 = 0x71.toByte()
+private const val QOI_MAGIC_1 = 0x6F.toByte()
+private const val QOI_MAGIC_2 = 0x69.toByte()
+private const val QOI_MAGIC_3 = 0x66.toByte()
 
 private const val QOI_OP_INDEX = 0x00
 private const val QOI_OP_DIFF = 0x40
@@ -30,6 +30,12 @@ private const val QOI_OP_RUN = 0xC0
 private const val QOI_OP_RGB = 0xFE
 private const val QOI_OP_RGBA = 0xFF
 private const val QOI_MASK_2 = 0xC0
+
+internal fun decodingError(error: Throwable): ImageError =
+    ImageError.Decoding(DecodingError(ImageFormatHint.Exact(ImageFormat.Qoi), error))
+
+internal fun encodingError(error: Throwable): ImageError =
+    ImageError.Encoding(io.github.kotlinmania.image.EncodingError(ImageFormatHint.Exact(ImageFormat.Qoi), error))
 
 private fun qoiColorHash(r: Int, g: Int, b: Int, a: Int): Int =
     (r * 3 + g * 5 + b * 7 + a * 11) % 64
@@ -52,12 +58,7 @@ public class QoiDecoder internal constructor(
         try {
             reader.readExact(header)
         } catch (e: Exception) {
-            throw ImageError.Decoding(
-                DecodingError(
-                    ImageFormatHint.Exact(ImageFormat.Qoi),
-                    "Failed to read QOI header: ${e.message}",
-                ),
-            )
+            throw decodingError(e)
         }
 
         if (header[0] != QOI_MAGIC_0 ||
@@ -189,15 +190,27 @@ public class QoiDecoder internal constructor(
             }
         }
     }
+
+    public fun readImageBoxed(buf: ByteArray) {
+        readImage(buf)
+    }
+
+    public companion object {
+        public fun new(reader: IoRead): QoiDecoder = QoiDecoder(reader)
+    }
 }
 
 /**
  * QOI image encoder.
  */
-public class QoiEncoder internal constructor(
+public class QoiEncoder(
     private val writer: IoWrite,
 ) : ImageEncoder {
-    internal constructor(writeBuffer: BufferIoWrite) : this(writeBuffer as IoWrite)
+    public constructor(writeBuffer: BufferIoWrite) : this(writeBuffer as IoWrite)
+
+    public companion object {
+        public fun new(writer: IoWrite): QoiEncoder = QoiEncoder(writer)
+    }
 
     /**
      * Encodes the image and writes to writer.

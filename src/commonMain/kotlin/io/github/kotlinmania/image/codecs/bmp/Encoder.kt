@@ -20,6 +20,15 @@ private const val BITMAPINFOHEADER_SIZE: UInt = 40u
 private const val BITMAPV4HEADER_SIZE: UInt = 108u
 
 /**
+ * An RGB palette color entry.
+ */
+public data class PaletteColor(
+    public val r: UByte,
+    public val g: UByte,
+    public val b: UByte,
+)
+
+/**
  * The representation of a BMP encoder.
  */
 public class BmpEncoder internal constructor(
@@ -47,7 +56,7 @@ public class BmpEncoder internal constructor(
         width: UInt,
         height: UInt,
         colorType: ExtendedColorType,
-        palette: List<Triple<UByte, UByte, UByte>>?,
+        palette: List<PaletteColor>?,
     ) {
         if (palette != null && colorType != ExtendedColorType.L8 && colorType != ExtendedColorType.La8) {
             throw ImageError.Parameter(
@@ -204,11 +213,11 @@ public class BmpEncoder internal constructor(
         height: UInt,
         rowPadding: UInt,
         bytesPerPixel: UInt,
-        palette: List<Triple<UByte, UByte, UByte>>?,
+        palette: List<PaletteColor>?,
     ) {
         if (palette != null) {
             for (item in palette) {
-                writer.writeAll(byteArrayOf(item.third.toByte(), item.second.toByte(), item.first.toByte(), 0))
+                writer.writeAll(byteArrayOf(item.b.toByte(), item.g.toByte(), item.r.toByte(), 0))
             }
         } else {
             for (v in 0..255) {
@@ -230,7 +239,7 @@ public class BmpEncoder internal constructor(
             } else {
                 for (col in 0 until w) {
                     val px = rowStart + col * xStride
-                    writer.writeU8(image[px].toInt() and 0xFF)
+                    writer.writeAll(byteArrayOf(image[px]))
                 }
             }
             if (pad.isNotEmpty()) {
@@ -257,7 +266,7 @@ private data class WrittenPixelInfo(
 
 private fun writtenPixelInfo(
     c: ExtendedColorType,
-    palette: List<Triple<UByte, UByte, UByte>>?,
+    palette: List<PaletteColor>?,
 ): WrittenPixelInfo =
     when (c) {
         ExtendedColorType.Rgb8 -> WrittenPixelInfo(BITMAPINFOHEADER_SIZE, 3u, 0u)
