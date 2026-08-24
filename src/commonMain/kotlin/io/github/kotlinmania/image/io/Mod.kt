@@ -1,49 +1,40 @@
 // port-lint: source io.rs
 package io.github.kotlinmania.image.io
 
-/*
- * Input and output of images.
- *
- * Translation ledger for `src/io.rs`. Per the workspace mod.rs rule, an
- * upstream file that mixes submodule declarations with concrete items may
- * be parceled into focused Kotlin files; this file is the tracking ledger
- * and each parceled file carries its own `// port-lint: source <upstream>`
- * header.
- *
- * Upstream submodule declarations:
- *
- *   pub(crate) mod decoder;
- *   pub(crate) mod encoder;
- *   pub(crate) mod format;
- *   pub(crate) mod free_functions;
- *   pub(crate) mod image_reader_type;
- *   pub(crate) mod limits;
- *
- * Per the workspace re-export rule, the deprecated re-exports
- *
- *   pub type Reader<R> = ImageReader<R>;
- *   pub type Limits = limits::Limits;
- *   pub type LimitSupport = limits::LimitSupport;
- *
- * and
- *
- *   pub(crate) use self::image_reader_type::ImageReader;
- *
- * are not bridged here via `typealias`. Callers reference the per-submodule
- * packages directly. Both are marked `#[deprecated]` upstream and are not
- * part of the long-term Kotlin surface.
- *
- * The crate-internal `ReadExt` trait and `seek_relative` helper depend on
- * `std::io::{Read, Seek}` and arrive when the IO layer lands.
- *
- * Items parceled out of `src/io.rs` (and the directory):
- *   - `ImageFormat` enum -> Format.kt
- *   - `Limits` + `LimitSupport` -> Limits.kt
- *   - `ImageDecoder` + `ImageDecoderRect` -> Decoder.kt
- *   - `ImageEncoder` -> Encoder.kt
- *   - `guessFormat` + `loadRect` + `encoderForFormat` -> FreeFunctions.kt
- *   - `IoRead` + `BufferIoRead` -> IoRead.kt
- *   - `IoWrite` + `BufferIoWrite` -> IoWrite.kt
+/**
+ * Deprecated re-export of [ImageReader] as [Reader].
  */
+@Deprecated(
+    message = "this type has been moved and renamed to ImageReader",
+    replaceWith = ReplaceWith("ImageReader", "io.github.kotlinmania.image.io.ImageReader"),
+)
+public typealias Reader = ImageReader
 
-private const val MODULE_LEDGER = true
+/**
+ * Interface providing extension functions for byte-oriented reading.
+ */
+internal interface ReadExt {
+    /**
+     * Reads exactly [len] bytes into the provided byte list.
+     */
+    fun readExactVec(vec: MutableList<Byte>, len: Int)
+}
+
+/**
+ * Reads exactly [len] bytes from this [IoRead] into [vec].
+ */
+internal fun IoRead.readExactVec(vec: MutableList<Byte>, len: Int) {
+    val initialLen = vec.size
+    val buf = ByteArray(len)
+    try {
+        readExact(buf)
+        for (i in 0 until len) {
+            vec.add(buf[i])
+        }
+    } catch (e: Exception) {
+        while (vec.size > initialLen) {
+            vec.removeAt(vec.size - 1)
+        }
+        throw e
+    }
+}

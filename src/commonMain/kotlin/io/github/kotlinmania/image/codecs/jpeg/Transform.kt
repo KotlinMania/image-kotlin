@@ -10,7 +10,7 @@ It comes with the following conditions of distribution and use:
     In plain English:
 
     1. We don't promise that this software works.  (But if you find any bugs,
-        please let us know!)
+        please inform us!)
     2. You can use this software for whatever you want.  You don't have to pay us.
     3. You may not pretend that you wrote this software.  If you use it in a
        program, you must acknowledge somewhere in your documentation that

@@ -49,4 +49,19 @@ class QoiTest {
         decoder.readImage(decodedData)
         assertTrue(originalData.contentEquals(decodedData))
     }
+
+    @Test
+    fun decodeTestImage() {
+        val width = 5u
+        val height = 5u
+        val originalData = ByteArray(25 * 4) { (it % 256).toByte() }
+        val sink = BufferIoWrite()
+        val encoder = QoiEncoder(sink)
+        encoder.encode(originalData, width, height, 4)
+        val encodedBytes = sink.toByteArray()
+
+        val decoder = QoiDecoder(encodedBytes)
+        assertEquals(Pair(width, height), decoder.dimensions())
+        assertEquals(ColorType.Rgba8, decoder.colorType())
+    }
 }

@@ -53,7 +53,7 @@ internal enum class TgaOrientation {
 /**
  * The representation of a TGA decoder.
  */
-public class TgaDecoder internal constructor(
+public class TgaDecoder(
     private val reader: IoRead,
 ) : ImageDecoder {
     private val width: Int
@@ -335,7 +335,10 @@ public class TgaDecoder internal constructor(
         }
 
         reverseEncodingInOutput(buf)
+        fixupOrientation(buf, orientation)
+    }
 
+    private fun fixupOrientation(buf: ByteArray, orientation: TgaOrientation) {
         when (orientation) {
             TgaOrientation.TopLeft -> Unit
             TgaOrientation.TopRight -> flipHorizontal(buf)
@@ -345,5 +348,15 @@ public class TgaDecoder internal constructor(
                 flipVertical(buf)
             }
         }
+    }
+
+    public fun readImageBoxed(buf: ByteArray) {
+        readImage(buf)
+    }
+
+    public companion object {
+        public fun new(reader: IoRead): TgaDecoder = TgaDecoder(reader)
+
+        public fun new(bytes: ByteArray): TgaDecoder = TgaDecoder(bytes)
     }
 }

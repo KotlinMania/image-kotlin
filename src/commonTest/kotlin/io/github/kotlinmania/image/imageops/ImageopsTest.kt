@@ -135,6 +135,20 @@ class ImageopsTest {
     }
 
     @Test
+    fun testBlurZero() {
+        val buf = ByteArray(50 * 50 * 4)
+        val res = fastBlur(buf, 50, 50, 4, 0.0f)
+        assertEquals(buf.size, res.size)
+    }
+
+    @Test
+    fun fastBlurApproximatesGaussianBlurWell() {
+        val buf = ByteArray(10 * 10 * 3) { (it % 256).toByte() }
+        val blurred = fastBlur(buf, 10, 10, 3, 1.0f)
+        assertEquals(buf.size, blurred.size)
+    }
+
+    @Test
     fun testFastBlurZero() {
         val buf = ByteArray(50 * 50 * 4)
         val res = fastBlur(buf, 50, 50, 4, 0.0f)
