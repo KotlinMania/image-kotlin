@@ -74,7 +74,6 @@ public class DxtDecoder internal constructor(
     private val variant: DxtVariant,
     private var row: UInt = 0u,
 ) : ImageDecoder {
-
     public constructor(
         bytes: ByteArray,
         width: UInt,
@@ -82,9 +81,14 @@ public class DxtDecoder internal constructor(
         variant: DxtVariant,
     ) : this(
         inner = BufferIoRead(bytes),
-        widthBlocks = if (width % 4u == 0u && height % 4u == 0u) width / 4u else throw ImageError.Parameter(
-            ParameterError(ParameterErrorKind.DimensionMismatch),
-        ),
+        widthBlocks =
+            if (width % 4u == 0u && height % 4u == 0u) {
+                width / 4u
+            } else {
+                throw ImageError.Parameter(
+                    ParameterError(ParameterErrorKind.DimensionMismatch),
+                )
+            },
         heightBlocks = height / 4u,
         variant = variant,
         row = 0u,

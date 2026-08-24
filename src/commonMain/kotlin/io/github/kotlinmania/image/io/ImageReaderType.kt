@@ -9,6 +9,7 @@ import io.github.kotlinmania.image.codecs.DdsDecoder
 import io.github.kotlinmania.image.codecs.FarbfeldDecoder
 import io.github.kotlinmania.image.codecs.QoiDecoder
 import io.github.kotlinmania.image.codecs.bmp.BmpDecoder
+import io.github.kotlinmania.image.codecs.hdr.HdrDecoder
 import io.github.kotlinmania.image.codecs.pnm.PnmDecoder
 import io.github.kotlinmania.image.codecs.tga.TgaDecoder
 
@@ -61,6 +62,7 @@ public class ImageReader(
                 ImageFormat.Bmp -> BmpDecoder(data)
                 ImageFormat.Pnm -> PnmDecoder(data)
                 ImageFormat.Dds -> DdsDecoder(data)
+                ImageFormat.Hdr -> HdrDecoder.new(BufferIoRead(data))
                 else -> throw ImageError.Unsupported(
                     UnsupportedError(
                         ImageFormatHint.Exact(fmt),

@@ -81,12 +81,25 @@ class PnmModTest {
 
     @Test
     fun roundtripGray() {
-        val buf = byteArrayOf(
-            0, 0, 0, 255.toByte(),
-            255.toByte(), 255.toByte(), 255.toByte(), 255.toByte(),
-            255.toByte(), 0, 255.toByte(), 0,
-            255.toByte(), 0, 0, 0,
-        )
+        val buf =
+            byteArrayOf(
+                0,
+                0,
+                0,
+                255.toByte(),
+                255.toByte(),
+                255.toByte(),
+                255.toByte(),
+                255.toByte(),
+                255.toByte(),
+                0,
+                255.toByte(),
+                0,
+                255.toByte(),
+                0,
+                0,
+                0,
+            )
 
         executeRoundtripDefault(buf, 4u, 4u, ExtendedColorType.L8)
         executeRoundtripWithSubtype(buf, 4u, 4u, ExtendedColorType.L8, PnmSubtype.ArbitraryMap)
@@ -108,17 +121,36 @@ class PnmModTest {
 
     @Test
     fun roundtripRgb() {
-        val buf = byteArrayOf(
-            0, 0, 0,
-            0, 0, 255.toByte(),
-            0, 255.toByte(), 0,
-            0, 255.toByte(), 255.toByte(),
-            255.toByte(), 0, 0,
-            255.toByte(), 0, 255.toByte(),
-            255.toByte(), 255.toByte(), 0,
-            255.toByte(), 255.toByte(), 255.toByte(),
-            255.toByte(), 255.toByte(), 255.toByte(),
-        )
+        val buf =
+            byteArrayOf(
+                0,
+                0,
+                0,
+                0,
+                0,
+                255.toByte(),
+                0,
+                255.toByte(),
+                0,
+                0,
+                255.toByte(),
+                255.toByte(),
+                255.toByte(),
+                0,
+                0,
+                255.toByte(),
+                0,
+                255.toByte(),
+                255.toByte(),
+                255.toByte(),
+                0,
+                255.toByte(),
+                255.toByte(),
+                255.toByte(),
+                255.toByte(),
+                255.toByte(),
+                255.toByte(),
+            )
         executeRoundtripDefault(buf, 3u, 3u, ExtendedColorType.Rgb8)
         executeRoundtripWithSubtype(
             buf,

@@ -17,6 +17,8 @@ import io.github.kotlinmania.image.codecs.QoiDecoder
 import io.github.kotlinmania.image.codecs.QoiEncoder
 import io.github.kotlinmania.image.codecs.bmp.BmpDecoder
 import io.github.kotlinmania.image.codecs.bmp.BmpEncoder
+import io.github.kotlinmania.image.codecs.hdr.HdrDecoder
+import io.github.kotlinmania.image.codecs.hdr.HdrEncoder
 import io.github.kotlinmania.image.codecs.pnm.PnmDecoder
 import io.github.kotlinmania.image.codecs.pnm.PnmEncoder
 import io.github.kotlinmania.image.codecs.tga.TgaDecoder
@@ -107,6 +109,7 @@ internal fun encoderForFormat(format: ImageFormat, writer: IoWrite): ImageEncode
         ImageFormat.Farbfeld -> FarbfeldEncoder(writer)
         ImageFormat.Qoi -> QoiEncoder(writer)
         ImageFormat.Pnm -> PnmEncoder(writer)
+        ImageFormat.Hdr -> HdrEncoder.new(writer)
         else -> throw ImageError.Unsupported(
             UnsupportedError(
                 ImageFormatHint.Exact(format),
@@ -126,6 +129,7 @@ internal fun decoderForFormat(format: ImageFormat, reader: IoRead): ImageDecoder
         ImageFormat.Qoi -> QoiDecoder(reader)
         ImageFormat.Pnm -> PnmDecoder(reader)
         ImageFormat.Dds -> DdsDecoder(reader)
+        ImageFormat.Hdr -> HdrDecoder.new(reader)
         else -> throw ImageError.Unsupported(
             UnsupportedError(
                 ImageFormatHint.Exact(format),
