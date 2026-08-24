@@ -7,6 +7,11 @@ import io.github.kotlinmania.image.io.Limits
 import io.github.kotlinmania.image.metadata.Cicp
 
 /**
+ * Result of an image decoding/encoding process.
+ */
+public typealias ImageResult<T> = Result<T>
+
+/**
  * The generic error type for image operations.
  */
 public sealed class ImageError(
@@ -37,12 +42,18 @@ public sealed class ImageError(
         public val error: Throwable,
     ) : ImageError(error.message, error)
 
+    public fun source(): Throwable? = cause
+
+    public fun fmt(): String = toString()
+
     public companion object {
         public fun fromThrowable(t: Throwable): ImageError =
             when (t) {
                 is ImageError -> t
                 else -> IoError(t)
             }
+
+        public fun from(t: Throwable): ImageError = fromThrowable(t)
     }
 }
 
@@ -54,6 +65,12 @@ public data class UnsupportedError(
     public val kind: UnsupportedErrorKind,
 ) {
     public fun formatHint(): ImageFormatHint = format
+
+    public fun kind(): UnsupportedErrorKind = kind
+
+    public fun source(): Throwable? = null
+
+    public fun fmt(): String = toString()
 
     override fun toString(): String =
         when (kind) {
@@ -112,6 +129,10 @@ public data class DecodingError(
 
     public fun formatHint(): ImageFormatHint = format
 
+    public fun source(): Throwable? = underlying
+
+    public fun fmt(): String = toString()
+
     override fun toString(): String =
         when (underlying) {
             null ->
@@ -123,6 +144,8 @@ public data class DecodingError(
         }
 
     public companion object {
+        public fun new(format: ImageFormatHint, err: Throwable): DecodingError = DecodingError(format, err)
+
         public fun fromFormatHint(format: ImageFormatHint): DecodingError = DecodingError(format, null)
     }
 }
@@ -135,6 +158,10 @@ public data class EncodingError(
 
     public fun formatHint(): ImageFormatHint = format
 
+    public fun source(): Throwable? = underlying
+
+    public fun fmt(): String = toString()
+
     override fun toString(): String =
         when (underlying) {
             null -> "Format error encoding $format"
@@ -142,6 +169,8 @@ public data class EncodingError(
         }
 
     public companion object {
+        public fun new(format: ImageFormatHint, err: Throwable): EncodingError = EncodingError(format, err)
+
         public fun fromFormatHint(format: ImageFormatHint): EncodingError = EncodingError(format, null)
     }
 }
@@ -150,6 +179,12 @@ public data class ParameterError(
     public val kind: ParameterErrorKind,
     public val underlying: Throwable? = null,
 ) {
+    public fun kind(): ParameterErrorKind = kind
+
+    public fun source(): Throwable? = underlying
+
+    public fun fmt(): String = toString()
+
     override fun toString(): String {
         val base =
             when (kind) {
@@ -165,6 +200,8 @@ public data class ParameterError(
 
     public companion object {
         public fun fromKind(kind: ParameterErrorKind): ParameterError = ParameterError(kind, null)
+
+        public fun from(kind: ParameterErrorKind): ParameterError = ParameterError(kind, null)
     }
 }
 
@@ -192,6 +229,12 @@ public sealed interface ParameterErrorKind {
 public data class LimitError(
     public val kind: LimitErrorKind,
 ) {
+    public fun kind(): LimitErrorKind = kind
+
+    public fun source(): Throwable? = null
+
+    public fun fmt(): String = toString()
+
     override fun toString(): String =
         when (kind) {
             LimitErrorKind.InsufficientMemory -> "Memory limit exceeded"
@@ -201,6 +244,8 @@ public data class LimitError(
 
     public companion object {
         public fun fromKind(kind: LimitErrorKind): LimitError = LimitError(kind)
+
+        public fun from(kind: LimitErrorKind): LimitError = LimitError(kind)
     }
 }
 

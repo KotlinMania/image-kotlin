@@ -51,4 +51,13 @@ class ErrorTest {
         val imgErr = err.toImageError()
         assertTrue(imgErr is ImageError.Unsupported)
     }
+
+    private inline fun <reified T : Any> assertSendSync() {
+        assertTrue(T::class.isInstance(ImageError.Parameter(ParameterError.fromKind(ParameterErrorKind.DimensionMismatch))))
+    }
+
+    @Test
+    fun testSendSyncStability() {
+        assertSendSync<ImageError>()
+    }
 }

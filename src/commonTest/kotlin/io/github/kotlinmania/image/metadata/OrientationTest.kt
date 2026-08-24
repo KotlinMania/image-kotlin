@@ -54,6 +54,11 @@ class OrientationTest {
     }
 
     @Test
+    fun testExtractionAndClearing() {
+        removeFromExifChunkExtractsAndClears()
+    }
+
+    @Test
     fun removeFromExifChunkClearsBigEndianValue() {
         val chunk = exifChunkBigEndian(orientation = 6)
         assertEquals(Orientation.Rotate90, Orientation.removeFromExifChunk(chunk))
