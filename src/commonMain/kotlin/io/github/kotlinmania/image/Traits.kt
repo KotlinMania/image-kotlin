@@ -220,4 +220,41 @@ public interface Pixel<Subpixel> {
 
     /** Blend the color of a given pixel into this one, taking into account alpha channels. */
     public fun blend(other: Pixel<Subpixel>)
+
+    /** Apply the function [f] to each channel except the alpha channel. */
+    public fun mapWithoutAlpha(f: (Subpixel) -> Subpixel): Pixel<Subpixel> = mapWithAlpha(f, { it })
+
+    /** Apply the function [f] to each channel except the alpha channel in place. */
+    public fun applyWithoutAlpha(f: (Subpixel) -> Subpixel) {
+        mapWithAlpha(f, { it })
+    }
+}
+
+/**
+ * Pixel color channel layout.
+ */
+public enum class LayoutWithColor(
+    public val channels: Int,
+) {
+    Rgb(3),
+    Rgba(4),
+    Luma(1),
+    LumaAlpha(2),
+    ;
+
+    public companion object {
+        public fun from(color: ColorType): LayoutWithColor =
+            when (color) {
+                ColorType.L8, ColorType.L16 -> Luma
+                ColorType.La8, ColorType.La16 -> LumaAlpha
+                ColorType.Rgb8, ColorType.Rgb16, ColorType.Rgb32F -> Rgb
+                ColorType.Rgba8, ColorType.Rgba16, ColorType.Rgba32F -> Rgba
+            }
+    }
+}
+
+public object PrivateToken
+
+public interface SealedPixelWithColorType {
+    public val layout: LayoutWithColor
 }
