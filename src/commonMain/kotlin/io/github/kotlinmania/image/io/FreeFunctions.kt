@@ -10,6 +10,7 @@ import io.github.kotlinmania.image.ParameterError
 import io.github.kotlinmania.image.ParameterErrorKind
 import io.github.kotlinmania.image.UnsupportedError
 import io.github.kotlinmania.image.UnsupportedErrorKind
+import io.github.kotlinmania.image.codecs.DdsDecoder
 import io.github.kotlinmania.image.codecs.FarbfeldDecoder
 import io.github.kotlinmania.image.codecs.FarbfeldEncoder
 import io.github.kotlinmania.image.codecs.QoiDecoder
@@ -124,6 +125,7 @@ internal fun decoderForFormat(format: ImageFormat, reader: IoRead): ImageDecoder
         ImageFormat.Farbfeld -> FarbfeldDecoder(reader)
         ImageFormat.Qoi -> QoiDecoder(reader)
         ImageFormat.Pnm -> PnmDecoder(reader)
+        ImageFormat.Dds -> DdsDecoder(reader)
         else -> throw ImageError.Unsupported(
             UnsupportedError(
                 ImageFormatHint.Exact(format),

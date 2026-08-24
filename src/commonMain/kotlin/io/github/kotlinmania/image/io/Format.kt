@@ -92,8 +92,8 @@ public enum class ImageFormat {
     /** Returns whether this `ImageFormat` can in principle be decoded by the library. */
     public fun canRead(): Boolean =
         when (this) {
-            Png, Gif, Jpeg, WebP, Tiff, Tga, Bmp, Ico, Hdr, OpenExr, Pnm, Farbfeld, Avif, Qoi -> true
-            Dds, Pcx -> false
+            Png, Gif, Jpeg, WebP, Tiff, Tga, Bmp, Ico, Hdr, OpenExr, Pnm, Farbfeld, Avif, Qoi, Dds -> true
+            Pcx -> false
         }
 
     /** Returns whether this `ImageFormat` can in principle be encoded by the library. */
