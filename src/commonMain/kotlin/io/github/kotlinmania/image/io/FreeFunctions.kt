@@ -19,6 +19,8 @@ import io.github.kotlinmania.image.codecs.bmp.BmpDecoder
 import io.github.kotlinmania.image.codecs.bmp.BmpEncoder
 import io.github.kotlinmania.image.codecs.hdr.HdrDecoder
 import io.github.kotlinmania.image.codecs.hdr.HdrEncoder
+import io.github.kotlinmania.image.codecs.ico.IcoDecoder
+import io.github.kotlinmania.image.codecs.ico.IcoEncoder
 import io.github.kotlinmania.image.codecs.pnm.PnmDecoder
 import io.github.kotlinmania.image.codecs.pnm.PnmEncoder
 import io.github.kotlinmania.image.codecs.tga.TgaDecoder
@@ -105,6 +107,7 @@ public fun guessFormatImpl(buffer: ByteArray): ImageFormat? {
 internal fun encoderForFormat(format: ImageFormat, writer: IoWrite): ImageEncoder =
     when (format) {
         ImageFormat.Bmp -> BmpEncoder(writer)
+        ImageFormat.Ico -> IcoEncoder(writer)
         ImageFormat.Tga -> TgaEncoder(writer)
         ImageFormat.Farbfeld -> FarbfeldEncoder(writer)
         ImageFormat.Qoi -> QoiEncoder(writer)
@@ -124,6 +127,7 @@ internal fun encoderForFormat(format: ImageFormat, writer: IoWrite): ImageEncode
 internal fun decoderForFormat(format: ImageFormat, reader: IoRead): ImageDecoder =
     when (format) {
         ImageFormat.Bmp -> BmpDecoder(reader)
+        ImageFormat.Ico -> IcoDecoder(reader)
         ImageFormat.Tga -> TgaDecoder(reader)
         ImageFormat.Farbfeld -> FarbfeldDecoder(reader)
         ImageFormat.Qoi -> QoiDecoder(reader)
