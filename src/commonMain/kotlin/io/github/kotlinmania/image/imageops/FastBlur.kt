@@ -1,9 +1,29 @@
 // port-lint: source imageops/fast_blur.rs
 package io.github.kotlinmania.image.imageops
 
+import io.github.kotlinmania.image.images.ImageBuffer
 import kotlin.math.floor
 import kotlin.math.round
 import kotlin.math.sqrt
+
+/**
+ * Approximation of Gaussian blur.
+ *
+ * Source: Kovesi, P.: Fast Almost-Gaussian Filtering The Australian Pattern
+ * Recognition Society Conference: DICTA 2010. December 2010. Sydney.
+ */
+public fun <P, Container> fastBlur(
+    inputBuffer: ImageBuffer<P, Container>,
+    sigma: Float,
+): ImageBuffer<P, ByteArray> = inputBuffer.fastBlur(sigma)
+
+/**
+ * Bounds and radius validation helper.
+ */
+public fun testRadiusSize(bound: Int, radius: Int) {
+    val sum = bound.toLong() + radius.toLong()
+    require(sum <= Int.MAX_VALUE.toLong()) { "Radius overflowed maximum possible size" }
+}
 
 /**
  * Calculates box sizes for Gaussian blur approximation.
@@ -28,65 +48,224 @@ public fun boxesForGauss(sigma: Float, n: Int): IntArray {
     return result
 }
 
-private fun ceilToOdd(x: Int): Int = if (x % 2 == 0) x + 1 else x
+/**
+ * Ceil an integer to the nearest odd integer.
+ */
+public fun ceilToOdd(x: Int): Int = if (x % 2 == 0) x + 1 else x
 
-private fun boxBlurHorizontal(
+/**
+ * Rounding saturating multiplication for sample accumulation.
+ */
+public fun roundingSaturatingMul(v: Float, w: Float): Byte {
+    val r = round(v * w)
+    return r.coerceIn(0.0f, 255.0f).toInt().toByte()
+}
+
+/**
+ * Strategy dispatcher for horizontal box blur pass.
+ */
+public fun boxBlurHorizontalPassStrategy(
     src: ByteArray,
+    srcStride: Int,
     dst: ByteArray,
+    dstStride: Int,
+    width: Int,
+    channels: Int,
+    radius: Int,
+) {
+    when (channels) {
+        1, 2, 3, 4 -> boxBlurHorizontalPassImpl(src, srcStride, dst, dstStride, width, channels, radius)
+        else -> throw UnsupportedOperationException("More than 4 channels is not yet implemented")
+    }
+}
+
+/**
+ * Strategy dispatcher for vertical box blur pass.
+ */
+public fun boxBlurVerticalPassStrategy(
+    src: ByteArray,
+    srcStride: Int,
+    dst: ByteArray,
+    dstStride: Int,
     width: Int,
     height: Int,
     channels: Int,
     radius: Int,
 ) {
-    val scale = 1.0f / (radius * 2 + 1).toFloat()
-    for (y in 0 until height) {
-        val rowOffset = y * width * channels
-        for (c in 0 until channels) {
-            var sum = 0f
-            // Initialize sum with clamped border
-            for (i in -radius..radius) {
-                val x = i.coerceIn(0, width - 1)
-                sum += src[rowOffset + x * channels + c].toInt() and 0xFF
-            }
+    when (channels) {
+        1, 2, 3, 4 -> boxBlurVerticalPassImpl(src, srcStride, dst, dstStride, width, height, channels, radius)
+        else -> throw UnsupportedOperationException("More than 4 channels is not yet implemented")
+    }
+}
 
-            for (x in 0 until width) {
-                dst[rowOffset + x * channels + c] = (sum * scale).coerceIn(0f, 255f).toInt().toByte()
-                // Shift window
-                val nextRight = (x + radius + 1).coerceIn(0, width - 1)
-                val prevLeft = (x - radius).coerceIn(0, width - 1)
-                sum += (src[rowOffset + nextRight * channels + c].toInt() and 0xFF) -
-                    (src[rowOffset + prevLeft * channels + c].toInt() and 0xFF)
+/**
+ * Implementation of horizontal box blur with 4-phase sliding window.
+ */
+public fun boxBlurHorizontalPassImpl(
+    src: ByteArray,
+    srcStride: Int,
+    dst: ByteArray,
+    dstStride: Int,
+    width: Int,
+    cn: Int,
+    radius: Int,
+) {
+    require(width > 0) { "Width must be sanitized before this method" }
+    testRadiusSize(width, radius)
+
+    val kernelSize = radius * 2 + 1
+    val edgeCount = (kernelSize / 2 + 1).toFloat()
+    val halfKernel = kernelSize / 2
+    val weight = 1.0f / kernelSize.toFloat()
+    val widthBound = width - 1
+
+    val height = if (srcStride > 0) src.size / srcStride else 0
+
+    for (y in 0 until height) {
+        val srcRowOffset = y * srcStride
+        val dstRowOffset = y * dstStride
+
+        var weight0 = (src[srcRowOffset].toInt() and 0xFF).toFloat() * edgeCount
+        var weight1 = if (cn > 1) (src[srcRowOffset + 1].toInt() and 0xFF).toFloat() * edgeCount else 0f
+        var weight2 = if (cn > 2) (src[srcRowOffset + 2].toInt() and 0xFF).toFloat() * edgeCount else 0f
+        var weight3 = if (cn == 4) (src[srcRowOffset + 3].toInt() and 0xFF).toFloat() * edgeCount else 0f
+
+        for (x in 1..halfKernel) {
+            val px = minOf(x, widthBound) * cn
+            weight0 += (src[srcRowOffset + px].toInt() and 0xFF).toFloat()
+            if (cn > 1) weight1 += (src[srcRowOffset + px + 1].toInt() and 0xFF).toFloat()
+            if (cn > 2) weight2 += (src[srcRowOffset + px + 2].toInt() and 0xFF).toFloat()
+            if (cn == 4) weight3 += (src[srcRowOffset + px + 3].toInt() and 0xFF).toFloat()
+        }
+
+        val leadingLimit = minOf(halfKernel, width)
+        for (x in 0 until leadingLimit) {
+            val next = minOf(x + halfKernel + 1, widthBound) * cn
+            val previous = maxOf(x - halfKernel, 0) * cn
+
+            val dstPos = dstRowOffset + x * cn
+            dst[dstPos] = roundingSaturatingMul(weight0, weight)
+            if (cn > 1) dst[dstPos + 1] = roundingSaturatingMul(weight1, weight)
+            if (cn > 2) dst[dstPos + 2] = roundingSaturatingMul(weight2, weight)
+            if (cn == 4) dst[dstPos + 3] = roundingSaturatingMul(weight3, weight)
+
+            val srcNextPos = srcRowOffset + next
+            val srcPrevPos = srcRowOffset + previous
+
+            weight0 += (src[srcNextPos].toInt() and 0xFF).toFloat()
+            if (cn > 1) weight1 += (src[srcNextPos + 1].toInt() and 0xFF).toFloat()
+            if (cn > 2) weight2 += (src[srcNextPos + 2].toInt() and 0xFF).toFloat()
+            if (cn == 4) weight3 += (src[srcNextPos + 3].toInt() and 0xFF).toFloat()
+
+            weight0 -= (src[srcPrevPos].toInt() and 0xFF).toFloat()
+            if (cn > 1) weight1 -= (src[srcPrevPos + 1].toInt() and 0xFF).toFloat()
+            if (cn > 2) weight2 -= (src[srcPrevPos + 2].toInt() and 0xFF).toFloat()
+            if (cn == 4) weight3 -= (src[srcPrevPos + 3].toInt() and 0xFF).toFloat()
+        }
+
+        val maxXBeforeClamping = (widthBound - (halfKernel + 1)).coerceAtLeast(0)
+        var lastProcessedItem = halfKernel
+
+        val rowLength = srcStride
+        if ((halfKernel * 2 + 1) * cn < rowLength && maxXBeforeClamping * cn < rowLength && maxXBeforeClamping > halfKernel) {
+            for (x in halfKernel until maxXBeforeClamping) {
+                val dstPos = dstRowOffset + x * cn
+                dst[dstPos] = roundingSaturatingMul(weight0, weight)
+                if (cn > 1) dst[dstPos + 1] = roundingSaturatingMul(weight1, weight)
+                if (cn > 2) dst[dstPos + 2] = roundingSaturatingMul(weight2, weight)
+                if (cn == 4) dst[dstPos + 3] = roundingSaturatingMul(weight3, weight)
+
+                val nextPos = srcRowOffset + (x + halfKernel + 1) * cn
+                val prevPos = srcRowOffset + (x - halfKernel) * cn
+
+                weight0 += (src[nextPos].toInt() and 0xFF).toFloat()
+                if (cn > 1) weight1 += (src[nextPos + 1].toInt() and 0xFF).toFloat()
+                if (cn > 2) weight2 += (src[nextPos + 2].toInt() and 0xFF).toFloat()
+                if (cn == 4) weight3 += (src[nextPos + 3].toInt() and 0xFF).toFloat()
+
+                weight0 -= (src[prevPos].toInt() and 0xFF).toFloat()
+                if (cn > 1) weight1 -= (src[prevPos + 1].toInt() and 0xFF).toFloat()
+                if (cn > 2) weight2 -= (src[prevPos + 2].toInt() and 0xFF).toFloat()
+                if (cn == 4) weight3 -= (src[prevPos + 3].toInt() and 0xFF).toFloat()
             }
+            lastProcessedItem = maxXBeforeClamping
+        }
+
+        for (x in lastProcessedItem until width) {
+            val next = minOf(x + halfKernel + 1, widthBound) * cn
+            val previous = maxOf(x - halfKernel, 0) * cn
+
+            val dstPos = dstRowOffset + x * cn
+            dst[dstPos] = roundingSaturatingMul(weight0, weight)
+            if (cn > 1) dst[dstPos + 1] = roundingSaturatingMul(weight1, weight)
+            if (cn > 2) dst[dstPos + 2] = roundingSaturatingMul(weight2, weight)
+            if (cn == 4) dst[dstPos + 3] = roundingSaturatingMul(weight3, weight)
+
+            val srcNextPos = srcRowOffset + next
+            val srcPrevPos = srcRowOffset + previous
+
+            weight0 += (src[srcNextPos].toInt() and 0xFF).toFloat()
+            if (cn > 1) weight1 += (src[srcNextPos + 1].toInt() and 0xFF).toFloat()
+            if (cn > 2) weight2 += (src[srcNextPos + 2].toInt() and 0xFF).toFloat()
+            if (cn == 4) weight3 += (src[srcNextPos + 3].toInt() and 0xFF).toFloat()
+
+            weight0 -= (src[srcPrevPos].toInt() and 0xFF).toFloat()
+            if (cn > 1) weight1 -= (src[srcPrevPos + 1].toInt() and 0xFF).toFloat()
+            if (cn > 2) weight2 -= (src[srcPrevPos + 2].toInt() and 0xFF).toFloat()
+            if (cn == 4) weight3 -= (src[srcPrevPos + 3].toInt() and 0xFF).toFloat()
         }
     }
 }
 
-private fun boxBlurVertical(
+/**
+ * Implementation of vertical box blur with column accumulator.
+ */
+public fun boxBlurVerticalPassImpl(
     src: ByteArray,
+    srcStride: Int,
     dst: ByteArray,
+    dstStride: Int,
     width: Int,
     height: Int,
-    channels: Int,
+    cn: Int,
     radius: Int,
 ) {
-    val scale = 1.0f / (radius * 2 + 1).toFloat()
-    for (x in 0 until width) {
-        for (c in 0 until channels) {
-            var sum = 0f
-            // Initialize sum with clamped border
-            for (i in -radius..radius) {
-                val y = i.coerceIn(0, height - 1)
-                sum += src[y * width * channels + x * channels + c].toInt() and 0xFF
-            }
+    require(width > 0) { "Width must be sanitized before this method" }
+    require(height > 0) { "Height must be sanitized before this method" }
+    testRadiusSize(width, radius)
 
-            for (y in 0 until height) {
-                dst[y * width * channels + x * channels + c] = (sum * scale).coerceIn(0f, 255f).toInt().toByte()
-                // Shift window
-                val nextBottom = (y + radius + 1).coerceIn(0, height - 1)
-                val prevTop = (y - radius).coerceIn(0, height - 1)
-                sum += (src[nextBottom * width * channels + x * channels + c].toInt() and 0xFF) -
-                    (src[prevTop * width * channels + x * channels + c].toInt() and 0xFF)
-            }
+    val kernelSize = radius * 2 + 1
+    val edgeCount = (kernelSize / 2 + 1).toFloat()
+    val halfKernel = kernelSize / 2
+    val weight = 1.0f / kernelSize.toFloat()
+
+    val bufSize = width * cn
+    val heightBound = height - 1
+
+    val buffer = FloatArray(bufSize)
+
+    for (x in 0 until bufSize) {
+        var w = (src[x].toInt() and 0xFF).toFloat() * edgeCount
+        for (y in 1..halfKernel) {
+            val ySrcShift = minOf(y, heightBound) * srcStride
+            w += (src[ySrcShift + x].toInt() and 0xFF).toFloat()
+        }
+        buffer[x] = w
+    }
+
+    for (y in 0 until height) {
+        val next = minOf(y + halfKernel + 1, heightBound) * srcStride
+        val previous = maxOf(y - halfKernel, 0) * srcStride
+        val dstRowOffset = y * dstStride
+
+        for (x in 0 until bufSize) {
+            var weight0 = buffer[x]
+            dst[dstRowOffset + x] = roundingSaturatingMul(weight0, weight)
+            val srcNext = (src[next + x].toInt() and 0xFF).toFloat()
+            val srcPrevious = (src[previous + x].toInt() and 0xFF).toFloat()
+            weight0 += srcNext
+            weight0 -= srcPrevious
+            buffer[x] = weight0
         }
     }
 }
@@ -111,14 +290,26 @@ public fun fastBlur(
         return inputBuffer.copyOf()
     }
 
-    val size = width * height * channels
-    var current = inputBuffer.copyOf()
-    var temp = ByteArray(size)
+    val stride = width * channels
+    val destinationSize = width * height * channels
+    val transient = ByteArray(destinationSize)
+    val dst = ByteArray(destinationSize)
 
-    for (radius in boxes) {
-        boxBlurHorizontal(current, temp, width, height, channels, radius)
-        boxBlurVertical(temp, current, width, height, channels, radius)
+    val firstBox = boxes[0]
+    testRadiusSize(width, firstBox)
+    testRadiusSize(height, firstBox)
+
+    boxBlurHorizontalPassStrategy(inputBuffer, stride, transient, stride, width, channels, firstBox)
+    boxBlurVerticalPassStrategy(transient, stride, dst, stride, width, height, channels, firstBox)
+
+    for (i in 1 until boxes.size) {
+        val boxContainer = boxes[i]
+        testRadiusSize(width, boxContainer)
+        testRadiusSize(height, boxContainer)
+
+        boxBlurHorizontalPassStrategy(dst, stride, transient, stride, width, channels, boxContainer)
+        boxBlurVerticalPassStrategy(transient, stride, dst, stride, width, height, channels, boxContainer)
     }
 
-    return current
+    return dst
 }
