@@ -111,7 +111,7 @@ public val SIGNATURE: ByteArray =
 private const val SIGNATURE_LENGTH: Int = 10
 
 /**
- * Refer to [wikipedia](https://en.wikipedia.org/wiki/RGBE_image_format)
+ * Refer to [wikipedia](https://en.wikipedia.org/wiki/Radiance_HDR_format)
  */
 public data class Rgbe8Pixel(
     public var r: UByte = 0u,
