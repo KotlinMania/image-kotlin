@@ -79,8 +79,10 @@ private val R8_G8_B8_A8_COLOR_MASK =
  */
 public class BmpDecoder(
     private val reader: IoRead,
+    private val isIco: Boolean = false,
 ) : ImageDecoder {
-    public constructor(bytes: ByteArray) : this(BufferIoRead(bytes))
+    public constructor(bytes: ByteArray) : this(BufferIoRead(bytes), false)
+    public constructor(bytes: ByteArray, isIco: Boolean) : this(BufferIoRead(bytes), isIco)
 
     private val width: UInt
     private val height: UInt
@@ -92,21 +94,38 @@ public class BmpDecoder(
     private val rawImageData: ByteArray
 
     init {
-        // Read 14-byte file header
-        val fileHeader = ByteArray(14)
-        reader.readExact(fileHeader)
-        if (fileHeader[0] != 'B'.code.toByte() || fileHeader[1] != 'M'.code.toByte()) {
-            throw ImageError.Decoding(DecodingError(ImageFormatHint.Exact(ImageFormat.Bmp), "BMP signature invalid"))
+        var dataOffset = 0
+        var currentBytesRead: Int
+        val dibHeaderSize: UInt
+        val dibRest: ByteArray
+
+        if (!isIco) {
+            // Read 14-byte file header
+            val fileHeader = ByteArray(14)
+            reader.readExact(fileHeader)
+            if (fileHeader[0] != 'B'.code.toByte() || fileHeader[1] != 'M'.code.toByte()) {
+                throw ImageError.Decoding(DecodingError(ImageFormatHint.Exact(ImageFormat.Bmp), "BMP signature invalid"))
+            }
+            dataOffset = readU32Le(fileHeader, 10).toInt()
+
+            // Read DIB header size (first 4 bytes of DIB header)
+            val dibSizeBuf = ByteArray(4)
+            reader.readExact(dibSizeBuf)
+            dibHeaderSize = readU32Le(dibSizeBuf, 0).toUInt()
+
+            dibRest = ByteArray((dibHeaderSize.toInt() - 4).coerceAtLeast(0))
+            reader.readExact(dibRest)
+            currentBytesRead = 14 + dibHeaderSize.toInt()
+        } else {
+            // Read DIB header size directly
+            val dibSizeBuf = ByteArray(4)
+            reader.readExact(dibSizeBuf)
+            dibHeaderSize = readU32Le(dibSizeBuf, 0).toUInt()
+
+            dibRest = ByteArray((dibHeaderSize.toInt() - 4).coerceAtLeast(0))
+            reader.readExact(dibRest)
+            currentBytesRead = dibHeaderSize.toInt()
         }
-        val dataOffset = readU32Le(fileHeader, 10).toInt()
-
-        // Read DIB header size (first 4 bytes of DIB header)
-        val dibSizeBuf = ByteArray(4)
-        reader.readExact(dibSizeBuf)
-        val dibHeaderSize = readU32Le(dibSizeBuf, 0).toUInt()
-
-        val dibRest = ByteArray((dibHeaderSize.toInt() - 4).coerceAtLeast(0))
-        reader.readExact(dibRest)
 
         var w: Int
         var h: Int
@@ -117,7 +136,8 @@ public class BmpDecoder(
 
         if (dibHeaderSize == BITMAPCOREHEADER_SIZE) {
             w = readU16Le(dibRest, 0)
-            h = readU16Le(dibRest, 2)
+            val rawH = readU16Le(dibRest, 2)
+            h = if (isIco) rawH / 2 else rawH
             planes = readU16Le(dibRest, 4)
             bpp = readU16Le(dibRest, 6)
             topDown = false
@@ -125,7 +145,8 @@ public class BmpDecoder(
             w = readI32Le(dibRest, 0)
             val rawH = readI32Le(dibRest, 4)
             topDown = rawH < 0
-            h = abs(rawH)
+            val absH = abs(rawH)
+            h = if (isIco) absH / 2 else absH
             planes = readU16Le(dibRest, 8)
             bpp = readU16Le(dibRest, 10)
             if (dibRest.size >= 16) {
@@ -136,7 +157,7 @@ public class BmpDecoder(
             }
         }
 
-        if (planes != 1) {
+        if (!isIco && planes != 1) {
             throw ImageError.Decoding(DecodingError(ImageFormatHint.Exact(ImageFormat.Bmp), "More than one plane"))
         }
         if (w <= 0 || h <= 0) {
@@ -185,7 +206,7 @@ public class BmpDecoder(
             }
 
         // Read bitfield masks if bitfields compression and not in V4+ header
-        var currentBytesRead = 14 + dibHeaderSize.toInt()
+        currentBytesRead = (if (!isIco) 14 else 0) + dibHeaderSize.toInt()
         if (compression == 3L && dibHeaderSize < BITMAPV4HEADER_SIZE) {
             val maskBuf = ByteArray(12)
             reader.readExact(maskBuf)
@@ -259,7 +280,7 @@ public class BmpDecoder(
     override fun dimensions(): Pair<UInt, UInt> = Pair(width, height)
 
     override fun colorType(): ColorType =
-        if (bitfields?.a?.len ?: 0 > 0 || imageType == ImageType.RGBA32) {
+        if (isIco || bitfields?.a?.len ?: 0 > 0 || imageType == ImageType.RGBA32) {
             ColorType.Rgba8
         } else {
             ColorType.Rgb8
@@ -271,6 +292,38 @@ public class BmpDecoder(
         val isRgba = colorType() == ColorType.Rgba8
         val outChannels = if (isRgba) 4 else 3
 
+        val paddedRowBytes = when (imageType) {
+            ImageType.Palette -> ((w * bitCount + 7) / 8 + 3) and 3.inv()
+            ImageType.RGB24 -> (w * 3 + 3) and 3.inv()
+            ImageType.RGB16, ImageType.Bitfields16 -> (w * 2 + 3) and 3.inv()
+            ImageType.RGB32, ImageType.RGBA32, ImageType.Bitfields32 -> w * 4
+            else -> 0
+        }
+        val expectedPixelBytes = paddedRowBytes * h
+        if (imageType != ImageType.RLE8 && imageType != ImageType.RLE4) {
+            if (rawImageData.size < expectedPixelBytes) {
+                throw ImageError.Decoding(
+                    DecodingError(
+                        ImageFormatHint.Exact(if (isIco) ImageFormat.Ico else ImageFormat.Bmp),
+                        "Truncated image data",
+                    ),
+                )
+            }
+        }
+
+        if (isIco) {
+            val maskRowBytes = ((w + 31) / 32) * 4
+            val maskLength = maskRowBytes * h
+            if (rawImageData.size > expectedPixelBytes && rawImageData.size < expectedPixelBytes + maskLength) {
+                throw ImageError.Decoding(
+                    DecodingError(
+                        ImageFormatHint.Exact(ImageFormat.Ico),
+                        "ICO image data size did not match expected size",
+                    ),
+                )
+            }
+        }
+
         when (imageType) {
             ImageType.Palette -> decodePalette(buf, w, h, outChannels)
             ImageType.RGB24 -> decodeRgb24(buf, w, h, outChannels)
@@ -278,6 +331,43 @@ public class BmpDecoder(
             ImageType.RGB16, ImageType.Bitfields16 -> decodeBitfields16(buf, w, h, outChannels)
             ImageType.RLE8 -> decodeRle8(buf, w, h, outChannels)
             ImageType.RLE4 -> decodeRle4(buf, w, h, outChannels)
+        }
+
+        if (isIco) {
+            applyIcoMask(buf, w, h)
+        }
+    }
+
+    private fun applyIcoMask(buf: ByteArray, w: Int, h: Int) {
+        val paddedRowBytes = when (imageType) {
+            ImageType.Palette -> ((w * bitCount + 7) / 8 + 3) and 3.inv()
+            ImageType.RGB24 -> (w * 3 + 3) and 3.inv()
+            ImageType.RGB16, ImageType.Bitfields16 -> (w * 2 + 3) and 3.inv()
+            ImageType.RGB32, ImageType.RGBA32, ImageType.Bitfields32 -> w * 4
+            else -> return
+        }
+        val maskOffset = paddedRowBytes * h
+        val maskRowBytes = ((w + 31) / 32) * 4
+        if (rawImageData.size >= maskOffset + maskRowBytes * h) {
+            for (y in 0 until h) {
+                val maskRowStart = maskOffset + y * maskRowBytes
+                var x = 0
+                for (byteIdx in 0 until maskRowBytes) {
+                    if (maskRowStart + byteIdx >= rawImageData.size) break
+                    val maskByte = rawImageData[maskRowStart + byteIdx].toInt() and 0xFF
+                    for (bit in 7 downTo 0) {
+                        if (x >= w) break
+                        if ((maskByte and (1 shl bit)) != 0) {
+                            val targetRow = if (topDown) y else (h - 1 - y)
+                            val dstIdx = (targetRow * w + x) * 4 + 3
+                            if (dstIdx < buf.size) {
+                                buf[dstIdx] = 0.toByte()
+                            }
+                        }
+                        x++
+                    }
+                }
+            }
         }
     }
 
