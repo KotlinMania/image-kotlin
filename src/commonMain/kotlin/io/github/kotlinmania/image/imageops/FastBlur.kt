@@ -75,7 +75,7 @@ public fun boxBlurHorizontalPassStrategy(
 ) {
     when (channels) {
         1, 2, 3, 4 -> boxBlurHorizontalPassImpl(src, srcStride, dst, dstStride, width, channels, radius)
-        else -> throw UnsupportedOperationException("More than 4 channels is not yet implemented")
+        else -> throw UnsupportedOperationException("Channels count greater than 4 is unsupported")
     }
 }
 
@@ -94,7 +94,7 @@ public fun boxBlurVerticalPassStrategy(
 ) {
     when (channels) {
         1, 2, 3, 4 -> boxBlurVerticalPassImpl(src, srcStride, dst, dstStride, width, height, channels, radius)
-        else -> throw UnsupportedOperationException("More than 4 channels is not yet implemented")
+        else -> throw UnsupportedOperationException("Channels count greater than 4 is unsupported")
     }
 }
 
