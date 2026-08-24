@@ -95,4 +95,18 @@ import Image
             ExportedKotlinPackages.io.github.kotlinmania.image.metadata.Orientation.Rotate270.toExif() == 8
         )
     }
+
+    @Test func testDxtVariantFromSwift() {
+        let dxt1 = ExportedKotlinPackages.io.github.kotlinmania.image.codecs.DxtVariant.DXT1
+        #expect(dxt1.decodedBytesPerBlock() == 48)
+        #expect(dxt1.encodedBytesPerBlock() == 8)
+
+        let dxt3 = ExportedKotlinPackages.io.github.kotlinmania.image.codecs.DxtVariant.DXT3
+        #expect(dxt3.decodedBytesPerBlock() == 64)
+        #expect(dxt3.encodedBytesPerBlock() == 16)
+
+        let dxt5 = ExportedKotlinPackages.io.github.kotlinmania.image.codecs.DxtVariant.DXT5
+        #expect(dxt5.decodedBytesPerBlock() == 64)
+        #expect(dxt5.encodedBytesPerBlock() == 16)
+    }
 }

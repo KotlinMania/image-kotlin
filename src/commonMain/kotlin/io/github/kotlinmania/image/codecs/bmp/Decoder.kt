@@ -77,10 +77,10 @@ private val R8_G8_B8_A8_COLOR_MASK =
 /**
  * A BMP decoder.
  */
-public class BmpDecoder internal constructor(
+public class BmpDecoder(
     private val reader: IoRead,
 ) : ImageDecoder {
-    internal constructor(readBuffer: BufferIoRead) : this(readBuffer as IoRead)
+    public constructor(bytes: ByteArray) : this(BufferIoRead(bytes))
 
     private val width: UInt
     private val height: UInt

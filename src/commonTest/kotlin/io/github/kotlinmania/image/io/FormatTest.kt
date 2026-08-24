@@ -75,7 +75,8 @@ class FormatTest {
     fun readingEnabled() {
         assertTrue(ImageFormat.Jpeg.readingEnabled())
         assertTrue(ImageFormat.Farbfeld.readingEnabled())
-        assertTrue(!ImageFormat.Dds.readingEnabled())
+        assertTrue(ImageFormat.Dds.readingEnabled())
+        assertTrue(!ImageFormat.Pcx.readingEnabled())
     }
 
     @Test
