@@ -116,6 +116,8 @@ internal data class Dim(
     val stride: Int,
     val length: Int,
 ) : Comparable<Dim> {
+    fun stride(): Int = stride
+
     fun checkedLen(): Int? {
         val result = stride.toLong() * length.toLong()
         return if (result > Int.MAX_VALUE.toLong() || result < 0L) null else result.toInt()
@@ -788,3 +790,12 @@ public class ViewMut<Buffer, P>(
 
     public fun minLength(): Int = inner.minLength() ?: 0
 }
+
+public typealias Error = FlatError
+public typealias Output = Any?
+public typealias Pixel = Any?
+
+public data class NormalFormRequiredError(
+    public val form: NormalForm,
+) : Exception("Required sample buffer in normal form $form")
+
