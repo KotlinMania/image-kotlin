@@ -35,7 +35,10 @@ internal fun decodingError(error: Throwable): ImageError =
     ImageError.Decoding(DecodingError(ImageFormatHint.Exact(ImageFormat.Qoi), error))
 
 internal fun encodingError(error: Throwable): ImageError =
-    ImageError.Encoding(io.github.kotlinmania.image.EncodingError(ImageFormatHint.Exact(ImageFormat.Qoi), error))
+    ImageError.Encoding(
+        io.github.kotlinmania.image
+            .EncodingError(ImageFormatHint.Exact(ImageFormat.Qoi), error),
+    )
 
 private fun qoiColorHash(r: Int, g: Int, b: Int, a: Int): Int =
     (r * 3 + g * 5 + b * 7 + a * 11) % 64

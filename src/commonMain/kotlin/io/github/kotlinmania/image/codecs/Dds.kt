@@ -207,13 +207,14 @@ internal class DdsDx10Header(
             val arraySize = r.readU32Le()
             val miscFlags2 = r.readU32Le()
 
-            val header = DdsDx10Header(
-                dxgiFormat = dxgiFormat,
-                resourceDimension = resourceDimension,
-                miscFlag = miscFlag,
-                arraySize = arraySize,
-                miscFlags2 = miscFlags2,
-            )
+            val header =
+                DdsDx10Header(
+                    dxgiFormat = dxgiFormat,
+                    resourceDimension = resourceDimension,
+                    miscFlag = miscFlag,
+                    arraySize = arraySize,
+                    miscFlags2 = miscFlags2,
+                )
             header.validate()
             return header
         }
@@ -226,7 +227,6 @@ internal class DdsDx10Header(
 public class DdsDecoder internal constructor(
     private val inner: DxtDecoder,
 ) : ImageDecoder {
-
     public constructor(bytes: ByteArray) : this(BufferIoRead(bytes))
 
     public constructor(reader: IoRead) : this(createInner(reader))

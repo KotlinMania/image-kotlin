@@ -156,8 +156,6 @@ public enum class ImageFormat {
                 else -> null
             }
 
-        private fun inner(ext: String): ImageFormat? = fromExtension(ext)
-
         /**
          * Returns the image format inferred from the file extension of the given path string.
          */
