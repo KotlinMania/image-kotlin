@@ -1,11 +1,28 @@
 // port-lint: tests imageops/fast_blur.rs
 package io.github.kotlinmania.image.imageops
 
+import io.github.kotlinmania.image.images.DynamicImage
+import io.github.kotlinmania.image.images.ImageBuffer
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class FastBlurTest {
+    private class Rng(private var state: ULong) {
+        fun nextU32(): UInt {
+            state = state * 6364136223846793005uL + 1uL
+            return (state shr 32).toUInt()
+        }
+
+        fun nextU8(): Int = (nextU32() % 256u).toInt()
+
+        fun nextF32InRange(a: Float, b: Float): Float {
+            val u = nextU32()
+            val unit = u.toFloat() / (UInt.MAX_VALUE.toFloat() + 1.0f)
+            return a + (b - a) * unit
+        }
+    }
+
     @Test
     fun testBoxesForGauss() {
         val boxes = boxesForGauss(2.0f, 3)
@@ -38,5 +55,58 @@ class FastBlurTest {
         val empty = ByteArray(0)
         val result = fastBlur(empty, 0, 0, 1, 1.0f)
         assertEquals(0, result.size)
+    }
+
+    @Test
+    fun testBoxBlur() {
+        val rng = Rng(1234567890123456789uL)
+        for (iter in 0 until 35) {
+            val width = rng.nextU8()
+            val height = rng.nextU8()
+            val sigma = rng.nextF32InRange(0.1f, 100.0f)
+            val px = rng.nextU8().toByte()
+            val cn = rng.nextU8()
+            if (width == 0 || height == 0 || sigma <= 0f) {
+                continue
+            }
+            when (cn % 4) {
+                0 -> {
+                    val vc = ByteArray(width * height) { px }
+                    val img = ImageBuffer.createGray(width.toUInt(), height.toUInt(), vc)!!
+                    val dyn = DynamicImage.ImageLuma8(img)
+                    val res = dyn.fastBlur(sigma)
+                    for (clr in res.asBytes()) {
+                        assertEquals(px, clr)
+                    }
+                }
+                1 -> {
+                    val vc = ByteArray(width * height * 2) { px }
+                    val img = ImageBuffer.createGrayAlpha(width.toUInt(), height.toUInt(), vc)!!
+                    val dyn = DynamicImage.ImageLumaA8(img)
+                    val res = dyn.fastBlur(sigma)
+                    for (clr in res.asBytes()) {
+                        assertEquals(px, clr)
+                    }
+                }
+                2 -> {
+                    val vc = ByteArray(width * height * 3) { px }
+                    val img = ImageBuffer.createRgb(width.toUInt(), height.toUInt(), vc)!!
+                    val dyn = DynamicImage.ImageRgb8(img)
+                    val res = dyn.fastBlur(sigma)
+                    for (clr in res.asBytes()) {
+                        assertEquals(px, clr)
+                    }
+                }
+                3 -> {
+                    val vc = ByteArray(width * height * 4) { px }
+                    val img = ImageBuffer.createRgba(width.toUInt(), height.toUInt(), vc)!!
+                    val dyn = DynamicImage.ImageRgba8(img)
+                    val res = dyn.fastBlur(sigma)
+                    for (clr in res.asBytes()) {
+                        assertEquals(px, clr)
+                    }
+                }
+            }
+        }
     }
 }

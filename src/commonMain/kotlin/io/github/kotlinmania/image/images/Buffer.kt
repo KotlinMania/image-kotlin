@@ -64,6 +64,38 @@ public class ImageBuffer<P, Container>(
         color = cicp.intoRgb()
     }
 
+    public fun copyColorSpaceFrom(other: ImageBuffer<*, *>) {
+        color = other.color
+    }
+
+    public fun sampleLayout(): SampleLayout =
+        SampleLayout.rowMajorPacked(channelCount.toUByte(), width, height)
+
+    public fun asFlatSamples(): FlatSamples<ByteArray> =
+        FlatSamples(
+            samples = data,
+            layout = sampleLayout(),
+            colorHint = null,
+        )
+
+    public fun intoFlatSamples(): FlatSamples<ByteArray> =
+        FlatSamples(
+            samples = data,
+            layout = sampleLayout(),
+            colorHint = null,
+        )
+
+    public fun fastBlur(sigma: Float): ImageBuffer<P, ByteArray> {
+        val (w, h) = dimensions()
+        if (w == 0u || h == 0u) {
+            return clone()
+        }
+        val blurredBytes = io.github.kotlinmania.image.imageops.fastBlur(data, w.toInt(), h.toInt(), channelCount, sigma)
+        val copy = ImageBuffer<P, ByteArray>(w, h, blurredBytes, channelCount, pixelReader, pixelWriter, pixelBlender)
+        copy.color = color
+        return copy
+    }
+
     override fun getPixel(x: UInt, y: UInt): P {
         require(x < width && y < height) { "Image index ($x, $y) out of bounds ($width, $height)" }
         val idx = (y.toInt() * width.toInt() + x.toInt()) * channelCount
