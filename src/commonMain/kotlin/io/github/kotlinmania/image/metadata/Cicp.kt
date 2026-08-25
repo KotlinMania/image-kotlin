@@ -54,6 +54,14 @@ public data class Cicp(
                 matrix = CicpMatrixCoefficients.Identity,
                 fullRange = CicpVideoFullRangeFlag.FullRange,
             )
+
+        public fun from(cicp: CicpRgb): Cicp =
+            Cicp(
+                primaries = cicp.primaries,
+                transfer = cicp.transfer,
+                matrix = CicpMatrixCoefficients.Identity,
+                fullRange = CicpVideoFullRangeFlag.FullRange,
+            )
     }
 
     public fun qualifyStability(): Boolean =

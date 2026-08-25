@@ -89,4 +89,36 @@ class FreeFunctionsTest {
             assertEquals(0, output[25])
         }
     }
+
+    @Test
+    fun testLoadRectSingleScanline() {
+        val data = ByteArray(25) { it.toByte() }
+        val output = ByteArray(26)
+        var seeks = 0
+        val decoder = MockDecoder()
+
+        fun seekScanline(d: ImageDecoder, n: ULong) {
+            seeks += 1
+            assertEquals(0uL, n)
+            assertEquals(1, seeks)
+        }
+
+        fun readScanline(d: ImageDecoder, buf: ByteArray) {
+            data.copyInto(buf)
+        }
+
+        loadRect(
+            1u,
+            1u,
+            2u,
+            4u,
+            output,
+            2,
+            decoder,
+            data.size,
+            ::seekScanline,
+            ::readScanline,
+        )
+        assertContentEquals(byteArrayOf(6, 7, 11, 12, 16, 17, 21, 22, 0), output.copyOfRange(0, 9))
+    }
 }
