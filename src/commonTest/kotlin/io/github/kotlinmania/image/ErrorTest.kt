@@ -18,6 +18,8 @@ class ErrorTest {
 
         val err2 = UnsupportedError.fromFormatHint(ImageFormatHint.Unknown)
         assertEquals("The image format could not be determined", err2.toString())
+        assertEquals(ImageFormatHint.Unknown, err2.formatHint())
+        assertTrue(err2.kind is UnsupportedErrorKind.Format)
 
         val err3 =
             UnsupportedError.fromFormatAndKind(
@@ -25,24 +27,37 @@ class ErrorTest {
                 UnsupportedErrorKind.GenericFeature("animation"),
             )
         assertEquals("The decoder does not support the format feature animation", err3.toString())
+        assertEquals(UnsupportedErrorKind.GenericFeature("animation"), err3.kind)
     }
 
     @Test
     fun testDecodingErrorFormatting() {
         val err = DecodingError(ImageFormatHint.Exact(ImageFormat.Jpeg), RuntimeException("corrupt header"))
         assertTrue(err.toString().contains("corrupt header"))
+        assertEquals(ImageFormatHint.Exact(ImageFormat.Jpeg), err.format)
+        assertEquals(ImageFormatHint.Exact(ImageFormat.Jpeg), err.formatHint())
+    }
+
+    @Test
+    fun testEncodingErrorFormatting() {
+        val err = EncodingError(ImageFormatHint.Exact(ImageFormat.Png), RuntimeException("encode failure"))
+        assertTrue(err.toString().contains("encode failure"))
+        assertEquals(ImageFormatHint.Exact(ImageFormat.Png), err.format)
+        assertEquals(ImageFormatHint.Exact(ImageFormat.Png), err.formatHint())
     }
 
     @Test
     fun testParameterErrorFormatting() {
         val err = ParameterError.fromKind(ParameterErrorKind.DimensionMismatch)
         assertEquals("The Image's dimensions are either too small or too large", err.toString())
+        assertEquals(ParameterErrorKind.DimensionMismatch, err.kind)
     }
 
     @Test
     fun testLimitErrorFormatting() {
         val err = LimitError.fromKind(LimitErrorKind.InsufficientMemory)
         assertEquals("Memory limit exceeded", err.toString())
+        assertEquals(LimitErrorKind.InsufficientMemory, err.kind)
     }
 
     @Test
