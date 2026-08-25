@@ -11,17 +11,21 @@ import io.github.kotlinmania.image.LumaA
 import io.github.kotlinmania.image.Rgb
 import io.github.kotlinmania.image.Rgba
 import io.github.kotlinmania.image.imageops.FilterType
+import io.github.kotlinmania.image.imageops.GaussianBlurParameters
 import io.github.kotlinmania.image.imageops.brighten
 import io.github.kotlinmania.image.imageops.contrast
 import io.github.kotlinmania.image.imageops.fastBlur
 import io.github.kotlinmania.image.imageops.filter1dHorizontal
 import io.github.kotlinmania.image.imageops.filter1dVertical
 import io.github.kotlinmania.image.imageops.flipHorizontal
+import io.github.kotlinmania.image.imageops.flipHorizontalInPlace
 import io.github.kotlinmania.image.imageops.flipVertical
+import io.github.kotlinmania.image.imageops.flipVerticalInPlace
 import io.github.kotlinmania.image.imageops.huerotate
 import io.github.kotlinmania.image.imageops.invert
 import io.github.kotlinmania.image.imageops.resize
 import io.github.kotlinmania.image.imageops.rotate180
+import io.github.kotlinmania.image.imageops.rotate180InPlace
 import io.github.kotlinmania.image.imageops.rotate270
 import io.github.kotlinmania.image.imageops.rotate90
 import io.github.kotlinmania.image.imageops.thumbnail
@@ -34,6 +38,9 @@ import io.github.kotlinmania.image.io.encoderForFormat
 import io.github.kotlinmania.image.io.guessFormat
 import io.github.kotlinmania.image.io.load
 import io.github.kotlinmania.image.math.resizeDimensions
+import io.github.kotlinmania.image.metadata.Cicp
+import io.github.kotlinmania.image.metadata.CicpColorPrimaries
+import io.github.kotlinmania.image.metadata.CicpTransferCharacteristics
 import io.github.kotlinmania.image.metadata.Orientation
 import io.github.kotlinmania.image.toLuma
 import io.github.kotlinmania.image.toLumaAlpha
@@ -163,23 +170,68 @@ public sealed class DynamicImage : GenericImage<Rgba<UByte>> {
 
     public fun asRgb8(): RgbImage? = (this as? ImageRgb8)?.image
 
+    public fun asMutRgb8(): RgbImage? = asRgb8()
+
     public fun asRgba8(): RgbaImage? = (this as? ImageRgba8)?.image
+
+    public fun asMutRgba8(): RgbaImage? = asRgba8()
 
     public fun asLuma8(): GrayImage? = (this as? ImageLuma8)?.image
 
+    public fun asMutLuma8(): GrayImage? = asLuma8()
+
     public fun asLumaAlpha8(): GrayAlphaImage? = (this as? ImageLumaA8)?.image
+
+    public fun asMutLumaAlpha8(): GrayAlphaImage? = asLumaAlpha8()
 
     public fun asRgb16(): Rgb16Image? = (this as? ImageRgb16)?.image
 
+    public fun asMutRgb16(): Rgb16Image? = asRgb16()
+
     public fun asRgba16(): Rgba16Image? = (this as? ImageRgba16)?.image
+
+    public fun asMutRgba16(): Rgba16Image? = asRgba16()
 
     public fun asLuma16(): Gray16Image? = (this as? ImageLuma16)?.image
 
+    public fun asMutLuma16(): Gray16Image? = asLuma16()
+
     public fun asLumaAlpha16(): GrayAlpha16Image? = (this as? ImageLumaA16)?.image
+
+    public fun asMutLumaAlpha16(): GrayAlpha16Image? = asLumaAlpha16()
 
     public fun asRgb32F(): Rgb32FImage? = (this as? ImageRgb32F)?.image
 
+    public fun asMutRgb32F(): Rgb32FImage? = asRgb32F()
+
     public fun asRgba32F(): Rgba32FImage? = (this as? ImageRgba32F)?.image
+
+    public fun asMutRgba32F(): Rgba32FImage? = asRgba32F()
+
+    public fun asFlatSamplesU8(): FlatSamples<ByteArray>? =
+        when (this) {
+            is ImageLuma8 -> image.asFlatSamples()
+            is ImageLumaA8 -> image.asFlatSamples()
+            is ImageRgb8 -> image.asFlatSamples()
+            is ImageRgba8 -> image.asFlatSamples()
+            else -> null
+        }
+
+    public fun asFlatSamplesU16(): FlatSamples<ByteArray>? =
+        when (this) {
+            is ImageLuma16 -> image.asFlatSamples()
+            is ImageLumaA16 -> image.asFlatSamples()
+            is ImageRgb16 -> image.asFlatSamples()
+            is ImageRgba16 -> image.asFlatSamples()
+            else -> null
+        }
+
+    public fun asFlatSamplesF32(): FlatSamples<ByteArray>? =
+        when (this) {
+            is ImageRgb32F -> image.asFlatSamples()
+            is ImageRgba32F -> image.asFlatSamples()
+            else -> null
+        }
 
     public fun toRgb8(): RgbImage =
         when (this) {
@@ -324,6 +376,41 @@ public sealed class DynamicImage : GenericImage<Rgba<UByte>> {
             }
         }
 
+    public fun toLuma32F(): Gray32FImage =
+        when (this) {
+            else -> {
+                val w = width()
+                val h = height()
+                val res = createGray32F(w, h)
+                for (y in 0u until h) {
+                    for (x in 0u until w) {
+                        val p = getPixel(x, y)
+                        val luma = (0.2126f * p.r.toFloat() + 0.7152f * p.g.toFloat() + 0.0722f * p.b.toFloat()) / 255f
+                        res.putPixel(x, y, Luma(luma))
+                    }
+                }
+                res
+            }
+        }
+
+    public fun toLumaAlpha32F(): GrayAlpha32FImage =
+        when (this) {
+            else -> {
+                val w = width()
+                val h = height()
+                val res = createGrayAlpha32F(w, h)
+                for (y in 0u until h) {
+                    for (x in 0u until w) {
+                        val p = getPixel(x, y)
+                        val luma = (0.2126f * p.r.toFloat() + 0.7152f * p.g.toFloat() + 0.0722f * p.b.toFloat()) / 255f
+                        val a = p.a.toFloat() / 255f
+                        res.putPixel(x, y, LumaA(luma, a))
+                    }
+                }
+                res
+            }
+        }
+
     public fun intoRgb8(): RgbImage = toRgb8()
 
     public fun intoRgba8(): RgbaImage = toRgba8()
@@ -343,6 +430,69 @@ public sealed class DynamicImage : GenericImage<Rgba<UByte>> {
     public fun intoRgb32F(): Rgb32FImage = toRgb32F()
 
     public fun intoRgba32F(): Rgba32FImage = toRgba32F()
+
+    public fun intoLuma32F(): Gray32FImage = toLuma32F()
+
+    public fun intoLumaAlpha32F(): GrayAlpha32FImage = toLumaAlpha32F()
+
+    public fun setRgbPrimaries(color: CicpColorPrimaries) {
+        when (this) {
+            is ImageLuma8 -> image.setRgbPrimaries(color)
+            is ImageLumaA8 -> image.setRgbPrimaries(color)
+            is ImageRgb8 -> image.setRgbPrimaries(color)
+            is ImageRgba8 -> image.setRgbPrimaries(color)
+            is ImageLuma16 -> image.setRgbPrimaries(color)
+            is ImageLumaA16 -> image.setRgbPrimaries(color)
+            is ImageRgb16 -> image.setRgbPrimaries(color)
+            is ImageRgba16 -> image.setRgbPrimaries(color)
+            is ImageRgb32F -> image.setRgbPrimaries(color)
+            is ImageRgba32F -> image.setRgbPrimaries(color)
+        }
+    }
+
+    public fun setTransferFunction(tf: CicpTransferCharacteristics) {
+        when (this) {
+            is ImageLuma8 -> image.setTransferFunction(tf)
+            is ImageLumaA8 -> image.setTransferFunction(tf)
+            is ImageRgb8 -> image.setTransferFunction(tf)
+            is ImageRgba8 -> image.setTransferFunction(tf)
+            is ImageLuma16 -> image.setTransferFunction(tf)
+            is ImageLumaA16 -> image.setTransferFunction(tf)
+            is ImageRgb16 -> image.setTransferFunction(tf)
+            is ImageRgba16 -> image.setTransferFunction(tf)
+            is ImageRgb32F -> image.setTransferFunction(tf)
+            is ImageRgba32F -> image.setTransferFunction(tf)
+        }
+    }
+
+    public fun colorSpace(): Cicp =
+        when (this) {
+            is ImageLuma8 -> image.colorSpace()
+            is ImageLumaA8 -> image.colorSpace()
+            is ImageRgb8 -> image.colorSpace()
+            is ImageRgba8 -> image.colorSpace()
+            is ImageLuma16 -> image.colorSpace()
+            is ImageLumaA16 -> image.colorSpace()
+            is ImageRgb16 -> image.colorSpace()
+            is ImageRgba16 -> image.colorSpace()
+            is ImageRgb32F -> image.colorSpace()
+            is ImageRgba32F -> image.colorSpace()
+        }
+
+    public fun setColorSpace(cicp: Cicp) {
+        when (this) {
+            is ImageLuma8 -> image.setColorSpace(cicp)
+            is ImageLumaA8 -> image.setColorSpace(cicp)
+            is ImageRgb8 -> image.setColorSpace(cicp)
+            is ImageRgba8 -> image.setColorSpace(cicp)
+            is ImageLuma16 -> image.setColorSpace(cicp)
+            is ImageLumaA16 -> image.setColorSpace(cicp)
+            is ImageRgb16 -> image.setColorSpace(cicp)
+            is ImageRgba16 -> image.setColorSpace(cicp)
+            is ImageRgb32F -> image.setColorSpace(cicp)
+            is ImageRgba32F -> image.setColorSpace(cicp)
+        }
+    }
 
     override fun getPixel(x: UInt, y: UInt): Rgba<UByte> =
         when (this) {
@@ -627,6 +777,13 @@ public sealed class DynamicImage : GenericImage<Rgba<UByte>> {
         return fromRawBytes(width(), height(), dst, color())
     }
 
+    public fun blurAdvanced(parameters: GaussianBlurParameters): DynamicImage {
+        val channels = color().channelCount().toInt()
+        val bytes = asBytes()
+        val res = io.github.kotlinmania.image.imageops.blurAdvanced(bytes, width().toInt(), height().toInt(), channels, parameters)
+        return fromRawBytes(width(), height(), res, color())
+    }
+
     public fun fastBlur(sigma: Float): DynamicImage {
         val channels = color().channelCount().toInt()
         val bytes = asBytes()
@@ -724,11 +881,41 @@ public sealed class DynamicImage : GenericImage<Rgba<UByte>> {
         return fromRawBytes(width(), height(), res, color())
     }
 
+    public fun flipvInPlace() {
+        when (this) {
+            is ImageLuma8 -> flipVerticalInPlace(image.asRaw(), width().toInt(), height().toInt(), 1)
+            is ImageLumaA8 -> flipVerticalInPlace(image.asRaw(), width().toInt(), height().toInt(), 2)
+            is ImageRgb8 -> flipVerticalInPlace(image.asRaw(), width().toInt(), height().toInt(), 3)
+            is ImageRgba8 -> flipVerticalInPlace(image.asRaw(), width().toInt(), height().toInt(), 4)
+            is ImageLuma16 -> flipVerticalInPlace(image.asRaw(), width().toInt(), height().toInt(), 2)
+            is ImageLumaA16 -> flipVerticalInPlace(image.asRaw(), width().toInt(), height().toInt(), 4)
+            is ImageRgb16 -> flipVerticalInPlace(image.asRaw(), width().toInt(), height().toInt(), 6)
+            is ImageRgba16 -> flipVerticalInPlace(image.asRaw(), width().toInt(), height().toInt(), 8)
+            is ImageRgb32F -> flipVerticalInPlace(image.asRaw(), width().toInt(), height().toInt(), 12)
+            is ImageRgba32F -> flipVerticalInPlace(image.asRaw(), width().toInt(), height().toInt(), 16)
+        }
+    }
+
     public fun fliph(): DynamicImage {
         val channels = color().channelCount().toInt()
         val bytes = asBytes()
         val res = flipHorizontal(bytes, width().toInt(), height().toInt(), channels)
         return fromRawBytes(width(), height(), res, color())
+    }
+
+    public fun fliphInPlace() {
+        when (this) {
+            is ImageLuma8 -> flipHorizontalInPlace(image.asRaw(), width().toInt(), height().toInt(), 1)
+            is ImageLumaA8 -> flipHorizontalInPlace(image.asRaw(), width().toInt(), height().toInt(), 2)
+            is ImageRgb8 -> flipHorizontalInPlace(image.asRaw(), width().toInt(), height().toInt(), 3)
+            is ImageRgba8 -> flipHorizontalInPlace(image.asRaw(), width().toInt(), height().toInt(), 4)
+            is ImageLuma16 -> flipHorizontalInPlace(image.asRaw(), width().toInt(), height().toInt(), 2)
+            is ImageLumaA16 -> flipHorizontalInPlace(image.asRaw(), width().toInt(), height().toInt(), 4)
+            is ImageRgb16 -> flipHorizontalInPlace(image.asRaw(), width().toInt(), height().toInt(), 6)
+            is ImageRgba16 -> flipHorizontalInPlace(image.asRaw(), width().toInt(), height().toInt(), 8)
+            is ImageRgb32F -> flipHorizontalInPlace(image.asRaw(), width().toInt(), height().toInt(), 12)
+            is ImageRgba32F -> flipHorizontalInPlace(image.asRaw(), width().toInt(), height().toInt(), 16)
+        }
     }
 
     public fun rotate90(): DynamicImage {
@@ -745,6 +932,21 @@ public sealed class DynamicImage : GenericImage<Rgba<UByte>> {
         return fromRawBytes(width(), height(), res, color())
     }
 
+    public fun rotate180InPlace() {
+        when (this) {
+            is ImageLuma8 -> rotate180InPlace(image.asRaw(), width().toInt(), height().toInt(), 1)
+            is ImageLumaA8 -> rotate180InPlace(image.asRaw(), width().toInt(), height().toInt(), 2)
+            is ImageRgb8 -> rotate180InPlace(image.asRaw(), width().toInt(), height().toInt(), 3)
+            is ImageRgba8 -> rotate180InPlace(image.asRaw(), width().toInt(), height().toInt(), 4)
+            is ImageLuma16 -> rotate180InPlace(image.asRaw(), width().toInt(), height().toInt(), 2)
+            is ImageLumaA16 -> rotate180InPlace(image.asRaw(), width().toInt(), height().toInt(), 4)
+            is ImageRgb16 -> rotate180InPlace(image.asRaw(), width().toInt(), height().toInt(), 6)
+            is ImageRgba16 -> rotate180InPlace(image.asRaw(), width().toInt(), height().toInt(), 8)
+            is ImageRgb32F -> rotate180InPlace(image.asRaw(), width().toInt(), height().toInt(), 12)
+            is ImageRgba32F -> rotate180InPlace(image.asRaw(), width().toInt(), height().toInt(), 16)
+        }
+    }
+
     public fun rotate270(): DynamicImage {
         val channels = color().channelCount().toInt()
         val bytes = asBytes()
@@ -756,12 +958,32 @@ public sealed class DynamicImage : GenericImage<Rgba<UByte>> {
         when (orientation) {
             Orientation.NoTransforms -> this
             Orientation.Rotate90 -> rotate90()
-            Orientation.Rotate180 -> rotate180()
+            Orientation.Rotate180 -> {
+                val copy = cloneImage()
+                copy.rotate180InPlace()
+                copy
+            }
             Orientation.Rotate270 -> rotate270()
-            Orientation.FlipHorizontal -> fliph()
-            Orientation.FlipVertical -> flipv()
-            Orientation.Rotate90FlipH -> rotate90().fliph()
-            Orientation.Rotate270FlipH -> rotate270().fliph()
+            Orientation.FlipHorizontal -> {
+                val copy = cloneImage()
+                copy.fliphInPlace()
+                copy
+            }
+            Orientation.FlipVertical -> {
+                val copy = cloneImage()
+                copy.flipvInPlace()
+                copy
+            }
+            Orientation.Rotate90FlipH -> {
+                val copy = rotate90()
+                copy.fliphInPlace()
+                copy
+            }
+            Orientation.Rotate270FlipH -> {
+                val copy = rotate270()
+                copy.fliphInPlace()
+                copy
+            }
         }
 
     public fun crop(x: UInt, y: UInt, width: UInt, height: UInt): DynamicImage =
