@@ -1,10 +1,16 @@
 // port-lint: source imageops/sample.rs
 package io.github.kotlinmania.image.imageops
 
+import io.github.kotlinmania.image.Luma
+import io.github.kotlinmania.image.LumaA
+import io.github.kotlinmania.image.Rgb
+import io.github.kotlinmania.image.Rgba
+import io.github.kotlinmania.image.images.GenericImageView
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.exp
 import kotlin.math.max
+import kotlin.math.round
 import kotlin.math.sin
 import kotlin.math.sqrt
 
@@ -36,25 +42,62 @@ private fun sinc(t: Float): Float {
 private fun lanczos(x: Float, t: Float): Float =
     if (abs(x) < t) sinc(x) * sinc(x / t) else 0.0f
 
-private fun gaussianKernel(x: Float, r: Float): Float =
+/**
+ * The Gaussian function.
+ */
+public fun gaussian(x: Float, r: Float): Float =
     (1.0f / (sqrt(2.0f * PI.toFloat()) * r)) * exp(-x * x / (2.0f * r * r))
+
+/**
+ * Builtin Gaussian kernel filter with radius 0.5.
+ */
+public fun gaussianKernel(x: Float): Float = gaussian(x, 0.5f)
+
+/**
+ * Builtin Lanczos3 kernel filter.
+ */
+public fun lanczos3Kernel(x: Float): Float = lanczos(x, 3.0f)
+
+private fun bcCubicSpline(x: Float, b: Float, c: Float): Float {
+    val a = abs(x)
+    val k = if (a < 1.0f) {
+        (12.0f - 9.0f * b - 6.0f * c) * a * a * a +
+            (-18.0f + 12.0f * b + 6.0f * c) * a * a +
+            (6.0f - 2.0f * b)
+    } else if (a < 2.0f) {
+        (-b - 6.0f * c) * a * a * a +
+            (6.0f * b + 30.0f * c) * a * a +
+            (-12.0f * b - 48.0f * c) * a +
+            (8.0f * b + 24.0f * c)
+    } else {
+        0.0f
+    }
+    return k / 6.0f
+}
+
+/**
+ * Builtin Catmull-Rom kernel filter.
+ */
+public fun catmullromKernel(x: Float): Float = bcCubicSpline(x, 0.0f, 0.5f)
+
+/**
+ * Builtin Triangle (linear) kernel filter.
+ */
+public fun triangleKernel(x: Float): Float =
+    if (abs(x) < 1.0f) 1.0f - abs(x) else 0.0f
+
+/**
+ * Builtin Box kernel filter.
+ */
+public fun boxKernel(x: Float): Float = 1.0f
 
 private fun filterKernel(filter: FilterType, x: Float): Float =
     when (filter) {
         FilterType.Nearest -> if (abs(x) <= 0.5f) 1.0f else 0.0f
-        FilterType.Triangle -> (1.0f - abs(x)).coerceAtLeast(0.0f)
-        FilterType.CatmullRom -> {
-            val a = abs(x)
-            if (a < 1.0f) {
-                0.5f * (3.0f * a * a * a - 5.0f * a * a + 2.0f)
-            } else if (a < 2.0f) {
-                0.5f * (-a * a * a + 5.0f * a * a - 8.0f * a + 4.0f)
-            } else {
-                0.0f
-            }
-        }
-        FilterType.Gaussian -> gaussianKernel(x, 0.5f)
-        FilterType.Lanczos3 -> lanczos(x, 3.0f)
+        FilterType.Triangle -> triangleKernel(x).coerceAtLeast(0.0f)
+        FilterType.CatmullRom -> catmullromKernel(x)
+        FilterType.Gaussian -> gaussianKernel(x)
+        FilterType.Lanczos3 -> lanczos3Kernel(x)
     }
 
 /**
@@ -140,4 +183,400 @@ public fun thumbnail(
     val dstW = max(1, (srcW * ratio).toInt())
     val dstH = max(1, (srcH * ratio).toInt())
     return resize(image, srcW, srcH, dstW, dstH, channels, FilterType.Triangle)
+}
+
+/**
+ * Samples a pixel at normalized coordinates ([u], [v]) with bilinear interpolation.
+ */
+public fun <P> sampleBilinear(
+    img: GenericImageView<P>,
+    u: Float,
+    v: Float,
+): P? {
+    if (u !in 0.0f..1.0f || v !in 0.0f..1.0f) {
+        return null
+    }
+    val (w, h) = img.dimensions()
+    if (w == 0u || h == 0u) {
+        return null
+    }
+    val ui = (w.toFloat() * u - 0.5f).coerceIn(0.0f, (w - 1u).toFloat())
+    val vi = (h.toFloat() * v - 0.5f).coerceIn(0.0f, (h - 1u).toFloat())
+    return interpolateBilinear(img, ui, vi)
+}
+
+/**
+ * Samples a pixel at normalized coordinates ([u], [v]) using nearest-neighbor.
+ */
+public fun <P> sampleNearest(
+    img: GenericImageView<P>,
+    u: Float,
+    v: Float,
+): P? {
+    if (u !in 0.0f..1.0f || v !in 0.0f..1.0f) {
+        return null
+    }
+    val (w, h) = img.dimensions()
+    if (w == 0u || h == 0u) {
+        return null
+    }
+    val maxW = if (w > 0u) (w - 1u).toFloat() else 0f
+    val maxH = if (h > 0u) (h - 1u).toFloat() else 0f
+    val ui = (w.toFloat() * u - 0.5f).coerceIn(0.0f, maxW)
+    val vi = (h.toFloat() * v - 0.5f).coerceIn(0.0f, maxH)
+    return interpolateNearest(img, ui, vi)
+}
+
+private fun roundAwayFromZero(x: Float): Float =
+    if (x >= 0.0f) kotlin.math.floor(x + 0.5f) else kotlin.math.ceil(x - 0.5f)
+
+/**
+ * Interpolates a pixel at pixel coordinates ([x], [y]) using nearest-neighbor.
+ */
+public fun <P> interpolateNearest(
+    img: GenericImageView<P>,
+    x: Float,
+    y: Float,
+): P? {
+    val (w, h) = img.dimensions()
+    if (w == 0u || h == 0u) {
+        return null
+    }
+    if (x !in 0.0f..(w - 1u).toFloat() || y !in 0.0f..(h - 1u).toFloat()) {
+        return null
+    }
+    val rx = roundAwayFromZero(x).toUInt().coerceIn(0u, w - 1u)
+    val ry = roundAwayFromZero(y).toUInt().coerceIn(0u, h - 1u)
+    return img.getPixel(rx, ry)
+}
+
+/**
+ * Interpolates a pixel at pixel coordinates ([x], [y]) using bilinear interpolation.
+ */
+@Suppress("UNCHECKED_CAST")
+public fun <P> interpolateBilinear(
+    img: GenericImageView<P>,
+    x: Float,
+    y: Float,
+): P? {
+    val (w, h) = img.dimensions()
+    if (w == 0u || h == 0u) {
+        return null
+    }
+    if (x !in 0.0f..(w - 1u).toFloat() || y !in 0.0f..(h - 1u).toFloat()) {
+        return null
+    }
+
+    val uf = x.toInt().toUInt()
+    val vf = y.toInt().toUInt()
+    val uc = minOf(uf + 1u, w - 1u)
+    val vc = minOf(vf + 1u, h - 1u)
+
+    val p00 = img.getPixel(uf, vf)
+    val p01 = img.getPixel(uf, vc)
+    val p10 = img.getPixel(uc, vf)
+    val p11 = img.getPixel(uc, vc)
+
+    val ufw = x - uf.toFloat()
+    val vfw = y - vf.toFloat()
+    val ucw = (uf + 1u).toFloat() - x
+    val vcw = (vf + 1u).toFloat() - y
+
+    val wff = ucw * vcw
+    val wfc = ucw * vfw
+    val wcf = ufw * vcw
+    val wcc = ufw * vfw
+
+    return when (p00) {
+        is Rgba<*> -> {
+            val c00 = p00 as Rgba<*>
+            val c01 = p01 as Rgba<*>
+            val c10 = p10 as Rgba<*>
+            val c11 = p11 as Rgba<*>
+            if (c00.r is Float) {
+                val r00 = (c00.r as Float); val r01 = (c01.r as Float); val r10 = (c10.r as Float); val r11 = (c11.r as Float)
+                val g00 = (c00.g as Float); val g01 = (c01.g as Float); val g10 = (c10.g as Float); val g11 = (c11.g as Float)
+                val b00 = (c00.b as Float); val b01 = (c01.b as Float); val b10 = (c10.b as Float); val b11 = (c11.b as Float)
+                val a00 = (c00.a as Float); val a01 = (c01.a as Float); val a10 = (c10.a as Float); val a11 = (c11.a as Float)
+                val r = wff * r00 + wfc * r01 + wcf * r10 + wcc * r11
+                val g = wff * g00 + wfc * g01 + wcf * g10 + wcc * g11
+                val b = wff * b00 + wfc * b01 + wcf * b10 + wcc * b11
+                val a = wff * a00 + wfc * a01 + wcf * a10 + wcc * a11
+                Rgba(r, g, b, a) as P
+            } else {
+                val r00 = (c00.r as UByte).toFloat(); val r01 = (c01.r as UByte).toFloat(); val r10 = (c10.r as UByte).toFloat(); val r11 = (c11.r as UByte).toFloat()
+                val g00 = (c00.g as UByte).toFloat(); val g01 = (c01.g as UByte).toFloat(); val g10 = (c10.g as UByte).toFloat(); val g11 = (c11.g as UByte).toFloat()
+                val b00 = (c00.b as UByte).toFloat(); val b01 = (c01.b as UByte).toFloat(); val b10 = (c10.b as UByte).toFloat(); val b11 = (c11.b as UByte).toFloat()
+                val a00 = (c00.a as UByte).toFloat(); val a01 = (c01.a as UByte).toFloat(); val a10 = (c10.a as UByte).toFloat(); val a11 = (c11.a as UByte).toFloat()
+                val r = round(wff * r00 + wfc * r01 + wcf * r10 + wcc * r11).toInt().coerceIn(0, 255).toUByte()
+                val g = round(wff * g00 + wfc * g01 + wcf * g10 + wcc * g11).toInt().coerceIn(0, 255).toUByte()
+                val b = round(wff * b00 + wfc * b01 + wcf * b10 + wcc * b11).toInt().coerceIn(0, 255).toUByte()
+                val a = round(wff * a00 + wfc * a01 + wcf * a10 + wcc * a11).toInt().coerceIn(0, 255).toUByte()
+                Rgba(r, g, b, a) as P
+            }
+        }
+        is Rgb<*> -> {
+            val c00 = p00 as Rgb<*>
+            val c01 = p01 as Rgb<*>
+            val c10 = p10 as Rgb<*>
+            val c11 = p11 as Rgb<*>
+            if (c00.r is Float) {
+                val r00 = (c00.r as Float); val r01 = (c01.r as Float); val r10 = (c10.r as Float); val r11 = (c11.r as Float)
+                val g00 = (c00.g as Float); val g01 = (c01.g as Float); val g10 = (c10.g as Float); val g11 = (c11.g as Float)
+                val b00 = (c00.b as Float); val b01 = (c01.b as Float); val b10 = (c10.b as Float); val b11 = (c11.b as Float)
+                val r = wff * r00 + wfc * r01 + wcf * r10 + wcc * r11
+                val g = wff * g00 + wfc * g01 + wcf * g10 + wcc * g11
+                val b = wff * b00 + wfc * b01 + wcf * b10 + wcc * b11
+                Rgb(r, g, b) as P
+            } else {
+                val r00 = (c00.r as UByte).toFloat(); val r01 = (c01.r as UByte).toFloat(); val r10 = (c10.r as UByte).toFloat(); val r11 = (c11.r as UByte).toFloat()
+                val g00 = (c00.g as UByte).toFloat(); val g01 = (c01.g as UByte).toFloat(); val g10 = (c10.g as UByte).toFloat(); val g11 = (c11.g as UByte).toFloat()
+                val b00 = (c00.b as UByte).toFloat(); val b01 = (c01.b as UByte).toFloat(); val b10 = (c10.b as UByte).toFloat(); val b11 = (c11.b as UByte).toFloat()
+                val r = round(wff * r00 + wfc * r01 + wcf * r10 + wcc * r11).toInt().coerceIn(0, 255).toUByte()
+                val g = round(wff * g00 + wfc * g01 + wcf * g10 + wcc * g11).toInt().coerceIn(0, 255).toUByte()
+                val b = round(wff * b00 + wfc * b01 + wcf * b10 + wcc * b11).toInt().coerceIn(0, 255).toUByte()
+                Rgb(r, g, b) as P
+            }
+        }
+        is Luma<*> -> {
+            val c00 = p00 as Luma<*>
+            val c01 = p01 as Luma<*>
+            val c10 = p10 as Luma<*>
+            val c11 = p11 as Luma<*>
+            if (c00.l is Float) {
+                val l00 = (c00.l as Float); val l01 = (c01.l as Float); val l10 = (c10.l as Float); val l11 = (c11.l as Float)
+                val l = wff * l00 + wfc * l01 + wcf * l10 + wcc * l11
+                Luma(l) as P
+            } else {
+                val l00 = (c00.l as UByte).toFloat(); val l01 = (c01.l as UByte).toFloat(); val l10 = (c10.l as UByte).toFloat(); val l11 = (c11.l as UByte).toFloat()
+                val l = round(wff * l00 + wfc * l01 + wcf * l10 + wcc * l11).toInt().coerceIn(0, 255).toUByte()
+                Luma(l) as P
+            }
+        }
+        is LumaA<*> -> {
+            val c00 = p00 as LumaA<*>
+            val c01 = p01 as LumaA<*>
+            val c10 = p10 as LumaA<*>
+            val c11 = p11 as LumaA<*>
+            if (c00.l is Float) {
+                val l00 = (c00.l as Float); val l01 = (c01.l as Float); val l10 = (c10.l as Float); val l11 = (c11.l as Float)
+                val a00 = (c00.a as Float); val a01 = (c01.a as Float); val a10 = (c10.a as Float); val a11 = (c11.a as Float)
+                val l = wff * l00 + wfc * l01 + wcf * l10 + wcc * l11
+                val a = wff * a00 + wfc * a01 + wcf * a10 + wcc * a11
+                LumaA(l, a) as P
+            } else {
+                val l00 = (c00.l as UByte).toFloat(); val l01 = (c01.l as UByte).toFloat(); val l10 = (c10.l as UByte).toFloat(); val l11 = (c11.l as UByte).toFloat()
+                val a00 = (c00.a as UByte).toFloat(); val a01 = (c01.a as UByte).toFloat(); val a10 = (c10.a as UByte).toFloat(); val a11 = (c11.a as UByte).toFloat()
+                val l = round(wff * l00 + wfc * l01 + wcf * l10 + wcc * l11).toInt().coerceIn(0, 255).toUByte()
+                val a = round(wff * a00 + wfc * a01 + wcf * a10 + wcc * a11).toInt().coerceIn(0, 255).toUByte()
+                LumaA(l, a) as P
+            }
+        }
+        else -> p00
+    }
+}
+
+/**
+ * Holds analytical Gaussian blur representation parameters.
+ */
+public data class GaussianBlurParameters(
+    /** X-axis kernel size, must be odd */
+    public val xAxisKernelSize: UInt,
+    /** X-axis sigma, must be > 0 and finite */
+    public val xAxisSigma: Float,
+    /** Y-axis kernel size, must be odd */
+    public val yAxisKernelSize: UInt,
+    /** Y-axis sigma, must be > 0 and finite */
+    public val yAxisSigma: Float,
+) {
+    public companion object {
+        /** Built-in smoothing kernel with size 3. */
+        public val SMOOTHING_3: GaussianBlurParameters = GaussianBlurParameters(3u, 0.8f, 3u, 0.8f)
+
+        /** Built-in smoothing kernel with size 5. */
+        public val SMOOTHING_5: GaussianBlurParameters = GaussianBlurParameters(5u, 1.1f, 5u, 1.1f)
+
+        /** Built-in smoothing kernel with size 7. */
+        public val SMOOTHING_7: GaussianBlurParameters = GaussianBlurParameters(7u, 1.4f, 7u, 1.4f)
+
+        /** Creates a parameter set from radius. */
+        public fun newFromRadius(radius: Float): GaussianBlurParameters {
+            require(radius >= 0.0f) { "Radius must be non-negative" }
+            return newFromKernelSize(radius * 2.0f + 1.0f)
+        }
+
+        /** Creates a parameter set from kernel size. */
+        public fun newFromKernelSize(kernelSize: Float): GaussianBlurParameters {
+            require(kernelSize > 0.0f && !kernelSize.isNaN() && !kernelSize.isInfinite()) { "Kernel size must be positive and finite" }
+            val iKernelSize = roundToNearestOdd(kernelSize)
+            val vSigma = sigmaSize(kernelSize)
+            return GaussianBlurParameters(iKernelSize, vSigma, iKernelSize, vSigma)
+        }
+
+        /** Creates an anisotropic parameter set from kernel sizes. */
+        public fun newAnisotropicKernelSize(xAxisKernelSize: Float, yAxisKernelSize: Float): GaussianBlurParameters {
+            require(xAxisKernelSize > 0.0f && !xAxisKernelSize.isNaN() && !xAxisKernelSize.isInfinite()) { "Kernel size must be positive and finite" }
+            require(yAxisKernelSize > 0.0f && !yAxisKernelSize.isNaN() && !yAxisKernelSize.isInfinite()) { "Kernel size must be positive and finite" }
+            val xKernelSize = roundToNearestOdd(xAxisKernelSize)
+            val yKernelSize = roundToNearestOdd(yAxisKernelSize)
+            val xSigma = sigmaSize(xAxisKernelSize)
+            val ySigma = sigmaSize(yAxisKernelSize)
+            return GaussianBlurParameters(xKernelSize, xSigma, yKernelSize, ySigma)
+        }
+
+        /** Creates a parameter set from sigma. */
+        public fun newFromSigma(sigma: Float): GaussianBlurParameters {
+            require(sigma > 0.0f && !sigma.isNaN() && !sigma.isInfinite()) { "Sigma must be positive and finite" }
+            val kernelSize = kernelSizeFromSigma(sigma)
+            return GaussianBlurParameters(kernelSize, sigma, kernelSize, sigma)
+        }
+
+        public fun roundToNearestOdd(x: Float): UInt {
+            val n = roundAwayFromZero(x).toUInt()
+            return if (n % 2u != 0u) {
+                n
+            } else {
+                val lower = if (n > 0u) n - 1u else 1u
+                val upper = n + 1u
+                val distLower = abs(x - lower.toFloat())
+                val distUpper = abs(x - upper.toFloat())
+                if (distLower <= distUpper) lower else upper
+            }
+        }
+
+        public fun sigmaSize(kernelSize: Float): Float {
+            val safeKernelSize = if (kernelSize <= 1.0f) 0.8f else kernelSize
+            return 0.3f * ((safeKernelSize - 1.0f) * 0.5f - 1.0f) + 0.8f
+        }
+
+        public fun kernelSizeFromSigma(sigma: Float): UInt {
+            val possibleSize = max(3.0f, (((sigma - 0.8f) / 0.3f + 1.0f) * 2.0f) + 1.0f).toUInt()
+            return if (possibleSize % 2u == 0u) possibleSize + 1u else possibleSize
+        }
+    }
+}
+
+/**
+ * Computes a 1D normalized Gaussian kernel of specified [width] and [sigma].
+ */
+public fun getGaussianKernel1d(width: Int, sigma: Float): FloatArray {
+    var sumNorm = 0.0f
+    val kernel = FloatArray(width)
+    val scale = 1.0f / (sqrt(2.0f * PI.toFloat()) * sigma)
+    val mean = (width / 2).toFloat()
+
+    for (x in 0 until width) {
+        val diff = (x.toFloat() - mean) / sigma
+        val newWeight = exp(-0.5f * diff * diff) * scale
+        kernel[x] = newWeight
+        sumNorm += newWeight
+    }
+
+    if (sumNorm != 0.0f) {
+        val sumScale = 1.0f / sumNorm
+        for (i in kernel.indices) {
+            kernel[i] *= sumScale
+        }
+    }
+
+    return kernel
+}
+
+/**
+ * Performs a 3x3 convolution filter on the image buffer.
+ */
+public fun filter3x3(
+    image: ByteArray,
+    width: Int,
+    height: Int,
+    channels: Int,
+    kernel: FloatArray,
+): ByteArray {
+    require(kernel.size == 9) { "Kernel must have 9 elements" }
+    val tapsX = intArrayOf(-1, 0, 1, -1, 0, 1, -1, 0, 1)
+    val tapsY = intArrayOf(-1, -1, -1, 0, 0, 0, 1, 1, 1)
+
+    val out = image.copyOf()
+    var sumKernel = 0.0f
+    for (k in kernel) sumKernel += k
+    val inverseSum = if (sumKernel == 0.0f) 1.0f else 1.0f / sumKernel
+
+    for (y in 1 until height - 1) {
+        for (x in 1 until width - 1) {
+            for (c in 0 until channels) {
+                var t = 0.0f
+                for (k in 0 until 9) {
+                    val x0 = x + tapsX[k]
+                    val y0 = y + tapsY[k]
+                    val px = image[(y0 * width + x0) * channels + c].toInt() and 0xFF
+                    t += px.toFloat() * kernel[k]
+                }
+                val finalVal = (t * inverseSum).coerceIn(0.0f, 255.0f)
+                out[(y * width + x) * channels + c] = finalVal.toInt().toByte()
+            }
+        }
+    }
+    return out
+}
+
+/**
+ * Applies a Gaussian blur with the given [sigma] to the image.
+ */
+public fun blur(
+    image: ByteArray,
+    width: Int,
+    height: Int,
+    channels: Int,
+    sigma: Float,
+): ByteArray {
+    val actualSigma = if (sigma == 0.0f) 0.8f else sigma
+    return blurAdvanced(image, width, height, channels, GaussianBlurParameters.newFromSigma(actualSigma))
+}
+
+/**
+ * Applies Gaussian blur using analytical parameters.
+ */
+public fun blurAdvanced(
+    image: ByteArray,
+    width: Int,
+    height: Int,
+    channels: Int,
+    params: GaussianBlurParameters,
+): ByteArray {
+    if (width <= 0 || height <= 0 || image.isEmpty()) return ByteArray(0)
+    val xKernel = getGaussianKernel1d(params.xAxisKernelSize.toInt(), params.xAxisSigma)
+    val yKernel = getGaussianKernel1d(params.yAxisKernelSize.toInt(), params.yAxisSigma)
+    val temp = ByteArray(image.size)
+    val out = ByteArray(image.size)
+    filter1dHorizontal(image, temp, width, height, channels, xKernel)
+    filter1dVertical(temp, out, width, height, channels, yKernel)
+    return out
+}
+
+/**
+ * Performs an unsharpen mask on the image buffer.
+ */
+public fun unsharpen(
+    image: ByteArray,
+    width: Int,
+    height: Int,
+    channels: Int,
+    sigma: Float,
+    threshold: Int,
+): ByteArray {
+    if (width <= 0 || height <= 0 || image.isEmpty()) return ByteArray(0)
+    val blurred = blurAdvanced(image, width, height, channels, GaussianBlurParameters.newFromSigma(sigma))
+    val out = ByteArray(image.size)
+    for (i in image.indices) {
+        val ic = image[i].toInt() and 0xFF
+        val id = blurred[i].toInt() and 0xFF
+        val diff = ic - id
+        if (abs(diff) > threshold) {
+            val e = (ic + diff).coerceIn(0, 255)
+            out[i] = e.toByte()
+        } else {
+            out[i] = image[i]
+        }
+    }
+    return out
 }
