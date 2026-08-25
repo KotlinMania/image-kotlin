@@ -292,13 +292,14 @@ public class BmpDecoder(
         val isRgba = colorType() == ColorType.Rgba8
         val outChannels = if (isRgba) 4 else 3
 
-        val paddedRowBytes = when (imageType) {
-            ImageType.Palette -> ((w * bitCount + 7) / 8 + 3) and 3.inv()
-            ImageType.RGB24 -> (w * 3 + 3) and 3.inv()
-            ImageType.RGB16, ImageType.Bitfields16 -> (w * 2 + 3) and 3.inv()
-            ImageType.RGB32, ImageType.RGBA32, ImageType.Bitfields32 -> w * 4
-            else -> 0
-        }
+        val paddedRowBytes =
+            when (imageType) {
+                ImageType.Palette -> ((w * bitCount + 7) / 8 + 3) and 3.inv()
+                ImageType.RGB24 -> (w * 3 + 3) and 3.inv()
+                ImageType.RGB16, ImageType.Bitfields16 -> (w * 2 + 3) and 3.inv()
+                ImageType.RGB32, ImageType.RGBA32, ImageType.Bitfields32 -> w * 4
+                else -> 0
+            }
         val expectedPixelBytes = paddedRowBytes * h
         if (imageType != ImageType.RLE8 && imageType != ImageType.RLE4) {
             if (rawImageData.size < expectedPixelBytes) {
@@ -339,13 +340,14 @@ public class BmpDecoder(
     }
 
     private fun applyIcoMask(buf: ByteArray, w: Int, h: Int) {
-        val paddedRowBytes = when (imageType) {
-            ImageType.Palette -> ((w * bitCount + 7) / 8 + 3) and 3.inv()
-            ImageType.RGB24 -> (w * 3 + 3) and 3.inv()
-            ImageType.RGB16, ImageType.Bitfields16 -> (w * 2 + 3) and 3.inv()
-            ImageType.RGB32, ImageType.RGBA32, ImageType.Bitfields32 -> w * 4
-            else -> return
-        }
+        val paddedRowBytes =
+            when (imageType) {
+                ImageType.Palette -> ((w * bitCount + 7) / 8 + 3) and 3.inv()
+                ImageType.RGB24 -> (w * 3 + 3) and 3.inv()
+                ImageType.RGB16, ImageType.Bitfields16 -> (w * 2 + 3) and 3.inv()
+                ImageType.RGB32, ImageType.RGBA32, ImageType.Bitfields32 -> w * 4
+                else -> return
+            }
         val maskOffset = paddedRowBytes * h
         val maskRowBytes = ((w + 31) / 32) * 4
         if (rawImageData.size >= maskOffset + maskRowBytes * h) {

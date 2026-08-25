@@ -90,7 +90,9 @@ public class ImageBuffer<P, Container>(
         if (w == 0u || h == 0u) {
             return clone()
         }
-        val blurredBytes = io.github.kotlinmania.image.imageops.fastBlur(data, w.toInt(), h.toInt(), channelCount, sigma)
+        val blurredBytes =
+            io.github.kotlinmania.image.imageops
+                .fastBlur(data, w.toInt(), h.toInt(), channelCount, sigma)
         val copy = ImageBuffer<P, ByteArray>(w, h, blurredBytes, channelCount, pixelReader, pixelWriter, pixelBlender)
         copy.color = color
         return copy

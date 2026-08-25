@@ -7,6 +7,7 @@ package io.github.kotlinmania.image.codecs.avif
 public enum class AvifColorSpace {
     /** sRGB colorspace */
     Srgb,
+
     /** BT.709 colorspace */
     Bt709,
 }

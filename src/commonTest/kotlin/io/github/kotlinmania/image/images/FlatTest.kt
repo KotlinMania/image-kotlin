@@ -13,18 +13,20 @@ import kotlin.test.assertTrue
 class FlatTest {
     @Test
     fun aliasingView() {
-        val buffer = FlatSamples(
-            samples = byteArrayOf(42),
-            layout = SampleLayout(
-                channels = 3u,
-                channelStride = 0,
-                width = 100u,
-                widthStride = 0,
-                height = 100u,
-                heightStride = 0,
-            ),
-            colorHint = null,
-        )
+        val buffer =
+            FlatSamples(
+                samples = byteArrayOf(42),
+                layout =
+                    SampleLayout(
+                        channels = 3u,
+                        channelStride = 0,
+                        width = 100u,
+                        widthStride = 0,
+                        height = 100u,
+                        heightStride = 0,
+                    ),
+                colorHint = null,
+            )
 
         val view = buffer.asViewRgb().getOrThrow()
         var count = 0
@@ -41,18 +43,20 @@ class FlatTest {
 
     @Test
     fun mutableView() {
-        val buffer = FlatSamples(
-            samples = ByteArray(18),
-            layout = SampleLayout(
-                channels = 2u,
-                channelStride = 1,
-                width = 3u,
-                widthStride = 2,
-                height = 3u,
-                heightStride = 6,
-            ),
-            colorHint = null,
-        )
+        val buffer =
+            FlatSamples(
+                samples = ByteArray(18),
+                layout =
+                    SampleLayout(
+                        channels = 2u,
+                        channelStride = 1,
+                        width = 3u,
+                        widthStride = 2,
+                        height = 3u,
+                        heightStride = 6,
+                    ),
+                colorHint = null,
+            )
 
         val view = buffer.asViewMutLumaA().getOrThrow()
         assertEquals(Pair(3u, 3u), view.dimensions())
@@ -67,73 +71,82 @@ class FlatTest {
 
     @Test
     fun normalForms() {
-        val pixelPacked = FlatSamples(
-            samples = ByteArray(0),
-            layout = SampleLayout(
-                channels = 2u,
-                channelStride = 1,
-                width = 3u,
-                widthStride = 9,
-                height = 3u,
-                heightStride = 28,
-            ),
-            colorHint = null,
-        )
+        val pixelPacked =
+            FlatSamples(
+                samples = ByteArray(0),
+                layout =
+                    SampleLayout(
+                        channels = 2u,
+                        channelStride = 1,
+                        width = 3u,
+                        widthStride = 9,
+                        height = 3u,
+                        heightStride = 28,
+                    ),
+                colorHint = null,
+            )
         assertTrue(pixelPacked.isNormal(NormalForm.PixelPacked))
 
-        val imagePacked = FlatSamples(
-            samples = ByteArray(0),
-            layout = SampleLayout(
-                channels = 2u,
-                channelStride = 8,
-                width = 4u,
-                widthStride = 1,
-                height = 2u,
-                heightStride = 4,
-            ),
-            colorHint = null,
-        )
+        val imagePacked =
+            FlatSamples(
+                samples = ByteArray(0),
+                layout =
+                    SampleLayout(
+                        channels = 2u,
+                        channelStride = 8,
+                        width = 4u,
+                        widthStride = 1,
+                        height = 2u,
+                        heightStride = 4,
+                    ),
+                colorHint = null,
+            )
         assertTrue(imagePacked.isNormal(NormalForm.ImagePacked))
 
-        val rowMajorPacked = FlatSamples(
-            samples = ByteArray(0),
-            layout = SampleLayout(
+        val rowMajorPacked =
+            FlatSamples(
+                samples = ByteArray(0),
+                layout =
+                    SampleLayout(
+                        channels = 2u,
+                        channelStride = 1,
+                        width = 4u,
+                        widthStride = 2,
+                        height = 2u,
+                        heightStride = 8,
+                    ),
+                colorHint = null,
+            )
+        assertTrue(rowMajorPacked.isNormal(NormalForm.RowMajorPacked))
+
+        val columnMajorPacked =
+            FlatSamples(
+                samples = ByteArray(0),
+                layout =
+                    SampleLayout(
+                        channels = 2u,
+                        channelStride = 1,
+                        width = 4u,
+                        widthStride = 4,
+                        height = 2u,
+                        heightStride = 2,
+                    ),
+                colorHint = null,
+            )
+        assertTrue(columnMajorPacked.isNormal(NormalForm.ColumnMajorPacked))
+    }
+
+    @Test
+    fun imageBufferConversion() {
+        val expectedLayout =
+            SampleLayout(
                 channels = 2u,
                 channelStride = 1,
                 width = 4u,
                 widthStride = 2,
                 height = 2u,
                 heightStride = 8,
-            ),
-            colorHint = null,
-        )
-        assertTrue(rowMajorPacked.isNormal(NormalForm.RowMajorPacked))
-
-        val columnMajorPacked = FlatSamples(
-            samples = ByteArray(0),
-            layout = SampleLayout(
-                channels = 2u,
-                channelStride = 1,
-                width = 4u,
-                widthStride = 4,
-                height = 2u,
-                heightStride = 2,
-            ),
-            colorHint = null,
-        )
-        assertTrue(columnMajorPacked.isNormal(NormalForm.ColumnMajorPacked))
-    }
-
-    @Test
-    fun imageBufferConversion() {
-        val expectedLayout = SampleLayout(
-            channels = 2u,
-            channelStride = 1,
-            width = 4u,
-            widthStride = 2,
-            height = 2u,
-            heightStride = 8,
-        )
+            )
 
         val initial = ImageBuffer.createGrayAlpha(expectedLayout.width, expectedLayout.height, ByteArray(16))!!
         val buffer = initial.intoFlatSamples()

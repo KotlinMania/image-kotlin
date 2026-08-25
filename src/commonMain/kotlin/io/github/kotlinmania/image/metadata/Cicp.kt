@@ -246,6 +246,7 @@ public enum class DerivedLuminance {
 
 public interface ColorComponentForCicp<T> {
     public fun expandToF32(value: T): Float
+
     public fun clampFromF32(value: Float): T
 
     public companion object {

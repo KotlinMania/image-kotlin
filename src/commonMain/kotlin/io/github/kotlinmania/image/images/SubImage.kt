@@ -76,6 +76,30 @@ public class SubImage<P>(
         return SubImage(image, xOffset + x, yOffset + y, width, height)
     }
 
+    public fun xOffset(): UInt = xOffset
+
+    public fun yOffset(): UInt = yOffset
+
+    public fun xStride(): UInt = width
+
+    public fun yStride(): UInt = height
+
+    public fun getPixelMut(x: UInt, y: UInt): P = getPixel(x, y)
+
+    public fun bufferWithDimensions(width: UInt, height: UInt): GenericImage<P> {
+        val imgBuf = image as? ImageBuffer<P, *>
+        return if (imgBuf != null) {
+            imgBuf.bufferWithDimensions(width, height)
+        } else {
+            image.view(0u, 0u, width, height)
+        }
+    }
+
+    public fun bufferLike(): GenericImage<P> = bufferWithDimensions(width, height)
+
+    public fun colorSpace(): io.github.kotlinmania.image.metadata.Cicp =
+        (image as? ImageBuffer<*, *>)?.colorSpace() ?: io.github.kotlinmania.image.metadata.Cicp.SRGB
+
     public companion object {
         public fun <P> new(image: GenericImage<P>, x: UInt, y: UInt, width: UInt, height: UInt): SubImage<P> =
             SubImage(image, x, y, width, height)

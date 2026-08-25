@@ -10,7 +10,6 @@ import io.github.kotlinmania.image.UnsupportedError
 import io.github.kotlinmania.image.UnsupportedErrorKind
 import io.github.kotlinmania.image.io.BufferIoRead
 import io.github.kotlinmania.image.io.BufferIoWrite
-import io.github.kotlinmania.image.io.ImageDecoder
 import io.github.kotlinmania.image.io.ImageEncoder
 import io.github.kotlinmania.image.io.ImageFormat
 import io.github.kotlinmania.image.io.IoRead
@@ -36,7 +35,7 @@ private val FARBFELD_MAGIC =
  */
 public class FarbfeldDecoder internal constructor(
     private val reader: IoRead,
-) : ImageDecoder {
+) : io.github.kotlinmania.image.io.ImageDecoderRect {
     private val width: UInt
     private val height: UInt
 
@@ -115,6 +114,28 @@ public class FarbfeldDecoder internal constructor(
             "Invalid buffer size: expected $expected, got ${buf.size}"
         }
         reader.readExact(buf)
+    }
+
+    override fun readRect(
+        x: UInt,
+        y: UInt,
+        width: UInt,
+        height: UInt,
+        buf: ByteArray,
+        rowPitch: Int,
+    ) {
+        val totalBytes = width.toLong() * height.toLong() * 8L
+        require(buf.size >= totalBytes) {
+            "output buffer too short: expected $totalBytes, provided ${buf.size}"
+        }
+        val fullData = ByteArray((this.width.toLong() * this.height.toLong() * 8L).toInt())
+        readImage(fullData)
+        val fullRowPitch = this.width.toInt() * 8
+        for (r in 0 until height.toInt()) {
+            val srcRow = (y.toInt() + r) * fullRowPitch + (x.toInt() * 8)
+            val dstRow = r * rowPitch
+            fullData.copyInto(buf, destinationOffset = dstRow, startIndex = srcRow, endIndex = srcRow + width.toInt() * 8)
+        }
     }
 }
 

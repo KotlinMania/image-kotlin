@@ -56,6 +56,7 @@ internal data class DirEntry(
     val imageOffset: UInt,
 ) {
     fun realWidth(): UInt = if (width == 0.toUByte()) 256u else width.toUInt()
+
     fun realHeight(): UInt = if (height == 0.toUByte()) 256u else height.toUInt()
 
     fun matchesDimensions(w: UInt, h: UInt): Boolean =
@@ -111,11 +112,12 @@ public class IcoDecoder(
         } else {
             // BMP entry in ICO format
             val hasBmHeader = entryBytes.size >= 2 && entryBytes[0] == 'B'.code.toByte() && entryBytes[1] == 'M'.code.toByte()
-            innerDecoder = if (hasBmHeader) {
-                BmpDecoder(entryBytes, false)
-            } else {
-                BmpDecoder(entryBytes, true)
-            }
+            innerDecoder =
+                if (hasBmHeader) {
+                    BmpDecoder(entryBytes, false)
+                } else {
+                    BmpDecoder(entryBytes, true)
+                }
         }
     }
 
@@ -129,13 +131,14 @@ public class IcoDecoder(
             throw ImageError.Decoding(
                 DecodingError(
                     ImageFormatHint.Exact(ImageFormat.Ico),
-                    DecoderError.ImageEntryDimensionMismatch(
-                        "BMP",
-                        selectedEntry.realWidth(),
-                        selectedEntry.realHeight(),
-                        w,
-                        h,
-                    ).message ?: "",
+                    DecoderError
+                        .ImageEntryDimensionMismatch(
+                            "BMP",
+                            selectedEntry.realWidth(),
+                            selectedEntry.realHeight(),
+                            w,
+                            h,
+                        ).message ?: "",
                 ),
             )
         }

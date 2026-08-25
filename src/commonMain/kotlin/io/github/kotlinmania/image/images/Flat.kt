@@ -45,7 +45,9 @@ public enum class NormalForm {
     /**
      * The samples are in column-major form and all samples are packed.
      */
-    ColumnMajorPacked;
+    ColumnMajorPacked,
+
+    ;
 
     /**
      * Compares logical preconditions.
@@ -75,38 +77,49 @@ public sealed class FlatError : Exception() {
     }
 
     /** The represented image can not use this representation. */
-    public data class NormalFormRequired(public val form: NormalForm) : FlatError() {
-        override val message: String = "The layout needs to " + when (form) {
-            NormalForm.ColumnMajorPacked -> "be packed and in column major form"
-            NormalForm.ImagePacked -> "be fully packed"
-            NormalForm.PixelPacked -> "have packed pixels"
-            NormalForm.RowMajorPacked -> "be packed and in row major form"
-            NormalForm.Unaliased -> "not have any aliasing channels"
-        }
+    public data class NormalFormRequired(
+        public val form: NormalForm,
+    ) : FlatError() {
+        override val message: String =
+            "The layout needs to " +
+                when (form) {
+                    NormalForm.ColumnMajorPacked -> "be packed and in column major form"
+                    NormalForm.ImagePacked -> "be fully packed"
+                    NormalForm.PixelPacked -> "have packed pixels"
+                    NormalForm.RowMajorPacked -> "be packed and in row major form"
+                    NormalForm.Unaliased -> "not have any aliasing channels"
+                }
     }
 
     /** The color format did not match the channel count. */
-    public data class ChannelCountMismatch(public val layoutChannels: UByte, public val pixelChannels: UByte) : FlatError() {
+    public data class ChannelCountMismatch(
+        public val layoutChannels: UByte,
+        public val pixelChannels: UByte,
+    ) : FlatError() {
         override val message: String =
             "The channel count of the chosen pixel (=$pixelChannels) does agree with the layout (=$layoutChannels)"
     }
 
     /** The chosen color type does not match the hint. */
-    public data class WrongColor(public val color: ColorType) : FlatError() {
+    public data class WrongColor(
+        public val color: ColorType,
+    ) : FlatError() {
         override val message: String = "The chosen color type does not match the hint $color"
     }
 
-    public fun toImageError(): ImageError = when (this) {
-        is TooLarge -> ImageError.Parameter(ParameterError.fromKind(ParameterErrorKind.DimensionMismatch))
-        is NormalFormRequired -> ImageError.Decoding(DecodingError.new(ImageFormatHint.Unknown, this))
-        is ChannelCountMismatch -> ImageError.Parameter(ParameterError.fromKind(ParameterErrorKind.DimensionMismatch))
-        is WrongColor -> ImageError.Unsupported(
-            UnsupportedError.fromFormatAndKind(
-                ImageFormatHint.Unknown,
-                UnsupportedErrorKind.Color(color.toExtendedColorType()),
-            ),
-        )
-    }
+    public fun toImageError(): ImageError =
+        when (this) {
+            is TooLarge -> ImageError.Parameter(ParameterError.fromKind(ParameterErrorKind.DimensionMismatch))
+            is NormalFormRequired -> ImageError.Decoding(DecodingError.new(ImageFormatHint.Unknown, this))
+            is ChannelCountMismatch -> ImageError.Parameter(ParameterError.fromKind(ParameterErrorKind.DimensionMismatch))
+            is WrongColor ->
+                ImageError.Unsupported(
+                    UnsupportedError.fromFormatAndKind(
+                        ImageFormatHint.Unknown,
+                        UnsupportedErrorKind.Color(color.toExtendedColorType()),
+                    ),
+                )
+        }
 }
 
 /**
@@ -171,11 +184,12 @@ public data class SampleLayout(
     public fun fits(len: Int): Boolean = minLength()?.let { len >= it } ?: false
 
     internal fun increasingStrideDims(): List<Dim> {
-        val grouped = mutableListOf(
-            Dim(channelStride, channels.toInt()),
-            Dim(widthStride, width.toInt()),
-            Dim(heightStride, height.toInt()),
-        )
+        val grouped =
+            mutableListOf(
+                Dim(channelStride, channels.toInt()),
+                Dim(widthStride, width.toInt()),
+                Dim(heightStride, height.toInt()),
+            )
         grouped.sort()
         return grouped
     }
@@ -339,14 +353,15 @@ public data class FlatSamples<Buffer>(
             val bytes = byteArrayOf(pixel.r.toByte(), pixel.g.toByte(), pixel.b.toByte())
             return FlatSamples(
                 samples = bytes,
-                layout = SampleLayout(
-                    channels = 3u,
-                    channelStride = 0,
-                    width = width,
-                    widthStride = 0,
-                    height = height,
-                    heightStride = 0,
-                ),
+                layout =
+                    SampleLayout(
+                        channels = 3u,
+                        channelStride = 0,
+                        width = width,
+                        widthStride = 0,
+                        height = height,
+                        heightStride = 0,
+                    ),
                 colorHint = ColorType.Rgb8,
             )
         }
@@ -355,14 +370,15 @@ public data class FlatSamples<Buffer>(
             val bytes = byteArrayOf(pixel.r.toByte(), pixel.g.toByte(), pixel.b.toByte(), pixel.a.toByte())
             return FlatSamples(
                 samples = bytes,
-                layout = SampleLayout(
-                    channels = 4u,
-                    channelStride = 0,
-                    width = width,
-                    widthStride = 0,
-                    height = height,
-                    heightStride = 0,
-                ),
+                layout =
+                    SampleLayout(
+                        channels = 4u,
+                        channelStride = 0,
+                        width = width,
+                        widthStride = 0,
+                        height = height,
+                        heightStride = 0,
+                    ),
                 colorHint = ColorType.Rgba8,
             )
         }
@@ -371,14 +387,15 @@ public data class FlatSamples<Buffer>(
             val bytes = byteArrayOf(pixel.l.toByte())
             return FlatSamples(
                 samples = bytes,
-                layout = SampleLayout(
-                    channels = 1u,
-                    channelStride = 0,
-                    width = width,
-                    widthStride = 0,
-                    height = height,
-                    heightStride = 0,
-                ),
+                layout =
+                    SampleLayout(
+                        channels = 1u,
+                        channelStride = 0,
+                        width = width,
+                        widthStride = 0,
+                        height = height,
+                        heightStride = 0,
+                    ),
                 colorHint = ColorType.L8,
             )
         }
@@ -387,14 +404,15 @@ public data class FlatSamples<Buffer>(
             val bytes = byteArrayOf(pixel.l.toByte(), pixel.a.toByte())
             return FlatSamples(
                 samples = bytes,
-                layout = SampleLayout(
-                    channels = 2u,
-                    channelStride = 0,
-                    width = width,
-                    widthStride = 0,
-                    height = height,
-                    heightStride = 0,
-                ),
+                layout =
+                    SampleLayout(
+                        channels = 2u,
+                        channelStride = 0,
+                        width = width,
+                        widthStride = 0,
+                        height = height,
+                        heightStride = 0,
+                    ),
                 colorHint = ColorType.La8,
             )
         }
@@ -581,12 +599,13 @@ public fun FlatSamples<ByteArray>.asViewMutRgba(): Result<ViewMut<ByteArray, Rgb
             },
             pixelBlender = { flat, x, y, p ->
                 val base = flat.layout.inBoundsIndex(0u, x, y)
-                val cur = Rgba(
-                    flat.samples[base].toUByte(),
-                    flat.samples[base + 1].toUByte(),
-                    flat.samples[base + 2].toUByte(),
-                    flat.samples[base + 3].toUByte(),
-                )
+                val cur =
+                    Rgba(
+                        flat.samples[base].toUByte(),
+                        flat.samples[base + 1].toUByte(),
+                        flat.samples[base + 2].toUByte(),
+                        flat.samples[base + 3].toUByte(),
+                    )
                 cur.blendUByte(p)
                 flat.samples[base] = cur.r.toByte()
                 flat.samples[base + 1] = cur.g.toByte()
@@ -649,10 +668,11 @@ public fun FlatSamples<ByteArray>.asViewMutLumaA(): Result<ViewMut<ByteArray, Lu
             },
             pixelBlender = { flat, x, y, p ->
                 val base = flat.layout.inBoundsIndex(0u, x, y)
-                val cur = LumaA(
-                    flat.samples[base].toUByte(),
-                    flat.samples[base + 1].toUByte(),
-                )
+                val cur =
+                    LumaA(
+                        flat.samples[base].toUByte(),
+                        flat.samples[base + 1].toUByte(),
+                    )
                 cur.blendUByte(p)
                 flat.samples[base] = cur.l.toByte()
                 flat.samples[base + 1] = cur.a.toByte()
@@ -671,8 +691,9 @@ public fun FlatSamples<ByteArray>.tryIntoRgbImage(): Result<RgbImage> {
     if (!fits(samples.size)) {
         return Result.failure(FlatError.TooLarge.toImageError())
     }
-    val img = ImageBuffer.createRgb(layout.width, layout.height, samples)
-        ?: return Result.failure(FlatError.TooLarge.toImageError())
+    val img =
+        ImageBuffer.createRgb(layout.width, layout.height, samples)
+            ?: return Result.failure(FlatError.TooLarge.toImageError())
     return Result.success(img)
 }
 
@@ -686,8 +707,9 @@ public fun FlatSamples<ByteArray>.tryIntoRgbaImage(): Result<RgbaImage> {
     if (!fits(samples.size)) {
         return Result.failure(FlatError.TooLarge.toImageError())
     }
-    val img = ImageBuffer.createRgba(layout.width, layout.height, samples)
-        ?: return Result.failure(FlatError.TooLarge.toImageError())
+    val img =
+        ImageBuffer.createRgba(layout.width, layout.height, samples)
+            ?: return Result.failure(FlatError.TooLarge.toImageError())
     return Result.success(img)
 }
 
@@ -701,8 +723,9 @@ public fun FlatSamples<ByteArray>.tryIntoGrayImage(): Result<GrayImage> {
     if (!fits(samples.size)) {
         return Result.failure(FlatError.TooLarge.toImageError())
     }
-    val img = ImageBuffer.createGray(layout.width, layout.height, samples)
-        ?: return Result.failure(FlatError.TooLarge.toImageError())
+    val img =
+        ImageBuffer.createGray(layout.width, layout.height, samples)
+            ?: return Result.failure(FlatError.TooLarge.toImageError())
     return Result.success(img)
 }
 
@@ -716,8 +739,9 @@ public fun FlatSamples<ByteArray>.tryIntoGrayAlphaImage(): Result<GrayAlphaImage
     if (!fits(samples.size)) {
         return Result.failure(FlatError.TooLarge.toImageError())
     }
-    val img = ImageBuffer.createGrayAlpha(layout.width, layout.height, samples)
-        ?: return Result.failure(FlatError.TooLarge.toImageError())
+    val img =
+        ImageBuffer.createGrayAlpha(layout.width, layout.height, samples)
+            ?: return Result.failure(FlatError.TooLarge.toImageError())
     return Result.success(img)
 }
 
@@ -798,4 +822,3 @@ public typealias Pixel = Any?
 public data class NormalFormRequiredError(
     public val form: NormalForm,
 ) : Exception("Required sample buffer in normal form $form")
-

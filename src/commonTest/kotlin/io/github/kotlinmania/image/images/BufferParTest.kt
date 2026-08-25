@@ -32,13 +32,14 @@ class BufferParTest {
 
     @Test
     fun iterParity() {
-        val image1 = ImageBuffer.createRgb(17u, 29u) { x, y ->
-            Rgb(
-                ((x + y * 98u + 0u * 27u) % 255u).toUByte(),
-                ((x + y * 98u + 1u * 27u) % 255u).toUByte(),
-                ((x + y * 98u + 2u * 27u) % 255u).toUByte(),
-            )
-        }
+        val image1 =
+            ImageBuffer.createRgb(17u, 29u) { x, y ->
+                Rgb(
+                    ((x + y * 98u + 0u * 27u) % 255u).toUByte(),
+                    ((x + y * 98u + 1u * 27u) % 255u).toUByte(),
+                    ((x + y * 98u + 2u * 27u) % 255u).toUByte(),
+                )
+            }
         val image2 = image1.clone()
 
         assertEquals(

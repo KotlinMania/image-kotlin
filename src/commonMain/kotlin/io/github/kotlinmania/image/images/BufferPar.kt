@@ -13,9 +13,13 @@ public class PixelsPar<P> internal constructor(
     private val pixels: List<P>,
 ) : Iterable<P> {
     public val size: Int get() = pixels.size
+
     public fun len(): Int = pixels.size
+
     public fun isEmpty(): Boolean = pixels.isEmpty()
+
     override fun iterator(): Iterator<P> = pixels.iterator()
+
     public fun toList(): List<P> = pixels
 
     override fun toString(): String = "PixelsPar(size=$size)"
@@ -28,9 +32,13 @@ public class PixelsMutPar<P> internal constructor(
     private val pixels: List<P>,
 ) : Iterable<P> {
     public val size: Int get() = pixels.size
+
     public fun len(): Int = pixels.size
+
     public fun isEmpty(): Boolean = pixels.isEmpty()
+
     override fun iterator(): Iterator<P> = pixels.iterator()
+
     public fun toList(): List<P> = pixels
 
     override fun toString(): String = "PixelsMutPar(size=$size)"
@@ -44,9 +52,13 @@ public class EnumeratePixelsPar<P> internal constructor(
     public val width: UInt,
 ) : Iterable<Triple<UInt, UInt, P>> {
     public val size: Int get() = enumerated.size
+
     public fun len(): Int = enumerated.size
+
     public fun isEmpty(): Boolean = enumerated.isEmpty()
+
     override fun iterator(): Iterator<Triple<UInt, UInt, P>> = enumerated.iterator()
+
     public fun toList(): List<Triple<UInt, UInt, P>> = enumerated
 
     override fun toString(): String = "EnumeratePixelsPar(width=$width, size=$size)"
@@ -60,9 +72,13 @@ public class EnumeratePixelsMutPar<P> internal constructor(
     public val width: UInt,
 ) : Iterable<Triple<UInt, UInt, P>> {
     public val size: Int get() = enumerated.size
+
     public fun len(): Int = enumerated.size
+
     public fun isEmpty(): Boolean = enumerated.isEmpty()
+
     override fun iterator(): Iterator<Triple<UInt, UInt, P>> = enumerated.iterator()
+
     public fun toList(): List<Triple<UInt, UInt, P>> = enumerated
 
     override fun toString(): String = "EnumeratePixelsMutPar(width=$width, size=$size)"
