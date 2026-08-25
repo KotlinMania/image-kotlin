@@ -12,7 +12,7 @@ class CicpTest {
     private fun noCoefficientFallback(): FloatArray = error("Fallback coefficients required")
 
     @Test
-    fun testDerivedLuminance() {
+    fun derivedLuminance() {
         val luminance = Cicp.SRGB.intoRgb().derivedLuminance()
         assertNotNull(luminance)
         val kr = luminance[0]
@@ -39,7 +39,7 @@ class CicpTest {
     }
 
     @Test
-    fun testCanCreateTransforms() {
+    fun canCreateTransforms() {
         assertNotNull(CicpTransform.new(Cicp.SRGB, Cicp.SRGB))
         assertNotNull(CicpTransform.new(Cicp.SRGB, Cicp.DISPLAY_P3))
         assertNotNull(CicpTransform.new(Cicp.DISPLAY_P3, Cicp.SRGB))
@@ -47,7 +47,7 @@ class CicpTest {
     }
 
     @Test
-    fun testTransformPixelsSrgb() {
+    fun transformPixelsSrgb() {
         val data = listOf(255u.toUByte(), 0u.toUByte(), 0u.toUByte(), 255u.toUByte())
         val color = Cicp.SRGB.intoRgb()
         val rgba =
@@ -85,7 +85,7 @@ class CicpTest {
     }
 
     @Test
-    fun testTransformPixelsSrgb16() {
+    fun transformPixelsSrgb16() {
         val data1 = listOf((UShort.MAX_VALUE / 2u).toUShort())
         val color = Cicp.SRGB.intoRgb()
         val rgb1 =
@@ -157,7 +157,7 @@ class CicpTest {
     }
 
     @Test
-    fun testTransformPixelsSrgbLumaAlpha() {
+    fun transformPixelsSrgbLumaAlpha() {
         val data1 = listOf((UShort.MAX_VALUE / 2u).toUShort(), UShort.MAX_VALUE)
         val color = Cicp.SRGB.intoRgb()
         val rgb1 =
