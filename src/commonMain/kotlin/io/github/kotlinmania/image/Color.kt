@@ -205,6 +205,20 @@ public sealed interface ExtendedColorType {
             else -> null
         }
 
+    /** Returns if there is an alpha channel. */
+    public fun hasAlpha(): Boolean =
+        when (this) {
+            A8, La1, La2, La4, La8, La16, Rgba1, Rgba2, Rgba4, Rgba8, Rgba16, Rgba32F, Bgra8 -> true
+            else -> false
+        }
+
+    /** Returns false if the color scheme is grayscale, true otherwise. */
+    public fun hasColor(): Boolean =
+        when (this) {
+            A8, L1, L2, L4, L8, L16, La1, La2, La4, La8, La16 -> false
+            else -> true
+        }
+
     /** Returns the number of bytes required to hold a width x height image of this color type. */
     public fun bufferSize(width: UInt, height: UInt): ULong {
         val bpp = bitsPerPixel().toULong()
