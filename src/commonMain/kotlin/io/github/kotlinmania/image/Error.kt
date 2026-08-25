@@ -59,11 +59,16 @@ public sealed class ImageError(
 
 /**
  * The implementation for an operation was not provided.
+ *
+ * See the variant [ImageError.Unsupported] for more documentation.
  */
 public data class UnsupportedError(
     public val format: ImageFormatHint,
     public val kind: UnsupportedErrorKind,
 ) {
+    /**
+     * Returns the image format associated with this error.
+     */
     public fun formatHint(): ImageFormatHint = format
 
     public fun source(): Throwable? = null
@@ -89,6 +94,12 @@ public data class UnsupportedError(
         }
 
     public companion object {
+        /**
+         * Create an [UnsupportedError] for an image with details on the unsupported feature.
+         *
+         * If the operation was not connected to a particular image format then the hint may be
+         * [ImageFormatHint.Unknown].
+         */
         public fun fromFormatAndKind(format: ImageFormatHint, kind: UnsupportedErrorKind): UnsupportedError =
             UnsupportedError(format, kind)
 
@@ -175,6 +186,11 @@ public data class EncodingError(
     }
 }
 
+/**
+ * An error was encountered in inputs arguments.
+ *
+ * This is used as an opaque representation for the [ImageError.Parameter] variant.
+ */
 public data class ParameterError(
     public val kind: ParameterErrorKind,
     public val underlying: Throwable? = null,
@@ -197,33 +213,46 @@ public data class ParameterError(
     }
 
     public companion object {
+        /** Construct a [ParameterError] directly from a corresponding kind. */
         public fun fromKind(kind: ParameterErrorKind): ParameterError = ParameterError(kind, null)
 
         public fun from(kind: ParameterErrorKind): ParameterError = ParameterError(kind, null)
     }
 }
 
+/** Details how a parameter is malformed. */
 public sealed interface ParameterErrorKind {
+    /** The dimensions passed are wrong. */
     public data object DimensionMismatch : ParameterErrorKind
 
+    /** Repeated an operation for which error that could not be cloned was emitted already. */
     public data object FailedAlready : ParameterErrorKind
 
+    /** The cicp is required to be RGB-like but had other matrix transforms or narrow range. */
     public data class RgbCicpRequired(
         public val cicp: Cicp,
     ) : ParameterErrorKind
 
+    /** A string describing the parameter. */
     public data class Generic(
         public val message: String,
     ) : ParameterErrorKind
 
+    /** The end of the image has been reached. */
     public data object NoMoreData : ParameterErrorKind
 
+    /** An operation expected a concrete color space but another was found. */
     public data class CicpMismatch(
         public val expected: Cicp,
         public val found: Cicp,
     ) : ParameterErrorKind
 }
 
+/**
+ * Completing the operation would have required more resources than allowed.
+ *
+ * This is used as an opaque representation for the [ImageError.Limits] variant.
+ */
 public data class LimitError(
     public val kind: LimitErrorKind,
 ) {
@@ -239,17 +268,22 @@ public data class LimitError(
         }
 
     public companion object {
+        /** Construct a generic [LimitError] directly from a corresponding kind. */
         public fun fromKind(kind: LimitErrorKind): LimitError = LimitError(kind)
 
         public fun from(kind: LimitErrorKind): LimitError = LimitError(kind)
     }
 }
 
+/** Indicates the limit that prevented an operation from completing. */
 public sealed interface LimitErrorKind {
+    /** The resulting image exceed dimension limits in either direction. */
     public data object DimensionError : LimitErrorKind
 
+    /** The operation would have performed an allocation larger than allowed. */
     public data object InsufficientMemory : LimitErrorKind
 
+    /** The specified strict limits are not supported for this operation. */
     public data class Unsupported(
         public val limits: Limits,
         public val supported: LimitSupport,
