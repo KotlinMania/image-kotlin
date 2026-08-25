@@ -234,4 +234,73 @@ class DynimageTests {
         assertEquals(4u, cropped.width())
         assertEquals(5u, cropped.height())
     }
+
+    @Test
+    fun testAsMutAccessors() {
+        val rgb8 = DynamicImage.newRgb8(2u, 2u)
+        assertNotNull(rgb8.asMutRgb8())
+        val rgba8 = DynamicImage.newRgba8(2u, 2u)
+        assertNotNull(rgba8.asMutRgba8())
+        val luma8 = DynamicImage.newLuma8(2u, 2u)
+        assertNotNull(luma8.asMutLuma8())
+        val lumaA8 = DynamicImage.newLumaA8(2u, 2u)
+        assertNotNull(lumaA8.asMutLumaAlpha8())
+        val rgb16 = DynamicImage.newRgb16(2u, 2u)
+        assertNotNull(rgb16.asMutRgb16())
+        val rgba16 = DynamicImage.newRgba16(2u, 2u)
+        assertNotNull(rgba16.asMutRgba16())
+        val luma16 = DynamicImage.newLuma16(2u, 2u)
+        assertNotNull(luma16.asMutLuma16())
+        val lumaA16 = DynamicImage.newLumaA16(2u, 2u)
+        assertNotNull(lumaA16.asMutLumaAlpha16())
+        val rgb32F = DynamicImage.newRgb32F(2u, 2u)
+        assertNotNull(rgb32F.asMutRgb32F())
+        val rgba32F = DynamicImage.newRgba32F(2u, 2u)
+        assertNotNull(rgba32F.asMutRgba32F())
+    }
+
+    @Test
+    fun testFlatSamplesAccessors() {
+        val rgb8 = DynamicImage.newRgb8(2u, 2u)
+        assertNotNull(rgb8.asFlatSamplesU8())
+        val rgb16 = DynamicImage.newRgb16(2u, 2u)
+        assertNotNull(rgb16.asFlatSamplesU16())
+        val rgb32F = DynamicImage.newRgb32F(2u, 2u)
+        assertNotNull(rgb32F.asFlatSamplesF32())
+    }
+
+    @Test
+    fun testToLuma32F() {
+        val img = DynamicImage.newRgb8(2u, 2u)
+        img.putPixel(0u, 0u, Rgba(255u, 255u, 255u, 255u))
+        val luma32 = img.toLuma32F()
+        assertEquals(2u, luma32.width())
+        assertEquals(2u, luma32.height())
+        val p = luma32.getPixel(0u, 0u)
+        assertEquals(1.0f, p.l, 0.01f)
+
+        val lumaA32 = img.toLumaAlpha32F()
+        assertEquals(2u, lumaA32.width())
+        assertEquals(2u, lumaA32.height())
+        val pa = lumaA32.getPixel(0u, 0u)
+        assertEquals(1.0f, pa.l, 0.01f)
+        assertEquals(1.0f, pa.a, 0.01f)
+    }
+
+    @Test
+    fun testInPlaceAffineOperations() {
+        val img = DynamicImage.newRgb8(2u, 2u)
+        img.putPixel(0u, 0u, Rgba(255u, 0u, 0u, 255u))
+        img.fliphInPlace()
+        val pFliph = img.getPixel(1u, 0u)
+        assertEquals(255u, pFliph.r)
+
+        img.flipvInPlace()
+        val pFlipv = img.getPixel(1u, 1u)
+        assertEquals(255u, pFlipv.r)
+
+        img.rotate180InPlace()
+        val pRot = img.getPixel(0u, 0u)
+        assertEquals(255u, pRot.r)
+    }
 }

@@ -628,6 +628,50 @@ public class ImageBuffer<P, Container>(
                     writeF32LE(arr, idx + 12, p.a)
                 },
             )
+
+        public fun createGray32F(width: UInt, height: UInt): Gray32FImage =
+            new(
+                width,
+                height,
+                4,
+                { arr, idx -> Luma(readF32LE(arr, idx)) },
+                { arr, idx, p -> writeF32LE(arr, idx, p.l) },
+            )
+
+        public fun createGray32F(width: UInt, height: UInt, buf: ByteArray): Gray32FImage? =
+            fromRaw(
+                width,
+                height,
+                buf,
+                4,
+                { arr, idx -> Luma(readF32LE(arr, idx)) },
+                { arr, idx, p -> writeF32LE(arr, idx, p.l) },
+            )
+
+        public fun createGrayAlpha32F(width: UInt, height: UInt): GrayAlpha32FImage =
+            new(
+                width,
+                height,
+                8,
+                { arr, idx -> LumaA(readF32LE(arr, idx), readF32LE(arr, idx + 4)) },
+                { arr, idx, p ->
+                    writeF32LE(arr, idx, p.l)
+                    writeF32LE(arr, idx + 4, p.a)
+                },
+            )
+
+        public fun createGrayAlpha32F(width: UInt, height: UInt, buf: ByteArray): GrayAlpha32FImage? =
+            fromRaw(
+                width,
+                height,
+                buf,
+                8,
+                { arr, idx -> LumaA(readF32LE(arr, idx), readF32LE(arr, idx + 4)) },
+                { arr, idx, p ->
+                    writeF32LE(arr, idx, p.l)
+                    writeF32LE(arr, idx + 4, p.a)
+                },
+            )
     }
 
     public fun copy(): ImageBuffer<P, ByteArray> = clone()
@@ -683,6 +727,16 @@ public fun createRgba32F(width: UInt, height: UInt): Rgba32FImage = ImageBuffer.
 public fun createRgba32F(width: UInt, height: UInt, buf: ByteArray): Rgba32FImage =
     ImageBuffer.createRgba32F(width, height, buf) ?: ImageBuffer.createRgba32F(width, height)
 
+public fun createGray32F(width: UInt, height: UInt): Gray32FImage = ImageBuffer.createGray32F(width, height)
+
+public fun createGray32F(width: UInt, height: UInt, buf: ByteArray): Gray32FImage =
+    ImageBuffer.createGray32F(width, height, buf) ?: ImageBuffer.createGray32F(width, height)
+
+public fun createGrayAlpha32F(width: UInt, height: UInt): GrayAlpha32FImage = ImageBuffer.createGrayAlpha32F(width, height)
+
+public fun createGrayAlpha32F(width: UInt, height: UInt, buf: ByteArray): GrayAlpha32FImage =
+    ImageBuffer.createGrayAlpha32F(width, height, buf) ?: ImageBuffer.createGrayAlpha32F(width, height)
+
 private fun readU16LE(arr: ByteArray, idx: Int): UShort =
     ((arr[idx].toInt() and 0xFF) or ((arr[idx + 1].toInt() and 0xFF) shl 8)).toUShort()
 
@@ -721,3 +775,6 @@ public typealias GrayAlpha16Image = ImageBuffer<LumaA<UShort>, ByteArray>
 
 public typealias Rgb32FImage = ImageBuffer<Rgb<Float>, ByteArray>
 public typealias Rgba32FImage = ImageBuffer<Rgba<Float>, ByteArray>
+public typealias Gray32FImage = ImageBuffer<Luma<Float>, ByteArray>
+public typealias GrayAlpha32FImage = ImageBuffer<LumaA<Float>, ByteArray>
+
