@@ -42,9 +42,27 @@ public sealed class ImageError(
         public val error: Throwable,
     ) : ImageError(error.message, error)
 
-    public fun source(): Throwable? = cause
+    public fun source(): Throwable? =
+        when (this) {
+            is Decoding -> error.source()
+            is Encoding -> error.source()
+            is Parameter -> error.source()
+            is Limits -> error.source()
+            is Unsupported -> error.source()
+            is IoError -> error
+        }
 
-    public fun fmt(): String = toString()
+    public fun fmt(): String =
+        when (this) {
+            is Decoding -> error.fmt()
+            is Encoding -> error.fmt()
+            is Parameter -> error.fmt()
+            is Limits -> error.fmt()
+            is Unsupported -> error.fmt()
+            is IoError -> error.message ?: error.toString()
+        }
+
+    override fun toString(): String = fmt()
 
     public companion object {
         public fun fromThrowable(t: Throwable): ImageError =
@@ -73,9 +91,7 @@ public data class UnsupportedError(
 
     public fun source(): Throwable? = null
 
-    public fun fmt(): String = toString()
-
-    override fun toString(): String =
+    public fun fmt(): String =
         when (kind) {
             is UnsupportedErrorKind.Format ->
                 when (kind.hint) {
@@ -92,6 +108,8 @@ public data class UnsupportedError(
                     else -> "The decoder for $format does not support the format features ${kind.message}"
                 }
         }
+
+    override fun toString(): String = fmt()
 
     public companion object {
         /**
@@ -142,9 +160,7 @@ public data class DecodingError(
 
     public fun source(): Throwable? = underlying
 
-    public fun fmt(): String = toString()
-
-    override fun toString(): String =
+    public fun fmt(): String =
         when (underlying) {
             null ->
                 when (format) {
@@ -153,6 +169,8 @@ public data class DecodingError(
                 }
             else -> "Format error decoding $format: ${underlying.message ?: underlying.toString()}"
         }
+
+    override fun toString(): String = fmt()
 
     public companion object {
         public fun new(format: ImageFormatHint, err: Throwable): DecodingError = DecodingError(format, err)
@@ -171,13 +189,13 @@ public data class EncodingError(
 
     public fun source(): Throwable? = underlying
 
-    public fun fmt(): String = toString()
-
-    override fun toString(): String =
+    public fun fmt(): String =
         when (underlying) {
             null -> "Format error encoding $format"
             else -> "Format error encoding $format:\n${underlying.message ?: underlying.toString()}"
         }
+
+    override fun toString(): String = fmt()
 
     public companion object {
         public fun new(format: ImageFormatHint, err: Throwable): EncodingError = EncodingError(format, err)
@@ -197,9 +215,7 @@ public data class ParameterError(
 ) {
     public fun source(): Throwable? = underlying
 
-    public fun fmt(): String = toString()
-
-    override fun toString(): String {
+    public fun fmt(): String {
         val base =
             when (kind) {
                 ParameterErrorKind.DimensionMismatch -> "The Image's dimensions are either too small or too large"
@@ -211,6 +227,8 @@ public data class ParameterError(
             }
         return if (underlying != null) "$base\n${underlying.message ?: underlying.toString()}" else base
     }
+
+    override fun toString(): String = fmt()
 
     public companion object {
         /** Construct a [ParameterError] directly from a corresponding kind. */
@@ -258,14 +276,14 @@ public data class LimitError(
 ) {
     public fun source(): Throwable? = null
 
-    public fun fmt(): String = toString()
-
-    override fun toString(): String =
+    public fun fmt(): String =
         when (kind) {
             LimitErrorKind.InsufficientMemory -> "Memory limit exceeded"
             LimitErrorKind.DimensionError -> "Image size exceeds limit"
             is LimitErrorKind.Unsupported -> "The following strict limits are specified but not supported by the operation: ${kind.limits}"
         }
+
+    override fun toString(): String = fmt()
 
     public companion object {
         /** Construct a generic [LimitError] directly from a corresponding kind. */
@@ -291,6 +309,14 @@ public sealed interface LimitErrorKind {
 }
 
 public sealed interface ImageFormatHint {
+    public fun fmt(): String =
+        when (this) {
+            is Exact -> "$format"
+            is Name -> "`$name`"
+            is PathExtension -> "`.${ext}`"
+            Unknown -> "`Unknown`"
+        }
+
     public data class Exact(
         public val format: ImageFormat,
     ) : ImageFormatHint
@@ -324,6 +350,8 @@ public sealed interface ImageFormatHint {
 public data class TryFromExtendedColorError(
     public val was: ExtendedColorType,
 ) : Exception("The pixel layout $was is not supported as a buffer ColorType") {
+    public fun fmt(): String = "The pixel layout $was is not supported as a buffer ColorType"
+
     public fun toImageError(): ImageError =
         ImageError.Unsupported(
             UnsupportedError.fromFormatAndKind(
@@ -331,4 +359,9 @@ public data class TryFromExtendedColorError(
                 UnsupportedErrorKind.Color(was),
             ),
         )
+
+    public companion object {
+        public fun from(err: TryFromExtendedColorError): ImageError = err.toImageError()
+    }
 }
+
