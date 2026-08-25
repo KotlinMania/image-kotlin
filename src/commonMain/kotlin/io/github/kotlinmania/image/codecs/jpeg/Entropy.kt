@@ -45,7 +45,7 @@ private fun deriveCodesAndSizes(bits: UByteArray): Pair<UByteArray, UShortArray>
             continue
         }
 
-        // FIXME there is something wrong with this code
+        // Shift difference calculation
         val diff: UByte = (huffsize[k].toInt() - size.toInt()).toUByte()
         code =
             if (diff < 16.toUByte()) {
