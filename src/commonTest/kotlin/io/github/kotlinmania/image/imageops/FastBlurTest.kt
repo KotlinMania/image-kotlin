@@ -8,7 +8,9 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class FastBlurTest {
-    private class Rng(private var state: ULong) {
+    private class Rng(
+        private var state: ULong,
+    ) {
         companion object {
             fun new(seed: ULong): Rng = Rng(seed)
         }
