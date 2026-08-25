@@ -105,4 +105,15 @@ internal class AutoBreak(
             runCatching { flushBuf() }
         }
     }
+
+    /**
+     * Drop hook alias for [close].
+     */
+    fun drop() {
+        close()
+    }
+
+    companion object {
+        fun new(writer: IoWrite, lineCapacity: Int): AutoBreak = AutoBreak(writer, lineCapacity)
+    }
 }
