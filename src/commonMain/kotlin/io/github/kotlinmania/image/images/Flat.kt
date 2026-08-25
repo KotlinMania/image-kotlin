@@ -280,6 +280,14 @@ public data class SampleLayout(
         return (y.toInt() * yStride) + (x.toInt() * xStride) + (channel.toInt() * cStride)
     }
 
+    public fun panicCwhOutOfBounds(channel: UByte, x: UInt, y: UInt): Nothing {
+        throw IndexOutOfBoundsException("Sample layout index ($channel, $x, $y) out of bounds ($channels, $width, $height)")
+    }
+
+    public fun panicPixelOutOfBounds(x: UInt, y: UInt): Nothing {
+        throw IndexOutOfBoundsException("Sample layout pixel ($x, $y) out of bounds ($width, $height)")
+    }
+
     public fun shrinkTo(channels: UByte, width: UInt, height: UInt): SampleLayout =
         copy(
             channels = minOf(this.channels, channels),
@@ -745,6 +753,14 @@ public fun FlatSamples<ByteArray>.tryIntoGrayAlphaImage(): Result<GrayAlphaImage
     return Result.success(img)
 }
 
+public fun FlatSamples<ByteArray>.tryIntoBufferRgb(): Result<RgbImage> = tryIntoRgbImage()
+
+public fun FlatSamples<ByteArray>.tryIntoBufferRgba(): Result<RgbaImage> = tryIntoRgbaImage()
+
+public fun FlatSamples<ByteArray>.tryIntoBufferLuma(): Result<GrayImage> = tryIntoGrayImage()
+
+public fun FlatSamples<ByteArray>.tryIntoBufferLumaA(): Result<GrayAlphaImage> = tryIntoGrayAlphaImage()
+
 /**
  * A flat buffer that can be used as an image view.
  */
@@ -763,6 +779,20 @@ public class View<Buffer, P>(
     override fun getPixel(x: UInt, y: UInt): P {
         require(inBounds(x, y)) { "Image index ($x, $y) out of bounds ${dimensions()}" }
         return pixelReader(inner, x, y)
+    }
+
+    public fun tryUpgrade(): Result<ViewMut<Buffer, P>> {
+        if (!inner.layout.isNormal(NormalForm.PixelPacked)) {
+            return Result.failure(FlatError.NormalFormRequired(NormalForm.PixelPacked).toImageError())
+        }
+        return Result.success(
+            ViewMut(
+                inner = inner,
+                pixelReader = pixelReader,
+                pixelWriter = { _, _, _, _ -> },
+                pixelBlender = { _, _, _, _ -> },
+            ),
+        )
     }
 
     public fun flat(): FlatSamples<Buffer> = inner
