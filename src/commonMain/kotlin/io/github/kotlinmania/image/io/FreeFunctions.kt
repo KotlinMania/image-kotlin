@@ -153,6 +153,20 @@ public fun load(reader: IoRead, format: ImageFormat): DynamicImage {
 /**
  * Saves the supplied buffer to a sink given the desired format.
  */
+public fun saveBuffer(
+    writer: IoWrite,
+    buf: ByteArray,
+    width: UInt,
+    height: UInt,
+    color: ExtendedColorType,
+    format: ImageFormat,
+) {
+    saveBufferWithFormat(writer, buf, width, height, color, format)
+}
+
+/**
+ * Saves the supplied buffer to a sink given the desired format.
+ */
 public fun saveBufferWithFormat(
     writer: IoWrite,
     buf: ByteArray,
