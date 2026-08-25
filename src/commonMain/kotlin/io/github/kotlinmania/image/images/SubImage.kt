@@ -45,6 +45,12 @@ public class SubImage<P>(
 
     public fun inner(): GenericImage<P> = image
 
+    public fun innerMut(): GenericImage<P> = image
+
+    public fun deref(): GenericImage<P> = image
+
+    public fun derefMut(): GenericImage<P> = image
+
     @Suppress("UNCHECKED_CAST")
     public fun toImage(): GenericImage<P> {
         val target =
@@ -68,5 +74,10 @@ public class SubImage<P>(
         require(x.toULong() + width.toULong() <= this.width.toULong()) { "SubImage width out of bounds" }
         require(y.toULong() + height.toULong() <= this.height.toULong()) { "SubImage height out of bounds" }
         return SubImage(image, xOffset + x, yOffset + y, width, height)
+    }
+
+    public companion object {
+        public fun <P> new(image: GenericImage<P>, x: UInt, y: UInt, width: UInt, height: UInt): SubImage<P> =
+            SubImage(image, x, y, width, height)
     }
 }

@@ -9,6 +9,10 @@ import kotlin.test.assertTrue
 
 class FastBlurTest {
     private class Rng(private var state: ULong) {
+        companion object {
+            fun new(seed: ULong): Rng = Rng(seed)
+        }
+
         fun nextU32(): UInt {
             state = state * 6364136223846793005uL + 1uL
             return (state shr 32).toUInt()

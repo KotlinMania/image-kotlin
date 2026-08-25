@@ -57,6 +57,11 @@ class ErrorTest {
     }
 
     @Test
+    fun sendSync() {
+        assertSendSync<ImageError>()
+    }
+
+    @Test
     fun testSendSyncStability() {
         assertSendSync<ImageError>()
     }

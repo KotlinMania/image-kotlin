@@ -94,6 +94,8 @@ public data class UnsupportedError(
 
         public fun fromFormatHint(hint: ImageFormatHint): UnsupportedError =
             UnsupportedError(hint, UnsupportedErrorKind.Format(hint))
+
+        public fun from(hint: ImageFormatHint): UnsupportedError = fromFormatHint(hint)
     }
 }
 
@@ -271,6 +273,17 @@ public sealed interface ImageFormatHint {
 
     public companion object {
         public fun fromFormat(format: ImageFormat): ImageFormatHint = Exact(format)
+
+        public fun from(format: ImageFormat): ImageFormatHint = Exact(format)
+
+        public fun from(path: String): ImageFormatHint {
+            val lastDot = path.lastIndexOf('.')
+            return if (lastDot != -1 && lastDot < path.length - 1) {
+                PathExtension(path.substring(lastDot + 1))
+            } else {
+                Unknown
+            }
+        }
     }
 }
 

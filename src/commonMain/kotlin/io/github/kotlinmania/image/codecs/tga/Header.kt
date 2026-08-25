@@ -35,6 +35,10 @@ internal enum class ImageType(
     ;
 
     companion object {
+        fun new(imgType: UByte): ImageType = fromValue(imgType)
+
+        fun new(imgType: Int): ImageType = fromValue(imgType.toUByte())
+
         fun fromValue(imgType: UByte): ImageType =
             when (imgType.toUInt()) {
                 0u -> NoImageData
