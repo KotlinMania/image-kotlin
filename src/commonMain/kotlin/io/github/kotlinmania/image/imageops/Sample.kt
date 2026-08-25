@@ -87,7 +87,7 @@ public fun triangleKernel(x: Float): Float =
     if (abs(x) < 1.0f) 1.0f - abs(x) else 0.0f
 
 /**
- * Builtin Box kernel filter.
+ * Built-in box kernel filter.
  */
 public fun boxKernel(x: Float): Float = 1.0f
 
