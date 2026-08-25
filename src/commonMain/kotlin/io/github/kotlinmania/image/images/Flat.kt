@@ -65,6 +65,8 @@ public enum class NormalForm {
 
         return null
     }
+
+    public fun partialCmp(other: NormalForm): Int? = partialCompareTo(other)
 }
 
 /**
@@ -356,6 +358,9 @@ public data class FlatSamples<Buffer>(
 
     public fun inBoundsIndex(channel: UByte, x: UInt, y: UInt): Int = layout.inBoundsIndex(channel, x, y)
 
+    public fun shrinkTo(channels: UByte, width: UInt, height: UInt): FlatSamples<Buffer> =
+        copy(layout = layout.shrinkTo(channels, width, height))
+
     public companion object {
         public fun withMonocolor(pixel: Rgb<UByte>, width: UInt, height: UInt): FlatSamples<ByteArray> {
             val bytes = byteArrayOf(pixel.r.toByte(), pixel.g.toByte(), pixel.b.toByte())
@@ -458,6 +463,13 @@ public fun FlatSamples<ByteArray>.asSlice(): ByteArray = samples
 
 public fun FlatSamples<ByteArray>.asMutSlice(): ByteArray = samples
 
+public fun FlatSamples<ByteArray>.asRef(): FlatSamples<ByteArray> = this
+
+public fun FlatSamples<ByteArray>.asMut(): FlatSamples<ByteArray> = this
+
+public fun FlatSamples<ByteArray>.toVec(): FlatSamples<ByteArray> =
+    FlatSamples(samples.copyOf(), layout, colorHint)
+
 public fun FlatSamples<ByteArray>.imageSlice(): ByteArray? {
     val minLen = minLength() ?: return null
     if (samples.size < minLen) return null
@@ -469,6 +481,14 @@ public fun FlatSamples<ByteArray>.imageMutSlice(): ByteArray? {
     if (samples.size < minLen) return null
     return samples.copyOfRange(0, minLen)
 }
+
+public fun FlatSamples<ByteArray>.asViewWithMutSamplesRgb(): Result<View<ByteArray, Rgb<UByte>>> = asViewRgb()
+
+public fun FlatSamples<ByteArray>.asViewWithMutSamplesRgba(): Result<View<ByteArray, Rgba<UByte>>> = asViewRgba()
+
+public fun FlatSamples<ByteArray>.asViewWithMutSamplesLuma(): Result<View<ByteArray, Luma<UByte>>> = asViewLuma()
+
+public fun FlatSamples<ByteArray>.asViewWithMutSamplesLumaA(): Result<View<ByteArray, LumaA<UByte>>> = asViewLumaA()
 
 public fun FlatSamples<ByteArray>.asViewRgb(): Result<View<ByteArray, Rgb<UByte>>> {
     if (layout.channels != 3.toUByte()) {
