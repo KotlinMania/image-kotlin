@@ -777,12 +777,8 @@ public sealed class DynamicImage : GenericImage<Rgba<UByte>> {
         return fromRawBytes(width(), height(), dst, color())
     }
 
-    public fun blurAdvanced(parameters: GaussianBlurParameters): DynamicImage {
-        val channels = color().channelCount().toInt()
-        val bytes = asBytes()
-        val res = io.github.kotlinmania.image.imageops.blurAdvanced(bytes, width().toInt(), height().toInt(), channels, parameters)
-        return fromRawBytes(width(), height(), res, color())
-    }
+    public fun blurAdvanced(parameters: GaussianBlurParameters): DynamicImage =
+        io.github.kotlinmania.image.imageops.gaussianBlurDynImage(this, parameters)
 
     public fun fastBlur(sigma: Float): DynamicImage {
         val channels = color().channelCount().toInt()
