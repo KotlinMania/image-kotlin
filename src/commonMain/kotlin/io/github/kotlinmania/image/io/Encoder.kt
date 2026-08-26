@@ -60,7 +60,14 @@ public interface ImageEncoder {
 /**
  * Boxed variant of the image encoder interface.
  */
-public interface ImageEncoderBoxed : ImageEncoder
+public interface ImageEncoderBoxed : ImageEncoder {
+    override fun writeImage(
+        buf: ByteArray,
+        width: UInt,
+        height: UInt,
+        colorType: ExtendedColorType,
+    )
+}
 
 /**
  * Converts a dynamic image to an 8-bit representation if needed.

@@ -60,6 +60,21 @@ public class IcoFrame internal constructor(
         }
 
         /**
+         * Construct a new [IcoFrame] by encoding [buf] as a PNG image.
+         */
+        public fun asPng(
+            buf: ByteArray,
+            width: UInt,
+            height: UInt,
+            colorType: ExtendedColorType,
+        ): IcoFrame {
+            val sink = BufferIoWrite()
+            val encoder = io.github.kotlinmania.image.codecs.png.PngEncoder(sink)
+            encoder.writeImage(buf, width, height, colorType)
+            return withEncoded(sink.toByteArray(), width, height, colorType)
+        }
+
+        /**
          * Construct a new [IcoFrame] by encoding [buf] as a BMP image.
          */
         public fun asBmp(
@@ -84,6 +99,10 @@ public class IcoEncoder internal constructor(
 ) : ImageEncoder {
     public constructor(writeBuffer: BufferIoWrite) : this(writeBuffer as IoWrite)
 
+    public companion object {
+        public fun new(w: IoWrite): IcoEncoder = IcoEncoder(w)
+    }
+
     /**
      * Takes some [IcoFrame]s and encodes them into an ICO.
      *
@@ -101,11 +120,11 @@ public class IcoEncoder internal constructor(
             )
         }
 
+        writeIcondir(writer, images.size)
         var offset = ICO_ICONDIR_SIZE + (ICO_DIRENTRY_SIZE * images.size.toUInt())
-        writeIconDir(writer, images.size)
 
         for (image in images) {
-            writeDirEntry(
+            writeDirentry(
                 writer,
                 image.width,
                 image.height,
@@ -140,7 +159,7 @@ public class IcoEncoder internal constructor(
     }
 }
 
-private fun writeIconDir(writer: IoWrite, numImages: Int) {
+private fun writeIcondir(writer: IoWrite, numImages: Int) {
     // Reserved field (must be zero):
     writer.writeU16Le(0)
     // Image type (ICO = 1, CUR = 2):
@@ -149,7 +168,7 @@ private fun writeIconDir(writer: IoWrite, numImages: Int) {
     writer.writeU16Le(numImages)
 }
 
-private fun writeDirEntry(
+private fun writeDirentry(
     writer: IoWrite,
     width: UByte,
     height: UByte,

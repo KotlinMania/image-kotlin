@@ -159,6 +159,12 @@ public class WebPEncoder(
     public companion object {
         public fun newLossless(w: IoWrite): WebPEncoder = WebPEncoder(w)
 
+        public fun fromWebpEncode(e: Exception): ImageError =
+            when (e) {
+                is ImageError -> e
+                else -> ImageError.Encoding(EncodingError(ImageFormatHint.Exact(ImageFormat.WebP), e))
+            }
+
         private fun writeU32Le(w: IoWrite, v: Int) {
             w.writeAll(
                 byteArrayOf(

@@ -136,34 +136,40 @@ public enum class ImageFormat {
         /**
          * Returns the image format specified by a file extension.
          */
-        public fun fromExtension(ext: String): ImageFormat? =
-            when (ext.lowercase()) {
-                "avif" -> Avif
-                "jpg", "jpeg", "jfif" -> Jpeg
-                "png", "apng" -> Png
-                "gif" -> Gif
-                "webp" -> WebP
-                "tif", "tiff" -> Tiff
-                "tga" -> Tga
-                "dds" -> Dds
-                "bmp" -> Bmp
-                "ico" -> Ico
-                "hdr" -> Hdr
-                "exr" -> OpenExr
-                "pbm", "pam", "ppm", "pgm", "pnm" -> Pnm
-                "ff" -> Farbfeld
-                "qoi" -> Qoi
-                else -> null
-            }
+        public fun fromExtension(ext: String): ImageFormat? {
+            fun inner(ext: String): ImageFormat? =
+                when (ext.lowercase()) {
+                    "avif" -> Avif
+                    "jpg", "jpeg", "jfif" -> Jpeg
+                    "png", "apng" -> Png
+                    "gif" -> Gif
+                    "webp" -> WebP
+                    "tif", "tiff" -> Tiff
+                    "tga" -> Tga
+                    "dds" -> Dds
+                    "bmp" -> Bmp
+                    "ico" -> Ico
+                    "hdr" -> Hdr
+                    "exr" -> OpenExr
+                    "pbm", "pam", "ppm", "pgm", "pnm" -> Pnm
+                    "ff" -> Farbfeld
+                    "qoi" -> Qoi
+                    else -> null
+                }
+            return inner(ext)
+        }
 
         /**
          * Returns the image format inferred from the file extension of the given path string.
          */
         public fun fromPath(path: String): ImageFormat? {
-            val name = path.substringAfterLast('/').substringAfterLast('\\')
-            val dot = name.lastIndexOf('.')
-            if (dot < 0 || dot == name.length - 1) return null
-            return fromExtension(name.substring(dot + 1))
+            fun inner(path: String): ImageFormat? {
+                val name = path.substringAfterLast('/').substringAfterLast('\\')
+                val dot = name.lastIndexOf('.')
+                if (dot < 0 || dot == name.length - 1) return null
+                return fromExtension(name.substring(dot + 1))
+            }
+            return inner(path)
         }
 
         /**

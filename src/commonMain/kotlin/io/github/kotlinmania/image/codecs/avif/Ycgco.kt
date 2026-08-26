@@ -231,32 +231,31 @@ public fun ycgco422ToRgba8(
     }
 }
 
-/**
- * Converts YCgCo 444 8-bit planar format to RGBA 8-bit.
- */
-public fun ycgco444ToRgba8(
+private fun ycgco444ToRgbxImpl(
     image: YuvPlanarImage,
     rgba: ByteArray,
-    range: YuvIntensityRange,
+    yuvRange: YuvIntensityRange,
+    channels: Int = 4,
+    bitDepth: Int = 8,
 ) {
     checkYuvPlanePreconditions(image.yPlane, PlaneDefinition.Y, image.yStride, image.height)
     checkYuvPlanePreconditions(image.uPlane, PlaneDefinition.U, image.uStride, image.height)
     checkYuvPlanePreconditions(image.vPlane, PlaneDefinition.V, image.vStride, image.height)
-    checkRgbPreconditions(rgba, image.width * 4, image.height)
+    checkRgbPreconditions(rgba, image.width * channels, image.height)
 
-    val yuvRange = range.getYuvRange(8u)
+    val range = yuvRange.getYuvRange(bitDepth.toUInt())
     val precision = 13
-    val maxValue = 255
+    val maxValue = (1 shl bitDepth) - 1
     val scaleCoef =
-        if (range == YuvIntensityRange.Tv) {
-            ((maxValue.toFloat() / yuvRange.rangeY.toFloat()) * (1 shl precision)).roundToInt()
+        if (yuvRange == YuvIntensityRange.Tv) {
+            ((maxValue.toFloat() / range.rangeY.toFloat()) * (1 shl precision)).roundToInt()
         } else {
             1
         }
 
-    val biasY = yuvRange.biasY.toInt()
-    val biasUv = yuvRange.biasUv.toInt()
-    val rgbStride = image.width * 4
+    val biasY = range.biasY.toInt()
+    val biasUv = range.biasUv.toInt()
+    val rgbStride = image.width * channels
 
     for (row in 0 until image.height) {
         val yRow = row * image.yStride
@@ -269,11 +268,23 @@ public fun ycgco444ToRgba8(
             val cg = (image.uPlane[uRow + col].toInt() and 0xFF) - biasUv
             val co = (image.vPlane[vRow + col].toInt() and 0xFF) - biasUv
 
-            if (range == YuvIntensityRange.Tv) {
-                ycgcoExecuteLimited(rgba, dstRow + col * 4, yValue, cg, co, scaleCoef, precision, 4, 8)
+            if (yuvRange == YuvIntensityRange.Tv) {
+                ycgcoExecuteLimited(rgba, dstRow + col * channels, yValue, cg, co, scaleCoef, precision, channels, bitDepth)
             } else {
-                ycgcoExecuteFull(rgba, dstRow + col * 4, yValue, cg, co, 4, 8)
+                ycgcoExecuteFull(rgba, dstRow + col * channels, yValue, cg, co, channels, bitDepth)
             }
         }
     }
 }
+
+/**
+ * Converts YCgCo 444 8-bit planar format to RGBA 8-bit.
+ */
+public fun ycgco444ToRgba8(
+    image: YuvPlanarImage,
+    rgba: ByteArray,
+    range: YuvIntensityRange,
+) {
+    ycgco444ToRgbxImpl(image, rgba, range, channels = 4, bitDepth = 8)
+}
+

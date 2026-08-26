@@ -13,6 +13,11 @@ import kotlin.test.assertTrue
 class WebPTest {
 
     @Test
+    fun writeWebp() {
+        testWebpLosslessRoundtripRgba()
+    }
+
+    @Test
     fun testWebpLosslessRoundtripRgba() {
         val width = 10u
         val height = 6u
