@@ -5,7 +5,13 @@ import io.github.kotlinmania.image.Luma
 import io.github.kotlinmania.image.LumaA
 import io.github.kotlinmania.image.Rgb
 import io.github.kotlinmania.image.Rgba
+import io.github.kotlinmania.image.images.DynamicImage
 import io.github.kotlinmania.image.images.GenericImageView
+import io.github.kotlinmania.image.images.ImageBuffer
+import io.github.kotlinmania.image.images.RgbImage
+import io.github.kotlinmania.image.images.Rgba16Image
+import io.github.kotlinmania.image.images.Rgba32FImage
+import io.github.kotlinmania.image.images.RgbaImage
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.exp
@@ -551,6 +557,148 @@ public fun blurAdvanced(
     filter1dHorizontal(image, temp, width, height, channels, xKernel)
     filter1dVertical(temp, out, width, height, channels, yKernel)
     return out
+}
+
+/**
+ * Performs separable Gaussian blur on a [DynamicImage] using [GaussianBlurParameters].
+ */
+private fun byteArrayToShortArrayLE(bytes: ByteArray): ShortArray {
+    val shorts = ShortArray(bytes.size / 2)
+    for (i in shorts.indices) {
+        val b0 = bytes[i * 2].toInt() and 0xFF
+        val b1 = bytes[i * 2 + 1].toInt() and 0xFF
+        shorts[i] = ((b1 shl 8) or b0).toShort()
+    }
+    return shorts
+}
+
+private fun shortArrayToByteArrayLE(shorts: ShortArray): ByteArray {
+    val bytes = ByteArray(shorts.size * 2)
+    for (i in shorts.indices) {
+        val s = shorts[i].toInt()
+        bytes[i * 2] = (s and 0xFF).toByte()
+        bytes[i * 2 + 1] = ((s shr 8) and 0xFF).toByte()
+    }
+    return bytes
+}
+
+private fun byteArrayToFloatArrayLE(bytes: ByteArray): FloatArray {
+    val floats = FloatArray(bytes.size / 4)
+    for (i in floats.indices) {
+        val b0 = bytes[i * 4].toInt() and 0xFF
+        val b1 = bytes[i * 4 + 1].toInt() and 0xFF
+        val b2 = bytes[i * 4 + 2].toInt() and 0xFF
+        val b3 = bytes[i * 4 + 3].toInt() and 0xFF
+        val bits = (b3 shl 24) or (b2 shl 16) or (b1 shl 8) or b0
+        floats[i] = Float.fromBits(bits)
+    }
+    return floats
+}
+
+private fun floatArrayToByteArrayLE(floats: FloatArray): ByteArray {
+    val bytes = ByteArray(floats.size * 4)
+    for (i in floats.indices) {
+        val bits = floats[i].toBits()
+        bytes[i * 4] = (bits and 0xFF).toByte()
+        bytes[i * 4 + 1] = ((bits shr 8) and 0xFF).toByte()
+        bytes[i * 4 + 2] = ((bits shr 16) and 0xFF).toByte()
+        bytes[i * 4 + 3] = ((bits shr 24) and 0xFF).toByte()
+    }
+    return bytes
+}
+
+/**
+ * Performs separable Gaussian blur on a [DynamicImage] using [GaussianBlurParameters].
+ */
+public fun gaussianBlurDynImage(
+    image: DynamicImage,
+    parameters: GaussianBlurParameters,
+): DynamicImage {
+    val xAxisKernel = getGaussianKernel1d(
+        parameters.xAxisKernelSize.toInt(),
+        parameters.xAxisSigma,
+    )
+    val yAxisKernel = getGaussianKernel1d(
+        parameters.yAxisKernelSize.toInt(),
+        parameters.yAxisSigma,
+    )
+
+    val filterImageSize = FilterImageSize(
+        width = image.width().toInt(),
+        height = image.height().toInt(),
+    )
+
+    val target: DynamicImage = when (image) {
+        is DynamicImage.ImageLuma8 -> {
+            val raw = image.image.asRaw()
+            val dest = ByteArray(raw.size)
+            filter2dSepPlane(raw, dest, filterImageSize, xAxisKernel, yAxisKernel)
+            DynamicImage.ImageLuma8(ImageBuffer.createGray(image.width(), image.height(), dest)!!)
+        }
+        is DynamicImage.ImageLumaA8 -> {
+            val raw = image.image.asRaw()
+            val dest = ByteArray(raw.size)
+            filter2dSepLa(raw, dest, filterImageSize, xAxisKernel, yAxisKernel)
+            DynamicImage.ImageLumaA8(ImageBuffer.createGrayAlpha(image.width(), image.height(), dest)!!)
+        }
+        is DynamicImage.ImageRgb8 -> {
+            val raw = image.image.asRaw()
+            val dest = ByteArray(raw.size)
+            filter2dSepRgb(raw, dest, filterImageSize, xAxisKernel, yAxisKernel)
+            DynamicImage.ImageRgb8(ImageBuffer.createRgb(image.width(), image.height(), dest)!!)
+        }
+        is DynamicImage.ImageRgba8 -> {
+            val raw = image.image.asRaw()
+            val dest = ByteArray(raw.size)
+            filter2dSepRgba(raw, dest, filterImageSize, xAxisKernel, yAxisKernel)
+            DynamicImage.ImageRgba8(ImageBuffer.createRgba(image.width(), image.height(), dest)!!)
+        }
+        is DynamicImage.ImageLuma16 -> {
+            val rawShorts = byteArrayToShortArrayLE(image.image.asRaw())
+            val destShorts = ShortArray(rawShorts.size)
+            filter2dSepPlaneU16(rawShorts, destShorts, filterImageSize, xAxisKernel, yAxisKernel)
+            val destBytes = shortArrayToByteArrayLE(destShorts)
+            DynamicImage.ImageLuma16(ImageBuffer.createGray16(image.width(), image.height(), destBytes)!!)
+        }
+        is DynamicImage.ImageLumaA16 -> {
+            val rawShorts = byteArrayToShortArrayLE(image.image.asRaw())
+            val destShorts = ShortArray(rawShorts.size)
+            filter2dSepLaU16(rawShorts, destShorts, filterImageSize, xAxisKernel, yAxisKernel)
+            val destBytes = shortArrayToByteArrayLE(destShorts)
+            DynamicImage.ImageLumaA16(ImageBuffer.createGrayAlpha16(image.width(), image.height(), destBytes)!!)
+        }
+        is DynamicImage.ImageRgb16 -> {
+            val rawShorts = byteArrayToShortArrayLE(image.image.asRaw())
+            val destShorts = ShortArray(rawShorts.size)
+            filter2dSepRgbU16(rawShorts, destShorts, filterImageSize, xAxisKernel, yAxisKernel)
+            val destBytes = shortArrayToByteArrayLE(destShorts)
+            DynamicImage.ImageRgb16(ImageBuffer.createRgb16(image.width(), image.height(), destBytes)!!)
+        }
+        is DynamicImage.ImageRgba16 -> {
+            val rawShorts = byteArrayToShortArrayLE(image.image.asRaw())
+            val destShorts = ShortArray(rawShorts.size)
+            filter2dSepRgbaU16(rawShorts, destShorts, filterImageSize, xAxisKernel, yAxisKernel)
+            val destBytes = shortArrayToByteArrayLE(destShorts)
+            DynamicImage.ImageRgba16(ImageBuffer.createRgba16(image.width(), image.height(), destBytes)!!)
+        }
+        is DynamicImage.ImageRgb32F -> {
+            val rawFloats = byteArrayToFloatArrayLE(image.image.asRaw())
+            val destFloats = FloatArray(rawFloats.size)
+            filter2dSepRgbF32(rawFloats, destFloats, filterImageSize, xAxisKernel, yAxisKernel)
+            val destBytes = floatArrayToByteArrayLE(destFloats)
+            DynamicImage.ImageRgb32F(ImageBuffer.createRgb32F(image.width(), image.height(), destBytes)!!)
+        }
+        is DynamicImage.ImageRgba32F -> {
+            val rawFloats = byteArrayToFloatArrayLE(image.image.asRaw())
+            val destFloats = FloatArray(rawFloats.size)
+            filter2dSepRgbaF32(rawFloats, destFloats, filterImageSize, xAxisKernel, yAxisKernel)
+            val destBytes = floatArrayToByteArrayLE(destFloats)
+            DynamicImage.ImageRgba32F(ImageBuffer.createRgba32F(image.width(), image.height(), destBytes)!!)
+        }
+    }
+
+    target.setColorSpace(image.colorSpace())
+    return target
 }
 
 /**

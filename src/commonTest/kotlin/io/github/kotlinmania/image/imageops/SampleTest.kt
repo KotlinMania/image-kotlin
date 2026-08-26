@@ -202,5 +202,17 @@ class SampleTest {
         val sharpened = unsharpen(img, 4, 4, 1, 1.0f, 5)
         assertEquals(16, sharpened.size)
     }
+
+    @Test
+    fun testGaussianBlurDynImage() {
+        val rgb = ImageBuffer.createRgb(4u, 4u) { x, y ->
+            Rgb((x * 40u).toUByte(), (y * 40u).toUByte(), 128u.toUByte())
+        }
+        val dyn = io.github.kotlinmania.image.images.DynamicImage.ImageRgb8(rgb)
+        val blurred = gaussianBlurDynImage(dyn, GaussianBlurParameters.SMOOTHING_3)
+        assertEquals(4u, blurred.width())
+        assertEquals(4u, blurred.height())
+        assertTrue(blurred.asBytes().isNotEmpty())
+    }
 }
 
