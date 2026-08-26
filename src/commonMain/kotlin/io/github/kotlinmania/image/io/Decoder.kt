@@ -95,3 +95,13 @@ public interface ImageDecoderRect : ImageDecoder {
         rowPitch: Int,
     )
 }
+
+/**
+ * Animation decoder producing a series of frames.
+ */
+public interface AnimationDecoder {
+    /**
+     * Consume the decoder producing a series of frames.
+     */
+    public fun intoFrames(): io.github.kotlinmania.image.Frames
+}
