@@ -35,7 +35,7 @@ public interface GenericImageView<P> {
     public fun view(x: UInt, y: UInt, width: UInt, height: UInt): SubImage<P> {
         require(x.toULong() + width.toULong() <= width().toULong()) { "View width out of bounds" }
         require(y.toULong() + height.toULong() <= height().toULong()) { "View height out of bounds" }
-        return SubImage(this as GenericImage<P>, x, y, width, height)
+        return SubImage(this, x, y, width, height)
     }
 
     /** Returns a subimage that is a view into this image if within bounds. */

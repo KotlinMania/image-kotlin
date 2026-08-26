@@ -5,7 +5,7 @@ package io.github.kotlinmania.image.images
  * A view into a rectangular region of another image buffer.
  */
 public class SubImage<P>(
-    private val image: GenericImage<P>,
+    private val image: GenericImageView<P>,
     private var xOffset: UInt,
     private var yOffset: UInt,
     private var width: UInt,
@@ -35,27 +35,26 @@ public class SubImage<P>(
 
     override fun putPixel(x: UInt, y: UInt, pixel: P) {
         require(x < width && y < height) { "Coordinates ($x, $y) out of sub-image bounds ($width, $height)" }
-        image.putPixel(xOffset + x, yOffset + y, pixel)
+        val img = image as? GenericImage<P> ?: throw UnsupportedOperationException("Underlying image is immutable")
+        img.putPixel(xOffset + x, yOffset + y, pixel)
     }
 
     override fun blendPixel(x: UInt, y: UInt, pixel: P) {
         require(x < width && y < height) { "Coordinates ($x, $y) out of sub-image bounds ($width, $height)" }
-        image.blendPixel(xOffset + x, yOffset + y, pixel)
+        val img = image as? GenericImage<P> ?: throw UnsupportedOperationException("Underlying image is immutable")
+        img.blendPixel(xOffset + x, yOffset + y, pixel)
     }
 
-    public fun inner(): GenericImage<P> = image
+    public fun inner(): GenericImageView<P> = image
 
-    public fun innerMut(): GenericImage<P> = image
+    public fun innerMut(): GenericImage<P>? = image as? GenericImage<P>
 
-    public fun deref(): GenericImage<P> = image
+    public fun deref(): GenericImageView<P> = image
 
-    public fun derefMut(): GenericImage<P> = image
+    public fun derefMut(): GenericImage<P>? = image as? GenericImage<P>
 
-    @Suppress("UNCHECKED_CAST")
     public fun toImage(): GenericImage<P> {
-        val target =
-            (image as? ImageBuffer<P, *>)?.bufferWithDimensions(width, height)
-                ?: (ImageBuffer.createRgba(width, height) as GenericImage<P>)
+        val target: GenericImage<P> = bufferWithDimensions(width, height)
         for (y in 0u until height) {
             for (x in 0u until width) {
                 target.putPixel(x, y, getPixel(x, y))
@@ -101,7 +100,7 @@ public class SubImage<P>(
         (image as? ImageBuffer<*, *>)?.colorSpace() ?: io.github.kotlinmania.image.metadata.Cicp.SRGB
 
     public companion object {
-        public fun <P> new(image: GenericImage<P>, x: UInt, y: UInt, width: UInt, height: UInt): SubImage<P> =
+        public fun <P> new(image: GenericImageView<P>, x: UInt, y: UInt, width: UInt, height: UInt): SubImage<P> =
             SubImage(image, x, y, width, height)
     }
 }
