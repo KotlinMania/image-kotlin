@@ -23,6 +23,17 @@ public sealed class DecoderError(
     message: String,
     cause: Throwable? = null,
 ) : Exception(message, cause) {
+    public fun fmt(): String = message ?: ""
+
+    public fun source(): Throwable? = cause
+
+    public fun toImageError(): ImageError =
+        ImageError.Decoding(DecodingError(ImageFormatHint.Exact(ImageFormat.Hdr), this))
+
+    public companion object {
+        public fun from(e: DecoderError): ImageError = e.toImageError()
+    }
+
     /** HDR's "#?RADIANCE" signature wrong or missing */
     public object RadianceHdrSignatureInvalid : DecoderError("Radiance HDR signature not found")
 
@@ -367,6 +378,10 @@ public class HdrDecoder internal constructor(
             buf[base + 10] = ((bBits ushr 16) and 0xFF).toByte()
             buf[base + 11] = ((bBits ushr 24) and 0xFF).toByte()
         }
+    }
+
+    public fun readImageBoxed(buf: ByteArray) {
+        readImage(buf)
     }
 
     public companion object {
