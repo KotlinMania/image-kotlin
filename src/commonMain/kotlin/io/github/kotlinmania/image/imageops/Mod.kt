@@ -35,8 +35,7 @@ public fun <P> cropImm(
     height: UInt,
 ): SubImage<P> {
     val dimms = cropDimms(image, x, y, width, height)
-    @Suppress("UNCHECKED_CAST")
-    return SubImage(image as GenericImage<P>, dimms.x, dimms.y, dimms.width, dimms.height)
+    return SubImage(image, dimms.x, dimms.y, dimms.width, dimms.height)
 }
 
 /**
