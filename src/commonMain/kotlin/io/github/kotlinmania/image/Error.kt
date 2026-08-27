@@ -74,7 +74,7 @@ public sealed class ImageError(
         public fun from(t: Throwable): ImageError = fromThrowable(t)
 
         public fun assertSendSync() {
-            // Marker for Send + Sync trait bounds
+            // Thread safety validation marker
         }
     }
 }

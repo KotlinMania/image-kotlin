@@ -350,7 +350,7 @@ public class TgaDecoder(
         }
     }
 
-    public fun readImageBoxed(buf: ByteArray) {
+    override fun readImageBoxed(buf: ByteArray) {
         readImage(buf)
     }
 

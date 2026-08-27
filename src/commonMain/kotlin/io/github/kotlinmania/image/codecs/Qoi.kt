@@ -194,7 +194,7 @@ public class QoiDecoder internal constructor(
         }
     }
 
-    public fun readImageBoxed(buf: ByteArray) {
+    override fun readImageBoxed(buf: ByteArray) {
         readImage(buf)
     }
 
