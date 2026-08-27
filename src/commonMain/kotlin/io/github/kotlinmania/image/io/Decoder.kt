@@ -70,6 +70,13 @@ public interface ImageDecoder {
     public fun readImage(buf: ByteArray)
 
     /**
+     * Reads all bytes in the image into [buf].
+     */
+    public fun readImageBoxed(buf: ByteArray) {
+        readImage(buf)
+    }
+
+    /**
      * Set the decoder to have the specified limits.
      */
     public fun setLimits(limits: Limits) {

@@ -978,6 +978,14 @@ tasks.register("swiftExportSmokeTest") {
                 )
             }.assertNormalExitValue()
 
+        val mergedLib = layout.buildDirectory.file("MergedLibraries/macos/Debug/lib${frameworkName}.a").get().asFile
+        if (mergedLib.exists()) {
+            val targetFile = File(swiftBuildDir, "lib${frameworkName}.a")
+            if (!targetFile.exists()) {
+                mergedLib.copyTo(targetFile, overwrite = true)
+            }
+        }
+
         execOperations
             .exec {
                 workingDir = layout.projectDirectory.dir("swift-test-harness").asFile

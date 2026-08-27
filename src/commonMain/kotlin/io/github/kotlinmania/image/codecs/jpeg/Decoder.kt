@@ -321,7 +321,7 @@ public class JpegDecoder(
         decodeScanData(buf)
     }
 
-    public fun readImageBoxed(buf: ByteArray) {
+    override fun readImageBoxed(buf: ByteArray) {
         readImage(buf)
     }
 

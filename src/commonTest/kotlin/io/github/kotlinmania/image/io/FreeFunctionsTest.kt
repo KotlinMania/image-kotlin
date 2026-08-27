@@ -33,6 +33,22 @@ class FreeFunctionsTest {
                 buf[i] = (i % 256).toByte()
             }
         }
+
+        override fun readImageBoxed(buf: ByteArray) {
+            readImage(buf)
+        }
+
+        fun seekScanline(n: ULong) {
+            scanlineNumber = n.toLong()
+        }
+
+        fun readScanline(buf: ByteArray, data: ByteArray) {
+            val bytesRead = scanlineNumber * scanlineBytes
+            if (bytesRead >= data.size) return
+            val len = minOf(scanlineBytes.toLong(), data.size - bytesRead).toInt()
+            data.copyInto(buf, destinationOffset = 0, startIndex = bytesRead.toInt(), endIndex = bytesRead.toInt() + len)
+            scanlineNumber += 1
+        }
     }
 
     @Test

@@ -9,7 +9,13 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 class CicpTest {
-    private fun noCoefficientFallback(): FloatArray = error("Fallback coefficients required")
+    private fun noCoefficientFallback(): FloatArray = throw IllegalStateException("Fallback coefficients required")
+
+    @Test
+    fun moxcms() {
+        val l = CicpTransferCharacteristics.Linear
+        assertEquals(CicpTransferCharacteristics.Linear, l)
+    }
 
     @Test
     fun derivedLuminance() {
