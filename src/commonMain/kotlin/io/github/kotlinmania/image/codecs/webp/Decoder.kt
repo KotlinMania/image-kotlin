@@ -234,3 +234,19 @@ public class WebPDecoder(
         }
     }
 }
+
+/**
+ * Animation frame iterator for WebP decoder.
+ */
+public class FramesInner(
+    private val decoder: WebPDecoder,
+) : Iterator<io.github.kotlinmania.image.Frame> {
+    private var current: UInt = 0u
+
+    override fun hasNext(): Boolean = false
+
+    override fun next(): io.github.kotlinmania.image.Frame {
+        throw NoSuchElementException("No more frames")
+    }
+}
+

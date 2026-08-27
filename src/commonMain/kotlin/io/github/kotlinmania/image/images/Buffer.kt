@@ -5,12 +5,17 @@ import io.github.kotlinmania.image.Luma
 import io.github.kotlinmania.image.LumaA
 import io.github.kotlinmania.image.Rgb
 import io.github.kotlinmania.image.Rgba
+import io.github.kotlinmania.image.ImageError
+import io.github.kotlinmania.image.ImageFormatHint
+import io.github.kotlinmania.image.UnsupportedError
+import io.github.kotlinmania.image.UnsupportedErrorKind
 import io.github.kotlinmania.image.blendUByte
 import io.github.kotlinmania.image.math.Rect
 import io.github.kotlinmania.image.metadata.Cicp
 import io.github.kotlinmania.image.metadata.CicpColorPrimaries
 import io.github.kotlinmania.image.metadata.CicpRgb
 import io.github.kotlinmania.image.metadata.CicpTransferCharacteristics
+import io.github.kotlinmania.image.metadata.CicpTransform
 
 /**
  * Generic image buffer parameterized by its Pixel type and container.
@@ -777,3 +782,211 @@ public typealias Rgb32FImage = ImageBuffer<Rgb<Float>, ByteArray>
 public typealias Rgba32FImage = ImageBuffer<Rgba<Float>, ByteArray>
 public typealias Gray32FImage = ImageBuffer<Luma<Float>, ByteArray>
 public typealias GrayAlpha32FImage = ImageBuffer<LumaA<Float>, ByteArray>
+
+/**
+ * Iterate over mutable pixel references.
+ */
+public class PixelsMut<P>(
+    private val buffer: ImageBuffer<P, *>,
+    private val width: UInt,
+    private val height: UInt,
+) : Iterator<P> {
+    private var curX: UInt = 0u
+    private var curY: UInt = 0u
+
+    override fun hasNext(): Boolean {
+        if (width == 0u || height == 0u) return false
+        return curY < height
+    }
+
+    override fun next(): P {
+        if (!hasNext()) throw NoSuchElementException("No more pixels")
+        val px = buffer.getPixel(curX, curY)
+        curX++
+        if (curX >= width) {
+            curX = 0u
+            curY++
+        }
+        return px
+    }
+}
+
+/**
+ * Iterate over rows of an image buffer.
+ */
+public class Rows<P>(
+    private val buffer: ImageBuffer<P, *>,
+    private val height: UInt,
+) : Iterator<List<P>> {
+    private var curY: UInt = 0u
+
+    override fun hasNext(): Boolean = curY < height
+
+    override fun next(): List<P> {
+        if (!hasNext()) throw NoSuchElementException("No more rows")
+        val y = curY++
+        val row = ArrayList<P>(buffer.width().toInt())
+        for (x in 0u until buffer.width()) {
+            row.add(buffer.getPixel(x, y))
+        }
+        return row
+    }
+}
+
+/**
+ * Iterate over mutable rows of an image buffer.
+ */
+public class RowsMut<P>(
+    private val buffer: ImageBuffer<P, *>,
+    private val height: UInt,
+) : Iterator<List<P>> {
+    private var curY: UInt = 0u
+
+    override fun hasNext(): Boolean = curY < height
+
+    override fun next(): List<P> {
+        if (!hasNext()) throw NoSuchElementException("No more rows")
+        val y = curY++
+        val row = ArrayList<P>(buffer.width().toInt())
+        for (x in 0u until buffer.width()) {
+            row.add(buffer.getPixel(x, y))
+        }
+        return row
+    }
+}
+
+/**
+ * Enumerate the pixels of an image as (x, y, pixel).
+ */
+public class EnumeratePixels<P>(
+    private val buffer: ImageBuffer<P, *>,
+    private val width: UInt,
+    private val height: UInt,
+) : Iterator<Triple<UInt, UInt, P>> {
+    private var curX: UInt = 0u
+    private var curY: UInt = 0u
+
+    override fun hasNext(): Boolean {
+        if (width == 0u || height == 0u) return false
+        return curY < height
+    }
+
+    override fun next(): Triple<UInt, UInt, P> {
+        if (!hasNext()) throw NoSuchElementException("No more pixels")
+        val x = curX
+        val y = curY
+        val px = buffer.getPixel(x, y)
+        curX++
+        if (curX >= width) {
+            curX = 0u
+            curY++
+        }
+        return Triple(x, y, px)
+    }
+}
+
+/**
+ * Enumerate the rows of an image as (y, row).
+ */
+public class EnumerateRows<P>(
+    private val buffer: ImageBuffer<P, *>,
+    private val height: UInt,
+) : Iterator<Pair<UInt, List<P>>> {
+    private var curY: UInt = 0u
+
+    override fun hasNext(): Boolean = curY < height
+
+    override fun next(): Pair<UInt, List<P>> {
+        if (!hasNext()) throw NoSuchElementException("No more rows")
+        val y = curY++
+        val row = ArrayList<P>(buffer.width().toInt())
+        for (x in 0u until buffer.width()) {
+            row.add(buffer.getPixel(x, y))
+        }
+        return Pair(y, row)
+    }
+}
+
+/**
+ * Enumerate the mutable pixels of an image as (x, y, pixel).
+ */
+public class EnumeratePixelsMut<P>(
+    private val buffer: ImageBuffer<P, *>,
+    private val width: UInt,
+    private val height: UInt,
+) : Iterator<Triple<UInt, UInt, P>> {
+    private var curX: UInt = 0u
+    private var curY: UInt = 0u
+
+    override fun hasNext(): Boolean {
+        if (width == 0u || height == 0u) return false
+        return curY < height
+    }
+
+    override fun next(): Triple<UInt, UInt, P> {
+        if (!hasNext()) throw NoSuchElementException("No more pixels")
+        val x = curX
+        val y = curY
+        val px = buffer.getPixel(x, y)
+        curX++
+        if (curX >= width) {
+            curX = 0u
+            curY++
+        }
+        return Triple(x, y, px)
+    }
+}
+
+/**
+ * Enumerate the mutable rows of an image as (y, row).
+ */
+public class EnumerateRowsMut<P>(
+    private val buffer: ImageBuffer<P, *>,
+    private val height: UInt,
+) : Iterator<Pair<UInt, List<P>>> {
+    private var curY: UInt = 0u
+
+    override fun hasNext(): Boolean = curY < height
+
+    override fun next(): Pair<UInt, List<P>> {
+        if (!hasNext()) throw NoSuchElementException("No more rows")
+        val y = curY++
+        val row = ArrayList<P>(buffer.width().toInt())
+        for (x in 0u until buffer.width()) {
+            row.add(buffer.getPixel(x, y))
+        }
+        return Pair(y, row)
+    }
+}
+
+/**
+ * Inputs to [ImageBuffer.copyFromColorSpace].
+ */
+public class ConvertColorOptions(
+    internal var transform: CicpTransform? = null,
+) {
+    public constructor() : this(transform = null)
+
+    internal fun asTransform(
+        fromColor: Cicp,
+        intoColor: Cicp,
+    ): CicpTransform {
+        val tr = transform
+        if (tr != null) {
+            tr.checkApplicable(fromColor, intoColor)
+            return tr
+        }
+        val created = CicpTransform.new(fromColor, intoColor)
+            ?: throw ImageError.Unsupported(
+                UnsupportedError.fromFormatAndKind(
+                    ImageFormatHint.Unknown,
+                    UnsupportedErrorKind.ColorspaceCicp(
+                        if (fromColor.qualifyStability()) intoColor else fromColor
+                    )
+                )
+            )
+        transform = created
+        return created
+    }
+}
+

@@ -253,3 +253,11 @@ public class PnmHeader(
         public fun from(header: ArbitraryHeader): PnmHeader = PnmHeader(header)
     }
 }
+
+internal class TupltypeWriter(
+    private val tupltype: ArbitraryTuplType?,
+) {
+    override fun toString(): String =
+        if (tupltype != null) "TUPLTYPE ${tupltype.name()}\n" else ""
+}
+

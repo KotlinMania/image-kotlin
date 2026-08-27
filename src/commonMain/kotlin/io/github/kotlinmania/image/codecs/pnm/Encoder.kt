@@ -438,3 +438,33 @@ public class PnmEncoder private constructor(
         encode(buf, width, height, colorType)
     }
 }
+
+internal class CheckedImageBuffer(
+    val image: FlatSamples,
+    val width: UInt,
+    val height: UInt,
+    val color: ExtendedColorType,
+)
+
+internal class UncheckedHeader(
+    val header: PnmHeader,
+)
+
+internal class CheckedDimensions(
+    val unchecked: UncheckedHeader,
+    val width: UInt,
+    val height: UInt,
+)
+
+internal class CheckedHeaderColor(
+    val dimensions: CheckedDimensions,
+    val color: ExtendedColorType,
+)
+
+internal class CheckedHeader(
+    val color: CheckedHeaderColor,
+    val image: CheckedImageBuffer,
+)
+
+internal class SampleWriter
+

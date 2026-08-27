@@ -673,3 +673,26 @@ private fun readU32Le(buf: ByteArray, offset: Int): Long {
 
 private fun readI32Le(buf: ByteArray, offset: Int): Int =
     readU32Le(buf, offset).toInt()
+
+/**
+ * Row iterator for BMP decoding.
+ */
+public class RowIterator(
+    private val buffer: ByteArray,
+    private val rowSize: Int,
+    private val height: Int,
+    private val topDown: Boolean,
+) : Iterator<ByteArray> {
+    private var cur = 0
+
+    override fun hasNext(): Boolean = cur < height
+
+    override fun next(): ByteArray {
+        if (!hasNext()) throw NoSuchElementException("No more rows")
+        val rowIndex = if (topDown) cur else (height - 1 - cur)
+        cur++
+        val offset = rowIndex * rowSize
+        return buffer.copyOfRange(offset, offset + rowSize)
+    }
+}
+

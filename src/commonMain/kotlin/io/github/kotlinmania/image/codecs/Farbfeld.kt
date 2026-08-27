@@ -192,3 +192,30 @@ public class FarbfeldEncoder internal constructor(
         encode(buf, width, height)
     }
 }
+
+/**
+ * Farbfeld reader.
+ */
+public class FarbfeldReader(
+    public val width: UInt,
+    public val height: UInt,
+    private val inner: IoRead,
+) {
+    public companion object {
+        public fun new(reader: IoRead): FarbfeldReader {
+            val magic = ByteArray(8)
+            reader.readExact(magic)
+            if (!magic.contentEquals(FARBFELD_MAGIC)) {
+                throw ImageError.Decoding(DecodingError(ImageFormatHint.Exact(ImageFormat.Farbfeld), "Invalid farbfeld magic"))
+            }
+            val wBuf = ByteArray(4)
+            reader.readExact(wBuf)
+            val hBuf = ByteArray(4)
+            reader.readExact(hBuf)
+            val w = ((wBuf[0].toInt() and 0xFF) shl 24) or ((wBuf[1].toInt() and 0xFF) shl 16) or ((wBuf[2].toInt() and 0xFF) shl 8) or (wBuf[3].toInt() and 0xFF)
+            val h = ((hBuf[0].toInt() and 0xFF) shl 24) or ((hBuf[1].toInt() and 0xFF) shl 16) or ((hBuf[2].toInt() and 0xFF) shl 8) or (hBuf[3].toInt() and 0xFF)
+            return FarbfeldReader(w.toUInt(), h.toUInt(), reader)
+        }
+    }
+}
+
