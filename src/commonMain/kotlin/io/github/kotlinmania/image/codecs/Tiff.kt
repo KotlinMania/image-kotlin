@@ -6,10 +6,6 @@ import io.github.kotlinmania.image.DecodingError
 import io.github.kotlinmania.image.ExtendedColorType
 import io.github.kotlinmania.image.ImageError
 import io.github.kotlinmania.image.ImageFormatHint
-import io.github.kotlinmania.image.ParameterError
-import io.github.kotlinmania.image.ParameterErrorKind
-import io.github.kotlinmania.image.UnsupportedError
-import io.github.kotlinmania.image.UnsupportedErrorKind
 import io.github.kotlinmania.image.images.DynamicImage
 import io.github.kotlinmania.image.io.BufferIoRead
 import io.github.kotlinmania.image.io.BufferIoWrite
@@ -66,11 +62,12 @@ public class TiffDecoder internal constructor(
             )
         }
 
-        val magic = if (isLittleEndian) {
-            (header[2].toInt() and 0xFF) or ((header[3].toInt() and 0xFF) shl 8)
-        } else {
-            ((header[2].toInt() and 0xFF) shl 8) or (header[3].toInt() and 0xFF)
-        }
+        val magic =
+            if (isLittleEndian) {
+                (header[2].toInt() and 0xFF) or ((header[3].toInt() and 0xFF) shl 8)
+            } else {
+                ((header[2].toInt() and 0xFF) shl 8) or (header[3].toInt() and 0xFF)
+            }
 
         if (magic != 42) {
             throw ImageError.Decoding(
@@ -140,11 +137,17 @@ public class TiffEncoder internal constructor(
         }
 
         // Write Little-Endian TIFF header: II, 42, offset to IFD (8)
-        val header = byteArrayOf(
-            0x49.toByte(), 0x49.toByte(), // II
-            0x2A.toByte(), 0x00.toByte(), // 42
-            0x08.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(), // IFD offset 8
-        )
+        val header =
+            byteArrayOf(
+                0x49.toByte(),
+                0x49.toByte(), // II
+                0x2A.toByte(),
+                0x00.toByte(), // 42
+                0x08.toByte(),
+                0x00.toByte(),
+                0x00.toByte(),
+                0x00.toByte(), // IFD offset 8
+            )
         writer.writeAll(header)
 
         // Write 1 IFD with standard tags: ImageWidth, ImageLength, BitsPerSample, Compression (1 = uncompressed),

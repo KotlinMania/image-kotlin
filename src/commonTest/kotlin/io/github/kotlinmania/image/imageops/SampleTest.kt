@@ -6,7 +6,6 @@ import io.github.kotlinmania.image.Rgba
 import io.github.kotlinmania.image.images.ImageBuffer
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
@@ -187,11 +186,18 @@ class SampleTest {
     @Test
     fun testFilter3x3() {
         val img = ByteArray(9) { 10.toByte() }
-        val kernel = floatArrayOf(
-            0f, 0f, 0f,
-            0f, 1f, 0f,
-            0f, 0f, 0f,
-        )
+        val kernel =
+            floatArrayOf(
+                0f,
+                0f,
+                0f,
+                0f,
+                1f,
+                0f,
+                0f,
+                0f,
+                0f,
+            )
         val filtered = filter3x3(img, 3, 3, 1, kernel)
         assertEquals(9, filtered.size)
     }
@@ -205,14 +211,16 @@ class SampleTest {
 
     @Test
     fun testGaussianBlurDynImage() {
-        val rgb = ImageBuffer.createRgb(4u, 4u) { x, y ->
-            Rgb((x * 40u).toUByte(), (y * 40u).toUByte(), 128u.toUByte())
-        }
-        val dyn = io.github.kotlinmania.image.images.DynamicImage.ImageRgb8(rgb)
+        val rgb =
+            ImageBuffer.createRgb(4u, 4u) { x, y ->
+                Rgb((x * 40u).toUByte(), (y * 40u).toUByte(), 128u.toUByte())
+            }
+        val dyn =
+            io.github.kotlinmania.image.images.DynamicImage
+                .ImageRgb8(rgb)
         val blurred = gaussianBlurDynImage(dyn, GaussianBlurParameters.SMOOTHING_3)
         assertEquals(4u, blurred.width())
         assertEquals(4u, blurred.height())
         assertTrue(blurred.asBytes().isNotEmpty())
     }
 }
-

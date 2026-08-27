@@ -114,12 +114,14 @@ public class WebPDecoder(
                         val hasXmpFlag = (flags and 0x04) != 0
                         val hasAnimFlag = (flags and 0x02) != 0
 
-                        val w = (input[chunkDataStart + 4].toLong() and 0xFF) or
-                            ((input[chunkDataStart + 5].toLong() and 0xFF) shl 8) or
-                            ((input[chunkDataStart + 6].toLong() and 0xFF) shl 16) + 1
-                        val h = (input[chunkDataStart + 7].toLong() and 0xFF) or
-                            ((input[chunkDataStart + 8].toLong() and 0xFF) shl 8) or
-                            ((input[chunkDataStart + 9].toLong() and 0xFF) shl 16) + 1
+                        val w =
+                            (input[chunkDataStart + 4].toLong() and 0xFF) or
+                                ((input[chunkDataStart + 5].toLong() and 0xFF) shl 8) or
+                                ((input[chunkDataStart + 6].toLong() and 0xFF) shl 16) + 1
+                        val h =
+                            (input[chunkDataStart + 7].toLong() and 0xFF) or
+                                ((input[chunkDataStart + 8].toLong() and 0xFF) shl 8) or
+                                ((input[chunkDataStart + 9].toLong() and 0xFF) shl 16) + 1
 
                         width = w.toUInt()
                         height = h.toUInt()
@@ -165,7 +167,11 @@ public class WebPDecoder(
     }
 
     override fun setLimits(limits: Limits) {
-        limits.checkSupport(io.github.kotlinmania.image.io.LimitSupport()).getOrThrow()
+        limits
+            .checkSupport(
+                io.github.kotlinmania.image.io
+                    .LimitSupport(),
+            ).getOrThrow()
         val (w, h) = dimensions()
         limits.checkDimensions(w, h).getOrThrow()
         this.limits = limits
@@ -198,13 +204,12 @@ public class WebPDecoder(
         readImage(buf)
     }
 
-    private fun readFourCc(offset: Int): String {
-        return buildString {
+    private fun readFourCc(offset: Int): String =
+        buildString {
             for (i in 0 until 4) {
                 append((input[offset + i].toInt() and 0xFF).toChar())
             }
         }
-    }
 
     private fun readU32Le(offset: Int): Long {
         val b0 = input[offset].toLong() and 0xFF

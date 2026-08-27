@@ -914,7 +914,11 @@ tasks.register("hostTests") {
 // Patch generated SPM Package.swift to include minimum macOS platform for Swift Concurrency
 tasks.matching { it.name.contains("GenerateSPMPackage") }.configureEach {
     doLast {
-        val spmDir = layout.buildDirectory.dir("SPMPackage").orNull?.asFile
+        val spmDir =
+            layout.buildDirectory
+                .dir("SPMPackage")
+                .orNull
+                ?.asFile
         if (spmDir != null && spmDir.exists()) {
             spmDir.walkTopDown().filter { it.name == "Package.swift" }.forEach { file ->
                 val text = file.readText()
@@ -978,9 +982,13 @@ tasks.register("swiftExportSmokeTest") {
                 )
             }.assertNormalExitValue()
 
-        val mergedLib = layout.buildDirectory.file("MergedLibraries/macos/Debug/lib${frameworkName}.a").get().asFile
+        val mergedLib =
+            layout.buildDirectory
+                .file("MergedLibraries/macos/Debug/lib$frameworkName.a")
+                .get()
+                .asFile
         if (mergedLib.exists()) {
-            val targetFile = File(swiftBuildDir, "lib${frameworkName}.a")
+            val targetFile = File(swiftBuildDir, "lib$frameworkName.a")
             if (!targetFile.exists()) {
                 mergedLib.copyTo(targetFile, overwrite = true)
             }

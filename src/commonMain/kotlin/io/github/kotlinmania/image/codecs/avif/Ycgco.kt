@@ -287,4 +287,3 @@ public fun ycgco444ToRgba8(
 ) {
     ycgco444ToRgbxImpl(image, rgba, range, channels = 4, bitDepth = 8)
 }
-

@@ -116,12 +116,13 @@ public class JpegDecoder(
 
                         height = h.toUInt()
                         width = w.toUInt()
-                        origColorType = when (numComp) {
-                            1 -> ColorType.L8
-                            3 -> ColorType.Rgb8
-                            4 -> ColorType.Rgba8
-                            else -> ColorType.Rgb8
-                        }
+                        origColorType =
+                            when (numComp) {
+                                1 -> ColorType.L8
+                                3 -> ColorType.Rgb8
+                                4 -> ColorType.Rgba8
+                                else -> ColorType.Rgb8
+                            }
 
                         components.clear()
                         var compOffset = payloadStart + 6
@@ -155,7 +156,9 @@ public class JpegDecoder(
                                     }
                                     hasQTable[qTableId] = true
                                     dqtOffset += 64
-                                } else break
+                                } else {
+                                    break
+                                }
                             } else {
                                 if (dqtOffset + 128 <= payloadStart + payloadLen) {
                                     for (k in 0 until 64) {
@@ -164,9 +167,13 @@ public class JpegDecoder(
                                     }
                                     hasQTable[qTableId] = true
                                     dqtOffset += 128
-                                } else break
+                                } else {
+                                    break
+                                }
                             }
-                        } else break
+                        } else {
+                            break
+                        }
                     }
                 }
                 // DHT
@@ -197,8 +204,12 @@ public class JpegDecoder(
                                 } else {
                                     acHuffman[tableId] = table
                                 }
-                            } else break
-                        } else break
+                            } else {
+                                break
+                            }
+                        } else {
+                            break
+                        }
                     }
                 }
                 // SOS (Start of Scan)
@@ -288,7 +299,11 @@ public class JpegDecoder(
     }
 
     override fun setLimits(limits: Limits) {
-        limits.checkSupport(io.github.kotlinmania.image.io.LimitSupport()).getOrThrow()
+        limits
+            .checkSupport(
+                io.github.kotlinmania.image.io
+                    .LimitSupport(),
+            ).getOrThrow()
         val (w, h) = dimensions()
         limits.checkDimensions(w, h).getOrThrow()
         this.limits = limits
@@ -350,10 +365,11 @@ public class JpegDecoder(
         val block = IntArray(64)
         val idctBlock = IntArray(64)
 
-        val mcuBuffers = Array(components.size) { cIdx ->
-            val c = components[cIdx]
-            Array(c.hSample * c.vSample) { IntArray(64) }
-        }
+        val mcuBuffers =
+            Array(components.size) { cIdx ->
+                val c = components[cIdx]
+                Array(c.hSample * c.vSample) { IntArray(64) }
+            }
 
         for (mcuY in 0 until mcusY) {
             for (mcuX in 0 until mcusX) {
@@ -570,16 +586,73 @@ public class JpegDecoder(
     }
 
     public companion object {
-        private val ZIGZAG = intArrayOf(
-            0, 1, 8, 16, 9, 2, 3, 10,
-            17, 24, 32, 25, 18, 11, 4, 5,
-            12, 19, 26, 33, 40, 48, 41, 34,
-            27, 20, 13, 6, 7, 14, 21, 28,
-            35, 42, 49, 56, 57, 50, 43, 36,
-            29, 22, 15, 23, 30, 37, 44, 51,
-            58, 59, 52, 45, 38, 31, 39, 46,
-            53, 60, 61, 54, 47, 55, 62, 63,
-        )
+        private val ZIGZAG =
+            intArrayOf(
+                0,
+                1,
+                8,
+                16,
+                9,
+                2,
+                3,
+                10,
+                17,
+                24,
+                32,
+                25,
+                18,
+                11,
+                4,
+                5,
+                12,
+                19,
+                26,
+                33,
+                40,
+                48,
+                41,
+                34,
+                27,
+                20,
+                13,
+                6,
+                7,
+                14,
+                21,
+                28,
+                35,
+                42,
+                49,
+                56,
+                57,
+                50,
+                43,
+                36,
+                29,
+                22,
+                15,
+                23,
+                30,
+                37,
+                44,
+                51,
+                58,
+                59,
+                52,
+                45,
+                38,
+                31,
+                39,
+                46,
+                53,
+                60,
+                61,
+                54,
+                47,
+                55,
+                62,
+                63,
+            )
 
         private fun readAllBytes(r: IoRead): ByteArray {
             val buf = ByteArray(4096)

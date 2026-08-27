@@ -30,7 +30,6 @@ internal fun Int.safeAdd(rhs: Int): Int {
     return res.toInt()
 }
 
-
 public data class KernelShape(
     public val width: Int,
     public val height: Int,
@@ -48,6 +47,7 @@ public data class ArenaColumns<T>(
 
 public interface ToStorage<S, T> {
     public fun to(input: S): T
+
     public fun to_(input: S): T = to(input)
 }
 
@@ -161,7 +161,6 @@ internal fun makeColumnsArenasU16(
 
     return ArenaColumns(topPad, bottomPad)
 }
-
 
 private const val Q0_15: Int = 15
 private const val SCALE_U8: Float = (1 shl Q0_15).toFloat()
@@ -1021,4 +1020,3 @@ public fun filter1dVertical(
         }
     }
 }
-

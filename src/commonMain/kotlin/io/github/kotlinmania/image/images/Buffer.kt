@@ -777,4 +777,3 @@ public typealias Rgb32FImage = ImageBuffer<Rgb<Float>, ByteArray>
 public typealias Rgba32FImage = ImageBuffer<Rgba<Float>, ByteArray>
 public typealias Gray32FImage = ImageBuffer<Luma<Float>, ByteArray>
 public typealias GrayAlpha32FImage = ImageBuffer<LumaA<Float>, ByteArray>
-
