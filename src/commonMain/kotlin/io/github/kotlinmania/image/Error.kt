@@ -359,6 +359,8 @@ public data class TryFromExtendedColorError(
 ) : Exception("The pixel layout $was is not supported as a buffer ColorType") {
     public fun fmt(): String = "The pixel layout $was is not supported as a buffer ColorType"
 
+    public fun fmt(format: Any?): String = fmt()
+
     public fun toImageError(): ImageError =
         ImageError.Unsupported(
             UnsupportedError.fromFormatAndKind(
