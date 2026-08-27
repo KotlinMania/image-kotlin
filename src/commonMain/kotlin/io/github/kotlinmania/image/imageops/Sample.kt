@@ -36,6 +36,50 @@ public enum class FilterType {
     Lanczos3,
 }
 
+/**
+ * A representation of a separable filter.
+ */
+public class Filter(
+    public val kernel: (Float) -> Float,
+    public val support: Float,
+)
+
+/**
+ * Float wrapper rounding to nearest integer values.
+ */
+internal class FloatNearest(public val value: Float) {
+    fun toI8(): Byte = round(value).toInt().toByte()
+    fun toI16(): Short = round(value).toInt().toShort()
+    fun toI64(): Long = round(value).toLong()
+    fun toU8(): UByte = round(value).toInt().toUByte()
+    fun toU16(): UShort = round(value).toInt().toUShort()
+    fun toU64(): ULong = round(value).toLong().toULong()
+}
+
+/**
+ * Local struct for keeping track of pixel sums for fast thumbnail averaging.
+ */
+internal class ThumbnailSum(
+    var c0: Long = 0L,
+    var c1: Long = 0L,
+    var c2: Long = 0L,
+    var c3: Long = 0L,
+) {
+    fun zeroed() {
+        c0 = 0L
+        c1 = 0L
+        c2 = 0L
+        c3 = 0L
+    }
+
+    fun addPixel(p0: Long, p1: Long, p2: Long, p3: Long) {
+        c0 += p0
+        c1 += p1
+        c2 += p2
+        c3 += p3
+    }
+}
+
 private fun sinc(t: Float): Float {
     val a = t * PI.toFloat()
     return if (t == 0.0f) 1.0f else sin(a) / a

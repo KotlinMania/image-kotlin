@@ -25,9 +25,22 @@ private fun IoRead.readU32Le(): UInt {
 }
 
 /**
+ * Extended DX10 header used by some DDS image files.
+ */
+public class DX10Header(
+    public val dxgiFormat: UInt,
+    public val resourceDimension: UInt,
+    public val miscFlag: UInt,
+    public val arraySize: UInt,
+    public val miscFlags2: UInt,
+)
+
+public typealias PixelFormat = DdsPixelFormat
+
+/**
  * DDS pixel format.
  */
-internal class DdsPixelFormat(
+public class DdsPixelFormat(
     val flags: UInt,
     val fourcc: ByteArray,
     val rgbBitCount: UInt,

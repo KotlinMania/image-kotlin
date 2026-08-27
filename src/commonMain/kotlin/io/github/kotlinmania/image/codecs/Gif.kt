@@ -439,3 +439,43 @@ public class GifEncoder internal constructor(
         public fun newWithSpeed(w: IoWrite, speed: Int): GifEncoder = GifEncoder(w, speed)
     }
 }
+
+/**
+ * Wrapper struct around a byte cursor.
+ */
+@Deprecated("Use IoRead directly")
+public class GifReader(
+    private val buffer: ByteArray,
+) : IoRead {
+    private var pos: Int = 0
+
+    override fun read(buffer: ByteArray, offset: Int, count: Int): Int {
+        if (pos >= this.buffer.size) return 0
+        val toRead = minOf(count, this.buffer.size - pos)
+        this.buffer.copyInto(buffer, offset, pos, pos + toRead)
+        pos += toRead
+        return toRead
+    }
+}
+
+internal class GifFrameIterator(
+    private val frames: List<Frame>,
+) : Iterator<Frame> {
+    private var index = 0
+
+    override fun hasNext(): Boolean = index < frames.size
+
+    override fun next(): Frame {
+        if (!hasNext()) throw NoSuchElementException("No more frames")
+        return frames[index++]
+    }
+}
+
+internal class FrameInfo(
+    val left: UInt,
+    val top: UInt,
+    val width: UInt,
+    val height: UInt,
+    val delay: Delay,
+)
+

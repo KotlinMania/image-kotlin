@@ -226,3 +226,22 @@ public class TiffEncoder internal constructor(
         public fun new(w: IoWrite): TiffEncoder = TiffEncoder(w)
     }
 }
+
+/**
+ * Wrapper struct around a byte cursor.
+ */
+@Deprecated("Use IoRead directly")
+public class TiffReader(
+    private val buffer: ByteArray,
+) : IoRead {
+    private var pos: Int = 0
+
+    override fun read(buffer: ByteArray, offset: Int, count: Int): Int {
+        if (pos >= this.buffer.size) return 0
+        val toRead = minOf(count, this.buffer.size - pos)
+        this.buffer.copyInto(buffer, offset, pos, pos + toRead)
+        pos += toRead
+        return toRead
+    }
+}
+

@@ -686,3 +686,7 @@ public class PnmDecoder(
         }
     }
 }
+
+internal class PbmBit
+internal class BWBit
+
