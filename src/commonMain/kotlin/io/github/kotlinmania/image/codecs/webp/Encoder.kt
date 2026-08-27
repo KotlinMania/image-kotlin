@@ -33,14 +33,15 @@ public class WebPEncoder(
     ) {
         val expectedBufferLen = colorType.bufferSize(width, height)
         require(expectedBufferLen == buf.size.toULong()) {
-            "Invalid buffer length: expected $expectedBufferLen got ${buf.size} for ${width}x${height} image"
+            "Invalid buffer length: expected $expectedBufferLen got ${buf.size} for ${width}x$height image"
         }
 
         when (colorType) {
             ExtendedColorType.L8,
             ExtendedColorType.La8,
             ExtendedColorType.Rgb8,
-            ExtendedColorType.Rgba8 -> {
+            ExtendedColorType.Rgba8,
+            -> {
                 // Supported WebP color types
             }
             else -> {
@@ -64,9 +65,10 @@ public class WebPEncoder(
             // Write VP8X chunk
             out.writeAll("VP8X".encodeToByteArray())
             writeU32Le(out, 10)
-            val flags = (if (hasIcc) 0x20 else 0) or
-                (if (colorType.hasAlpha()) 0x10 else 0) or
-                (if (hasExif) 0x08 else 0)
+            val flags =
+                (if (hasIcc) 0x20 else 0) or
+                    (if (colorType.hasAlpha()) 0x10 else 0) or
+                    (if (hasExif) 0x08 else 0)
             out.writeAll(byteArrayOf(flags.toByte(), 0, 0, 0))
             val w24 = (width - 1u).toInt()
             val h24 = (height - 1u).toInt()

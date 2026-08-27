@@ -20,6 +20,7 @@ import io.github.kotlinmania.image.io.writeAll
 public enum class ColorSpace {
     /** sRGB colorspace */
     Srgb,
+
     /** BT.709 colorspace */
     Bt709,
 }
@@ -69,23 +70,49 @@ public class AvifEncoder internal constructor(
             ExtendedColorType.Rgba8,
             -> {
                 // Write minimal valid AVIF (ISOBMFF ftyp + mdat)
-                val ftyp = byteArrayOf(
-                    0x00, 0x00, 0x00, 0x1C, // size 28
-                    0x66, 0x74, 0x79, 0x70, // ftyp
-                    0x61, 0x76, 0x69, 0x66, // major brand: avif
-                    0x00, 0x00, 0x00, 0x00, // minor version: 0
-                    0x61, 0x76, 0x69, 0x66, // compatible brands: avif
-                    0x6D, 0x69, 0x66, 0x31, // mif1
-                    0x6D, 0x69, 0x61, 0x66, // miaf
-                )
+                val ftyp =
+                    byteArrayOf(
+                        0x00,
+                        0x00,
+                        0x00,
+                        0x1C, // size 28
+                        0x66,
+                        0x74,
+                        0x79,
+                        0x70, // ftyp
+                        0x61,
+                        0x76,
+                        0x69,
+                        0x66, // major brand: avif
+                        0x00,
+                        0x00,
+                        0x00,
+                        0x00, // minor version: 0
+                        0x61,
+                        0x76,
+                        0x69,
+                        0x66, // compatible brands: avif
+                        0x6D,
+                        0x69,
+                        0x66,
+                        0x31, // mif1
+                        0x6D,
+                        0x69,
+                        0x61,
+                        0x66, // miaf
+                    )
                 val mdatSize = data.size + 8
-                val mdatHeader = byteArrayOf(
-                    ((mdatSize shr 24) and 0xFF).toByte(),
-                    ((mdatSize shr 16) and 0xFF).toByte(),
-                    ((mdatSize shr 8) and 0xFF).toByte(),
-                    (mdatSize and 0xFF).toByte(),
-                    0x6D, 0x64, 0x61, 0x74, // mdat
-                )
+                val mdatHeader =
+                    byteArrayOf(
+                        ((mdatSize shr 24) and 0xFF).toByte(),
+                        ((mdatSize shr 16) and 0xFF).toByte(),
+                        ((mdatSize shr 8) and 0xFF).toByte(),
+                        (mdatSize and 0xFF).toByte(),
+                        0x6D,
+                        0x64,
+                        0x61,
+                        0x74, // mdat
+                    )
                 writer.writeAll(ftyp)
                 writer.writeAll(mdatHeader)
                 writer.writeAll(data)

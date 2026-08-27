@@ -11,7 +11,6 @@ import io.github.kotlinmania.image.ImageError
 import io.github.kotlinmania.image.ImageFormatHint
 import io.github.kotlinmania.image.ParameterError
 import io.github.kotlinmania.image.ParameterErrorKind
-import io.github.kotlinmania.image.Ratio
 import io.github.kotlinmania.image.UnsupportedError
 import io.github.kotlinmania.image.UnsupportedErrorKind
 import io.github.kotlinmania.image.images.DynamicImage
@@ -32,7 +31,9 @@ import io.github.kotlinmania.image.io.writeAll
  */
 public sealed class Repeat {
     /** Finite number of repetitions */
-    public data class Finite(public val count: UShort) : Repeat()
+    public data class Finite(
+        public val count: UShort,
+    ) : Repeat()
 
     /** Looping GIF */
     public data object Infinite : Repeat()
@@ -150,14 +151,15 @@ public class GifDecoder internal constructor(
         if (framesList.isNotEmpty()) return framesList
 
         val canvas = ByteArray(width.toInt() * height.toInt() * 4)
-        val defaultFrame = Frame(
-            buffer = canvas,
-            width = width,
-            height = height,
-            delay = Delay.fromNumerDenomMs(100u, 1u),
-            left = 0u,
-            top = 0u,
-        )
+        val defaultFrame =
+            Frame(
+                buffer = canvas,
+                width = width,
+                height = height,
+                delay = Delay.fromNumerDenomMs(100u, 1u),
+                left = 0u,
+                top = 0u,
+            )
         framesList.add(defaultFrame)
         return framesList
     }
@@ -271,21 +273,34 @@ public class GifEncoder internal constructor(
 
         val rep = repeat
         if (rep != null) {
-            val appExt = byteArrayOf(
-                0x21.toByte(), 0xFF.toByte(), 0x0B.toByte(),
-                0x4E.toByte(), 0x45.toByte(), 0x54.toByte(), 0x53.toByte(), 0x43.toByte(),
-                0x41.toByte(), 0x50.toByte(), 0x45.toByte(), 0x32.toByte(), 0x2E.toByte(), 0x30.toByte(),
-                0x03.toByte(), 0x01.toByte(),
-                when (rep) {
-                    is Repeat.Infinite -> 0x00.toByte()
-                    is Repeat.Finite -> (rep.count.toInt() and 0xFF).toByte()
-                },
-                when (rep) {
-                    is Repeat.Infinite -> 0x00.toByte()
-                    is Repeat.Finite -> ((rep.count.toInt() shr 8) and 0xFF).toByte()
-                },
-                0x00.toByte(),
-            )
+            val appExt =
+                byteArrayOf(
+                    0x21.toByte(),
+                    0xFF.toByte(),
+                    0x0B.toByte(),
+                    0x4E.toByte(),
+                    0x45.toByte(),
+                    0x54.toByte(),
+                    0x53.toByte(),
+                    0x43.toByte(),
+                    0x41.toByte(),
+                    0x50.toByte(),
+                    0x45.toByte(),
+                    0x32.toByte(),
+                    0x2E.toByte(),
+                    0x30.toByte(),
+                    0x03.toByte(),
+                    0x01.toByte(),
+                    when (rep) {
+                        is Repeat.Infinite -> 0x00.toByte()
+                        is Repeat.Finite -> (rep.count.toInt() and 0xFF).toByte()
+                    },
+                    when (rep) {
+                        is Repeat.Infinite -> 0x00.toByte()
+                        is Repeat.Finite -> ((rep.count.toInt() shr 8) and 0xFF).toByte()
+                    },
+                    0x00.toByte(),
+                )
             writer.writeAll(appExt)
         }
     }
@@ -310,13 +325,17 @@ public class GifEncoder internal constructor(
             palette[pIdx++] = 0
         }
 
-        val gce = byteArrayOf(
-            0x21.toByte(), 0xF9.toByte(), 0x04.toByte(),
-            0x09.toByte(),
-            0x0A.toByte(), 0x00.toByte(),
-            0xFF.toByte(),
-            0x00.toByte(),
-        )
+        val gce =
+            byteArrayOf(
+                0x21.toByte(),
+                0xF9.toByte(),
+                0x04.toByte(),
+                0x09.toByte(),
+                0x0A.toByte(),
+                0x00.toByte(),
+                0xFF.toByte(),
+                0x00.toByte(),
+            )
         writer.writeAll(gce)
 
         val id = ByteArray(10)
@@ -416,6 +435,7 @@ public class GifEncoder internal constructor(
 
     public companion object {
         public fun new(w: IoWrite): GifEncoder = GifEncoder(w)
+
         public fun newWithSpeed(w: IoWrite, speed: Int): GifEncoder = GifEncoder(w, speed)
     }
 }

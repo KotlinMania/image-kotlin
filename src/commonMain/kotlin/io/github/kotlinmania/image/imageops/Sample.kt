@@ -8,10 +8,6 @@ import io.github.kotlinmania.image.Rgba
 import io.github.kotlinmania.image.images.DynamicImage
 import io.github.kotlinmania.image.images.GenericImageView
 import io.github.kotlinmania.image.images.ImageBuffer
-import io.github.kotlinmania.image.images.RgbImage
-import io.github.kotlinmania.image.images.Rgba16Image
-import io.github.kotlinmania.image.images.Rgba32FImage
-import io.github.kotlinmania.image.images.RgbaImage
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.exp
@@ -66,18 +62,19 @@ public fun lanczos3Kernel(x: Float): Float = lanczos(x, 3.0f)
 
 private fun bcCubicSpline(x: Float, b: Float, c: Float): Float {
     val a = abs(x)
-    val k = if (a < 1.0f) {
-        (12.0f - 9.0f * b - 6.0f * c) * a * a * a +
-            (-18.0f + 12.0f * b + 6.0f * c) * a * a +
-            (6.0f - 2.0f * b)
-    } else if (a < 2.0f) {
-        (-b - 6.0f * c) * a * a * a +
-            (6.0f * b + 30.0f * c) * a * a +
-            (-12.0f * b - 48.0f * c) * a +
-            (8.0f * b + 24.0f * c)
-    } else {
-        0.0f
-    }
+    val k =
+        if (a < 1.0f) {
+            (12.0f - 9.0f * b - 6.0f * c) * a * a * a +
+                (-18.0f + 12.0f * b + 6.0f * c) * a * a +
+                (6.0f - 2.0f * b)
+        } else if (a < 2.0f) {
+            (-b - 6.0f * c) * a * a * a +
+                (6.0f * b + 30.0f * c) * a * a +
+                (-12.0f * b - 48.0f * c) * a +
+                (8.0f * b + 24.0f * c)
+        } else {
+            0.0f
+        }
     return k / 6.0f
 }
 
@@ -300,20 +297,44 @@ public fun <P> interpolateBilinear(
             val c10 = p10 as Rgba<*>
             val c11 = p11 as Rgba<*>
             if (c00.r is Float) {
-                val r00 = (c00.r as Float); val r01 = (c01.r as Float); val r10 = (c10.r as Float); val r11 = (c11.r as Float)
-                val g00 = (c00.g as Float); val g01 = (c01.g as Float); val g10 = (c10.g as Float); val g11 = (c11.g as Float)
-                val b00 = (c00.b as Float); val b01 = (c01.b as Float); val b10 = (c10.b as Float); val b11 = (c11.b as Float)
-                val a00 = (c00.a as Float); val a01 = (c01.a as Float); val a10 = (c10.a as Float); val a11 = (c11.a as Float)
+                val r00 = (c00.r as Float)
+                val r01 = (c01.r as Float)
+                val r10 = (c10.r as Float)
+                val r11 = (c11.r as Float)
+                val g00 = (c00.g as Float)
+                val g01 = (c01.g as Float)
+                val g10 = (c10.g as Float)
+                val g11 = (c11.g as Float)
+                val b00 = (c00.b as Float)
+                val b01 = (c01.b as Float)
+                val b10 = (c10.b as Float)
+                val b11 = (c11.b as Float)
+                val a00 = (c00.a as Float)
+                val a01 = (c01.a as Float)
+                val a10 = (c10.a as Float)
+                val a11 = (c11.a as Float)
                 val r = wff * r00 + wfc * r01 + wcf * r10 + wcc * r11
                 val g = wff * g00 + wfc * g01 + wcf * g10 + wcc * g11
                 val b = wff * b00 + wfc * b01 + wcf * b10 + wcc * b11
                 val a = wff * a00 + wfc * a01 + wcf * a10 + wcc * a11
                 Rgba(r, g, b, a) as P
             } else {
-                val r00 = (c00.r as UByte).toFloat(); val r01 = (c01.r as UByte).toFloat(); val r10 = (c10.r as UByte).toFloat(); val r11 = (c11.r as UByte).toFloat()
-                val g00 = (c00.g as UByte).toFloat(); val g01 = (c01.g as UByte).toFloat(); val g10 = (c10.g as UByte).toFloat(); val g11 = (c11.g as UByte).toFloat()
-                val b00 = (c00.b as UByte).toFloat(); val b01 = (c01.b as UByte).toFloat(); val b10 = (c10.b as UByte).toFloat(); val b11 = (c11.b as UByte).toFloat()
-                val a00 = (c00.a as UByte).toFloat(); val a01 = (c01.a as UByte).toFloat(); val a10 = (c10.a as UByte).toFloat(); val a11 = (c11.a as UByte).toFloat()
+                val r00 = (c00.r as UByte).toFloat()
+                val r01 = (c01.r as UByte).toFloat()
+                val r10 = (c10.r as UByte).toFloat()
+                val r11 = (c11.r as UByte).toFloat()
+                val g00 = (c00.g as UByte).toFloat()
+                val g01 = (c01.g as UByte).toFloat()
+                val g10 = (c10.g as UByte).toFloat()
+                val g11 = (c11.g as UByte).toFloat()
+                val b00 = (c00.b as UByte).toFloat()
+                val b01 = (c01.b as UByte).toFloat()
+                val b10 = (c10.b as UByte).toFloat()
+                val b11 = (c11.b as UByte).toFloat()
+                val a00 = (c00.a as UByte).toFloat()
+                val a01 = (c01.a as UByte).toFloat()
+                val a10 = (c10.a as UByte).toFloat()
+                val a11 = (c11.a as UByte).toFloat()
                 val r = round(wff * r00 + wfc * r01 + wcf * r10 + wcc * r11).toInt().coerceIn(0, 255).toUByte()
                 val g = round(wff * g00 + wfc * g01 + wcf * g10 + wcc * g11).toInt().coerceIn(0, 255).toUByte()
                 val b = round(wff * b00 + wfc * b01 + wcf * b10 + wcc * b11).toInt().coerceIn(0, 255).toUByte()
@@ -327,17 +348,35 @@ public fun <P> interpolateBilinear(
             val c10 = p10 as Rgb<*>
             val c11 = p11 as Rgb<*>
             if (c00.r is Float) {
-                val r00 = (c00.r as Float); val r01 = (c01.r as Float); val r10 = (c10.r as Float); val r11 = (c11.r as Float)
-                val g00 = (c00.g as Float); val g01 = (c01.g as Float); val g10 = (c10.g as Float); val g11 = (c11.g as Float)
-                val b00 = (c00.b as Float); val b01 = (c01.b as Float); val b10 = (c10.b as Float); val b11 = (c11.b as Float)
+                val r00 = (c00.r as Float)
+                val r01 = (c01.r as Float)
+                val r10 = (c10.r as Float)
+                val r11 = (c11.r as Float)
+                val g00 = (c00.g as Float)
+                val g01 = (c01.g as Float)
+                val g10 = (c10.g as Float)
+                val g11 = (c11.g as Float)
+                val b00 = (c00.b as Float)
+                val b01 = (c01.b as Float)
+                val b10 = (c10.b as Float)
+                val b11 = (c11.b as Float)
                 val r = wff * r00 + wfc * r01 + wcf * r10 + wcc * r11
                 val g = wff * g00 + wfc * g01 + wcf * g10 + wcc * g11
                 val b = wff * b00 + wfc * b01 + wcf * b10 + wcc * b11
                 Rgb(r, g, b) as P
             } else {
-                val r00 = (c00.r as UByte).toFloat(); val r01 = (c01.r as UByte).toFloat(); val r10 = (c10.r as UByte).toFloat(); val r11 = (c11.r as UByte).toFloat()
-                val g00 = (c00.g as UByte).toFloat(); val g01 = (c01.g as UByte).toFloat(); val g10 = (c10.g as UByte).toFloat(); val g11 = (c11.g as UByte).toFloat()
-                val b00 = (c00.b as UByte).toFloat(); val b01 = (c01.b as UByte).toFloat(); val b10 = (c10.b as UByte).toFloat(); val b11 = (c11.b as UByte).toFloat()
+                val r00 = (c00.r as UByte).toFloat()
+                val r01 = (c01.r as UByte).toFloat()
+                val r10 = (c10.r as UByte).toFloat()
+                val r11 = (c11.r as UByte).toFloat()
+                val g00 = (c00.g as UByte).toFloat()
+                val g01 = (c01.g as UByte).toFloat()
+                val g10 = (c10.g as UByte).toFloat()
+                val g11 = (c11.g as UByte).toFloat()
+                val b00 = (c00.b as UByte).toFloat()
+                val b01 = (c01.b as UByte).toFloat()
+                val b10 = (c10.b as UByte).toFloat()
+                val b11 = (c11.b as UByte).toFloat()
                 val r = round(wff * r00 + wfc * r01 + wcf * r10 + wcc * r11).toInt().coerceIn(0, 255).toUByte()
                 val g = round(wff * g00 + wfc * g01 + wcf * g10 + wcc * g11).toInt().coerceIn(0, 255).toUByte()
                 val b = round(wff * b00 + wfc * b01 + wcf * b10 + wcc * b11).toInt().coerceIn(0, 255).toUByte()
@@ -350,11 +389,17 @@ public fun <P> interpolateBilinear(
             val c10 = p10 as Luma<*>
             val c11 = p11 as Luma<*>
             if (c00.l is Float) {
-                val l00 = (c00.l as Float); val l01 = (c01.l as Float); val l10 = (c10.l as Float); val l11 = (c11.l as Float)
+                val l00 = (c00.l as Float)
+                val l01 = (c01.l as Float)
+                val l10 = (c10.l as Float)
+                val l11 = (c11.l as Float)
                 val l = wff * l00 + wfc * l01 + wcf * l10 + wcc * l11
                 Luma(l) as P
             } else {
-                val l00 = (c00.l as UByte).toFloat(); val l01 = (c01.l as UByte).toFloat(); val l10 = (c10.l as UByte).toFloat(); val l11 = (c11.l as UByte).toFloat()
+                val l00 = (c00.l as UByte).toFloat()
+                val l01 = (c01.l as UByte).toFloat()
+                val l10 = (c10.l as UByte).toFloat()
+                val l11 = (c11.l as UByte).toFloat()
                 val l = round(wff * l00 + wfc * l01 + wcf * l10 + wcc * l11).toInt().coerceIn(0, 255).toUByte()
                 Luma(l) as P
             }
@@ -365,14 +410,26 @@ public fun <P> interpolateBilinear(
             val c10 = p10 as LumaA<*>
             val c11 = p11 as LumaA<*>
             if (c00.l is Float) {
-                val l00 = (c00.l as Float); val l01 = (c01.l as Float); val l10 = (c10.l as Float); val l11 = (c11.l as Float)
-                val a00 = (c00.a as Float); val a01 = (c01.a as Float); val a10 = (c10.a as Float); val a11 = (c11.a as Float)
+                val l00 = (c00.l as Float)
+                val l01 = (c01.l as Float)
+                val l10 = (c10.l as Float)
+                val l11 = (c11.l as Float)
+                val a00 = (c00.a as Float)
+                val a01 = (c01.a as Float)
+                val a10 = (c10.a as Float)
+                val a11 = (c11.a as Float)
                 val l = wff * l00 + wfc * l01 + wcf * l10 + wcc * l11
                 val a = wff * a00 + wfc * a01 + wcf * a10 + wcc * a11
                 LumaA(l, a) as P
             } else {
-                val l00 = (c00.l as UByte).toFloat(); val l01 = (c01.l as UByte).toFloat(); val l10 = (c10.l as UByte).toFloat(); val l11 = (c11.l as UByte).toFloat()
-                val a00 = (c00.a as UByte).toFloat(); val a01 = (c01.a as UByte).toFloat(); val a10 = (c10.a as UByte).toFloat(); val a11 = (c11.a as UByte).toFloat()
+                val l00 = (c00.l as UByte).toFloat()
+                val l01 = (c01.l as UByte).toFloat()
+                val l10 = (c10.l as UByte).toFloat()
+                val l11 = (c11.l as UByte).toFloat()
+                val a00 = (c00.a as UByte).toFloat()
+                val a01 = (c01.a as UByte).toFloat()
+                val a10 = (c10.a as UByte).toFloat()
+                val a11 = (c11.a as UByte).toFloat()
                 val l = round(wff * l00 + wfc * l01 + wcf * l10 + wcc * l11).toInt().coerceIn(0, 255).toUByte()
                 val a = round(wff * a00 + wfc * a01 + wcf * a10 + wcc * a11).toInt().coerceIn(0, 255).toUByte()
                 LumaA(l, a) as P
@@ -614,88 +671,92 @@ public fun gaussianBlurDynImage(
     image: DynamicImage,
     parameters: GaussianBlurParameters,
 ): DynamicImage {
-    val xAxisKernel = getGaussianKernel1d(
-        parameters.xAxisKernelSize.toInt(),
-        parameters.xAxisSigma,
-    )
-    val yAxisKernel = getGaussianKernel1d(
-        parameters.yAxisKernelSize.toInt(),
-        parameters.yAxisSigma,
-    )
+    val xAxisKernel =
+        getGaussianKernel1d(
+            parameters.xAxisKernelSize.toInt(),
+            parameters.xAxisSigma,
+        )
+    val yAxisKernel =
+        getGaussianKernel1d(
+            parameters.yAxisKernelSize.toInt(),
+            parameters.yAxisSigma,
+        )
 
-    val filterImageSize = FilterImageSize(
-        width = image.width().toInt(),
-        height = image.height().toInt(),
-    )
+    val filterImageSize =
+        FilterImageSize(
+            width = image.width().toInt(),
+            height = image.height().toInt(),
+        )
 
-    val target: DynamicImage = when (image) {
-        is DynamicImage.ImageLuma8 -> {
-            val raw = image.image.asRaw()
-            val dest = ByteArray(raw.size)
-            filter2dSepPlane(raw, dest, filterImageSize, xAxisKernel, yAxisKernel)
-            DynamicImage.ImageLuma8(ImageBuffer.createGray(image.width(), image.height(), dest)!!)
+    val target: DynamicImage =
+        when (image) {
+            is DynamicImage.ImageLuma8 -> {
+                val raw = image.image.asRaw()
+                val dest = ByteArray(raw.size)
+                filter2dSepPlane(raw, dest, filterImageSize, xAxisKernel, yAxisKernel)
+                DynamicImage.ImageLuma8(ImageBuffer.createGray(image.width(), image.height(), dest)!!)
+            }
+            is DynamicImage.ImageLumaA8 -> {
+                val raw = image.image.asRaw()
+                val dest = ByteArray(raw.size)
+                filter2dSepLa(raw, dest, filterImageSize, xAxisKernel, yAxisKernel)
+                DynamicImage.ImageLumaA8(ImageBuffer.createGrayAlpha(image.width(), image.height(), dest)!!)
+            }
+            is DynamicImage.ImageRgb8 -> {
+                val raw = image.image.asRaw()
+                val dest = ByteArray(raw.size)
+                filter2dSepRgb(raw, dest, filterImageSize, xAxisKernel, yAxisKernel)
+                DynamicImage.ImageRgb8(ImageBuffer.createRgb(image.width(), image.height(), dest)!!)
+            }
+            is DynamicImage.ImageRgba8 -> {
+                val raw = image.image.asRaw()
+                val dest = ByteArray(raw.size)
+                filter2dSepRgba(raw, dest, filterImageSize, xAxisKernel, yAxisKernel)
+                DynamicImage.ImageRgba8(ImageBuffer.createRgba(image.width(), image.height(), dest)!!)
+            }
+            is DynamicImage.ImageLuma16 -> {
+                val rawShorts = byteArrayToShortArrayLE(image.image.asRaw())
+                val destShorts = ShortArray(rawShorts.size)
+                filter2dSepPlaneU16(rawShorts, destShorts, filterImageSize, xAxisKernel, yAxisKernel)
+                val destBytes = shortArrayToByteArrayLE(destShorts)
+                DynamicImage.ImageLuma16(ImageBuffer.createGray16(image.width(), image.height(), destBytes)!!)
+            }
+            is DynamicImage.ImageLumaA16 -> {
+                val rawShorts = byteArrayToShortArrayLE(image.image.asRaw())
+                val destShorts = ShortArray(rawShorts.size)
+                filter2dSepLaU16(rawShorts, destShorts, filterImageSize, xAxisKernel, yAxisKernel)
+                val destBytes = shortArrayToByteArrayLE(destShorts)
+                DynamicImage.ImageLumaA16(ImageBuffer.createGrayAlpha16(image.width(), image.height(), destBytes)!!)
+            }
+            is DynamicImage.ImageRgb16 -> {
+                val rawShorts = byteArrayToShortArrayLE(image.image.asRaw())
+                val destShorts = ShortArray(rawShorts.size)
+                filter2dSepRgbU16(rawShorts, destShorts, filterImageSize, xAxisKernel, yAxisKernel)
+                val destBytes = shortArrayToByteArrayLE(destShorts)
+                DynamicImage.ImageRgb16(ImageBuffer.createRgb16(image.width(), image.height(), destBytes)!!)
+            }
+            is DynamicImage.ImageRgba16 -> {
+                val rawShorts = byteArrayToShortArrayLE(image.image.asRaw())
+                val destShorts = ShortArray(rawShorts.size)
+                filter2dSepRgbaU16(rawShorts, destShorts, filterImageSize, xAxisKernel, yAxisKernel)
+                val destBytes = shortArrayToByteArrayLE(destShorts)
+                DynamicImage.ImageRgba16(ImageBuffer.createRgba16(image.width(), image.height(), destBytes)!!)
+            }
+            is DynamicImage.ImageRgb32F -> {
+                val rawFloats = byteArrayToFloatArrayLE(image.image.asRaw())
+                val destFloats = FloatArray(rawFloats.size)
+                filter2dSepRgbF32(rawFloats, destFloats, filterImageSize, xAxisKernel, yAxisKernel)
+                val destBytes = floatArrayToByteArrayLE(destFloats)
+                DynamicImage.ImageRgb32F(ImageBuffer.createRgb32F(image.width(), image.height(), destBytes)!!)
+            }
+            is DynamicImage.ImageRgba32F -> {
+                val rawFloats = byteArrayToFloatArrayLE(image.image.asRaw())
+                val destFloats = FloatArray(rawFloats.size)
+                filter2dSepRgbaF32(rawFloats, destFloats, filterImageSize, xAxisKernel, yAxisKernel)
+                val destBytes = floatArrayToByteArrayLE(destFloats)
+                DynamicImage.ImageRgba32F(ImageBuffer.createRgba32F(image.width(), image.height(), destBytes)!!)
+            }
         }
-        is DynamicImage.ImageLumaA8 -> {
-            val raw = image.image.asRaw()
-            val dest = ByteArray(raw.size)
-            filter2dSepLa(raw, dest, filterImageSize, xAxisKernel, yAxisKernel)
-            DynamicImage.ImageLumaA8(ImageBuffer.createGrayAlpha(image.width(), image.height(), dest)!!)
-        }
-        is DynamicImage.ImageRgb8 -> {
-            val raw = image.image.asRaw()
-            val dest = ByteArray(raw.size)
-            filter2dSepRgb(raw, dest, filterImageSize, xAxisKernel, yAxisKernel)
-            DynamicImage.ImageRgb8(ImageBuffer.createRgb(image.width(), image.height(), dest)!!)
-        }
-        is DynamicImage.ImageRgba8 -> {
-            val raw = image.image.asRaw()
-            val dest = ByteArray(raw.size)
-            filter2dSepRgba(raw, dest, filterImageSize, xAxisKernel, yAxisKernel)
-            DynamicImage.ImageRgba8(ImageBuffer.createRgba(image.width(), image.height(), dest)!!)
-        }
-        is DynamicImage.ImageLuma16 -> {
-            val rawShorts = byteArrayToShortArrayLE(image.image.asRaw())
-            val destShorts = ShortArray(rawShorts.size)
-            filter2dSepPlaneU16(rawShorts, destShorts, filterImageSize, xAxisKernel, yAxisKernel)
-            val destBytes = shortArrayToByteArrayLE(destShorts)
-            DynamicImage.ImageLuma16(ImageBuffer.createGray16(image.width(), image.height(), destBytes)!!)
-        }
-        is DynamicImage.ImageLumaA16 -> {
-            val rawShorts = byteArrayToShortArrayLE(image.image.asRaw())
-            val destShorts = ShortArray(rawShorts.size)
-            filter2dSepLaU16(rawShorts, destShorts, filterImageSize, xAxisKernel, yAxisKernel)
-            val destBytes = shortArrayToByteArrayLE(destShorts)
-            DynamicImage.ImageLumaA16(ImageBuffer.createGrayAlpha16(image.width(), image.height(), destBytes)!!)
-        }
-        is DynamicImage.ImageRgb16 -> {
-            val rawShorts = byteArrayToShortArrayLE(image.image.asRaw())
-            val destShorts = ShortArray(rawShorts.size)
-            filter2dSepRgbU16(rawShorts, destShorts, filterImageSize, xAxisKernel, yAxisKernel)
-            val destBytes = shortArrayToByteArrayLE(destShorts)
-            DynamicImage.ImageRgb16(ImageBuffer.createRgb16(image.width(), image.height(), destBytes)!!)
-        }
-        is DynamicImage.ImageRgba16 -> {
-            val rawShorts = byteArrayToShortArrayLE(image.image.asRaw())
-            val destShorts = ShortArray(rawShorts.size)
-            filter2dSepRgbaU16(rawShorts, destShorts, filterImageSize, xAxisKernel, yAxisKernel)
-            val destBytes = shortArrayToByteArrayLE(destShorts)
-            DynamicImage.ImageRgba16(ImageBuffer.createRgba16(image.width(), image.height(), destBytes)!!)
-        }
-        is DynamicImage.ImageRgb32F -> {
-            val rawFloats = byteArrayToFloatArrayLE(image.image.asRaw())
-            val destFloats = FloatArray(rawFloats.size)
-            filter2dSepRgbF32(rawFloats, destFloats, filterImageSize, xAxisKernel, yAxisKernel)
-            val destBytes = floatArrayToByteArrayLE(destFloats)
-            DynamicImage.ImageRgb32F(ImageBuffer.createRgb32F(image.width(), image.height(), destBytes)!!)
-        }
-        is DynamicImage.ImageRgba32F -> {
-            val rawFloats = byteArrayToFloatArrayLE(image.image.asRaw())
-            val destFloats = FloatArray(rawFloats.size)
-            filter2dSepRgbaF32(rawFloats, destFloats, filterImageSize, xAxisKernel, yAxisKernel)
-            val destBytes = floatArrayToByteArrayLE(destFloats)
-            DynamicImage.ImageRgba32F(ImageBuffer.createRgba32F(image.width(), image.height(), destBytes)!!)
-        }
-    }
 
     target.setColorSpace(image.colorSpace())
     return target

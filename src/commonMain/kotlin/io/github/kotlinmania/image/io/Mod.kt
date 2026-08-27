@@ -9,6 +9,7 @@ package io.github.kotlinmania.image.io
     replaceWith = ReplaceWith("ImageReader", "io.github.kotlinmania.image.io.ImageReader"),
 )
 public typealias Reader = ImageReader
+
 /**
  * Interface providing extension functions for byte-oriented reading.
  */

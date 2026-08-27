@@ -778,7 +778,8 @@ public sealed class DynamicImage : GenericImage<Rgba<UByte>> {
     }
 
     public fun blurAdvanced(parameters: GaussianBlurParameters): DynamicImage =
-        io.github.kotlinmania.image.imageops.gaussianBlurDynImage(this, parameters)
+        io.github.kotlinmania.image.imageops
+            .gaussianBlurDynImage(this, parameters)
 
     public fun fastBlur(sigma: Float): DynamicImage {
         val channels = color().channelCount().toInt()

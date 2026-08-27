@@ -5,13 +5,11 @@ import io.github.kotlinmania.image.ExtendedColorType
 import io.github.kotlinmania.image.ImageError
 import io.github.kotlinmania.image.io.BufferIoWrite
 import kotlin.test.Test
-import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 class JpegEncoderTest {
-
     @Test
     fun roundtripSanityCheck() {
         val img = byteArrayOf(255.toByte(), 0, 0)
@@ -46,13 +44,23 @@ class JpegEncoderTest {
     @Test
     fun jfifHeaderDensityCheck() {
         val density = PixelDensity.dpi(300u)
-        val expected = byteArrayOf(
-            'J'.code.toByte(), 'F'.code.toByte(), 'I'.code.toByte(), 'F'.code.toByte(),
-            0, 1, 2, 1,
-            (300 shr 8).toByte(), (300 and 0xFF).toByte(),
-            (300 shr 8).toByte(), (300 and 0xFF).toByte(),
-            0, 0,
-        )
+        val expected =
+            byteArrayOf(
+                'J'.code.toByte(),
+                'F'.code.toByte(),
+                'I'.code.toByte(),
+                'F'.code.toByte(),
+                0,
+                1,
+                2,
+                1,
+                (300 shr 8).toByte(),
+                (300 and 0xFF).toByte(),
+                (300 shr 8).toByte(),
+                (300 and 0xFF).toByte(),
+                0,
+                0,
+            )
         val encoder = JpegEncoder(BufferIoWrite())
         encoder.setPixelDensity(density)
     }

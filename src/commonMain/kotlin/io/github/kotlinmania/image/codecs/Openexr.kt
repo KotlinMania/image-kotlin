@@ -6,8 +6,6 @@ import io.github.kotlinmania.image.DecodingError
 import io.github.kotlinmania.image.ExtendedColorType
 import io.github.kotlinmania.image.ImageError
 import io.github.kotlinmania.image.ImageFormatHint
-import io.github.kotlinmania.image.ParameterError
-import io.github.kotlinmania.image.ParameterErrorKind
 import io.github.kotlinmania.image.UnsupportedError
 import io.github.kotlinmania.image.UnsupportedErrorKind
 import io.github.kotlinmania.image.images.DynamicImage

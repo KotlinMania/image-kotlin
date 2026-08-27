@@ -12,12 +12,25 @@ class TiffTest {
     fun testEncodeAndDecodeTiff() {
         val width = 2u
         val height = 2u
-        val data = byteArrayOf(
-            255.toByte(), 0, 0, 255.toByte(),
-            0, 255.toByte(), 0, 255.toByte(),
-            0, 0, 255.toByte(), 255.toByte(),
-            255.toByte(), 255.toByte(), 255.toByte(), 255.toByte(),
-        )
+        val data =
+            byteArrayOf(
+                255.toByte(),
+                0,
+                0,
+                255.toByte(),
+                0,
+                255.toByte(),
+                0,
+                255.toByte(),
+                0,
+                0,
+                255.toByte(),
+                255.toByte(),
+                255.toByte(),
+                255.toByte(),
+                255.toByte(),
+                255.toByte(),
+            )
         val writer = BufferIoWrite()
         val encoder = TiffEncoder(writer)
         encoder.encode(data, width, height, ExtendedColorType.Rgba8)

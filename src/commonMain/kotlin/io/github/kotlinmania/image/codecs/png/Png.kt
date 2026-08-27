@@ -1,7 +1,6 @@
 // port-lint: source codecs/png.rs
 package io.github.kotlinmania.image.codecs.png
 
-import io.github.kotlinmania.image.ColorType
 import io.github.kotlinmania.image.ExtendedColorType
 import io.github.kotlinmania.image.ImageError
 import io.github.kotlinmania.image.ImageFormatHint
@@ -19,10 +18,17 @@ import io.github.kotlinmania.image.io.writeAll
  * The first eight bytes of a PNG file always contain the following values:
  * 137, 80, 78, 71, 13, 10, 26, 10
  */
-public val PNG_SIGNATURE: ByteArray = byteArrayOf(
-    137.toByte(), 80.toByte(), 78.toByte(), 71.toByte(),
-    13.toByte(), 10.toByte(), 26.toByte(), 10.toByte(),
-)
+public val PNG_SIGNATURE: ByteArray =
+    byteArrayOf(
+        137.toByte(),
+        80.toByte(),
+        78.toByte(),
+        71.toByte(),
+        13.toByte(),
+        10.toByte(),
+        26.toByte(),
+        10.toByte(),
+    )
 
 /**
  * DEFLATE compression level of a PNG encoder.
@@ -41,7 +47,9 @@ public sealed class CompressionType {
     public data object Uncompressed : CompressionType()
 
     /** Detailed compression level between 1 and 9 */
-    public data class Level(public val level: UByte) : CompressionType()
+    public data class Level(
+        public val level: UByte,
+    ) : CompressionType()
 }
 
 /**
@@ -151,17 +159,18 @@ public class PngEncoder internal constructor(
     ): DynamicImage? = null
 
     private fun writeIhdr(width: Int, height: Int, color: ExtendedColorType) {
-        val (bitDepth, colorTypeByte) = when (color) {
-            ExtendedColorType.L8 -> 8 to 0
-            ExtendedColorType.L16 -> 16 to 0
-            ExtendedColorType.La8 -> 8 to 4
-            ExtendedColorType.La16 -> 16 to 4
-            ExtendedColorType.Rgb8 -> 8 to 2
-            ExtendedColorType.Rgb16 -> 16 to 2
-            ExtendedColorType.Rgba8 -> 8 to 6
-            ExtendedColorType.Rgba16 -> 16 to 6
-            else -> 8 to 6
-        }
+        val (bitDepth, colorTypeByte) =
+            when (color) {
+                ExtendedColorType.L8 -> 8 to 0
+                ExtendedColorType.L16 -> 16 to 0
+                ExtendedColorType.La8 -> 8 to 4
+                ExtendedColorType.La16 -> 16 to 4
+                ExtendedColorType.Rgb8 -> 8 to 2
+                ExtendedColorType.Rgb16 -> 16 to 2
+                ExtendedColorType.Rgba8 -> 8 to 6
+                ExtendedColorType.Rgba16 -> 16 to 6
+                else -> 8 to 6
+            }
 
         val chunkData = ByteArray(13)
         chunkData[0] = ((width shr 24) and 0xFF).toByte()
@@ -209,12 +218,13 @@ public class PngEncoder internal constructor(
     private fun writeChunk(type: String, data: ByteArray) {
         val typeBytes = type.encodeToByteArray()
         val len = data.size
-        val lenBytes = byteArrayOf(
-            ((len shr 24) and 0xFF).toByte(),
-            ((len shr 16) and 0xFF).toByte(),
-            ((len shr 8) and 0xFF).toByte(),
-            (len and 0xFF).toByte(),
-        )
+        val lenBytes =
+            byteArrayOf(
+                ((len shr 24) and 0xFF).toByte(),
+                ((len shr 16) and 0xFF).toByte(),
+                ((len shr 8) and 0xFF).toByte(),
+                (len and 0xFF).toByte(),
+            )
         writer.writeAll(lenBytes)
         writer.writeAll(typeBytes)
         if (data.isNotEmpty()) {
@@ -223,12 +233,13 @@ public class PngEncoder internal constructor(
 
         // CRC-32 over type + data
         val crc = crc32(typeBytes, data)
-        val crcBytes = byteArrayOf(
-            ((crc shr 24) and 0xFF).toByte(),
-            ((crc shr 16) and 0xFF).toByte(),
-            ((crc shr 8) and 0xFF).toByte(),
-            (crc and 0xFF).toByte(),
-        )
+        val crcBytes =
+            byteArrayOf(
+                ((crc shr 24) and 0xFF).toByte(),
+                ((crc shr 16) and 0xFF).toByte(),
+                ((crc shr 8) and 0xFF).toByte(),
+                (crc and 0xFF).toByte(),
+            )
         writer.writeAll(crcBytes)
     }
 
@@ -293,12 +304,13 @@ public class PngEncoder internal constructor(
     }
 
     private companion object {
-        val CRC_TABLE: IntArray = IntArray(256) { i ->
-            var c = i
-            for (j in 0 until 8) {
-                c = if ((c and 1) != 0) -0x124774cd xor (c ushr 1) else c ushr 1
+        val CRC_TABLE: IntArray =
+            IntArray(256) { i ->
+                var c = i
+                for (j in 0 until 8) {
+                    c = if ((c and 1) != 0) -0x124774cd xor (c ushr 1) else c ushr 1
+                }
+                c
             }
-            c
-        }
     }
 }

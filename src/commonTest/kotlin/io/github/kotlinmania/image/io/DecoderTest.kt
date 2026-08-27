@@ -13,9 +13,7 @@ class DecoderTest {
 
         override fun dimensions(): Pair<UInt, UInt> = Pair(0xFFFFFFFFu, 0xFFFFFFFFu)
 
-        override fun readImage(buf: ByteArray) {
-            throw UnsupportedOperationException("Mock decoder does not read pixels")
-        }
+        override fun readImage(buf: ByteArray): Unit = throw UnsupportedOperationException("Mock decoder does not read pixels")
     }
 
     @Test

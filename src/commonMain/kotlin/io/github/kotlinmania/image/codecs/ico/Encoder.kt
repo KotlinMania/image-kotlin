@@ -69,7 +69,9 @@ public class IcoFrame internal constructor(
             colorType: ExtendedColorType,
         ): IcoFrame {
             val sink = BufferIoWrite()
-            val encoder = io.github.kotlinmania.image.codecs.png.PngEncoder(sink)
+            val encoder =
+                io.github.kotlinmania.image.codecs.png
+                    .PngEncoder(sink)
             encoder.writeImage(buf, width, height, colorType)
             return withEncoded(sink.toByteArray(), width, height, colorType)
         }

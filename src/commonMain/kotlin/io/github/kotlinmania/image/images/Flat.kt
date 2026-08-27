@@ -282,13 +282,9 @@ public data class SampleLayout(
         return (y.toInt() * yStride) + (x.toInt() * xStride) + (channel.toInt() * cStride)
     }
 
-    public fun panicCwhOutOfBounds(channel: UByte, x: UInt, y: UInt): Nothing {
-        throw IndexOutOfBoundsException("Sample layout index ($channel, $x, $y) out of bounds ($channels, $width, $height)")
-    }
+    public fun panicCwhOutOfBounds(channel: UByte, x: UInt, y: UInt): Nothing = throw IndexOutOfBoundsException("Sample layout index ($channel, $x, $y) out of bounds ($channels, $width, $height)")
 
-    public fun panicPixelOutOfBounds(x: UInt, y: UInt): Nothing {
-        throw IndexOutOfBoundsException("Sample layout pixel ($x, $y) out of bounds ($width, $height)")
-    }
+    public fun panicPixelOutOfBounds(x: UInt, y: UInt): Nothing = throw IndexOutOfBoundsException("Sample layout pixel ($x, $y) out of bounds ($width, $height)")
 
     public fun shrinkTo(channels: UByte, width: UInt, height: UInt): SampleLayout =
         copy(
@@ -376,6 +372,7 @@ public data class FlatSamples<Buffer>(
     public companion object {
         public fun <Buffer> from(samples: Buffer, layout: SampleLayout, colorHint: ColorType? = null): FlatSamples<Buffer> =
             FlatSamples(samples, layout, colorHint)
+
         public fun withMonocolor(pixel: Rgb<UByte>, width: UInt, height: UInt): FlatSamples<ByteArray> {
             val bytes = byteArrayOf(pixel.r.toByte(), pixel.g.toByte(), pixel.b.toByte())
             return FlatSamples(

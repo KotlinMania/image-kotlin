@@ -12,8 +12,8 @@ import io.github.kotlinmania.image.images.DynamicImage
 import io.github.kotlinmania.image.io.BufferIoWrite
 import io.github.kotlinmania.image.io.ImageEncoder
 import io.github.kotlinmania.image.io.ImageFormat
-import io.github.kotlinmania.image.io.IoException
 import io.github.kotlinmania.image.io.IoErrorKind
+import io.github.kotlinmania.image.io.IoException
 import io.github.kotlinmania.image.io.IoWrite
 import io.github.kotlinmania.image.io.MethodSealedToImage
 import io.github.kotlinmania.image.io.writeAll
@@ -31,97 +31,599 @@ private const val APP1: UByte = 0xE1u
 private const val APP2: UByte = 0xE2u
 
 // Section K.1 Table K.1
-private val STD_LUMA_QTABLE = ubyteArrayOf(
-    16u, 11u, 10u, 16u, 24u, 40u, 51u, 61u,
-    12u, 12u, 14u, 19u, 26u, 58u, 60u, 55u,
-    14u, 13u, 16u, 24u, 40u, 57u, 69u, 56u,
-    14u, 17u, 22u, 29u, 51u, 87u, 80u, 62u,
-    18u, 22u, 37u, 56u, 68u, 109u, 103u, 77u,
-    24u, 35u, 55u, 64u, 81u, 104u, 113u, 92u,
-    49u, 64u, 78u, 87u, 103u, 121u, 120u, 101u,
-    72u, 92u, 95u, 98u, 112u, 100u, 103u, 99u,
-)
+private val STD_LUMA_QTABLE =
+    ubyteArrayOf(
+        16u,
+        11u,
+        10u,
+        16u,
+        24u,
+        40u,
+        51u,
+        61u,
+        12u,
+        12u,
+        14u,
+        19u,
+        26u,
+        58u,
+        60u,
+        55u,
+        14u,
+        13u,
+        16u,
+        24u,
+        40u,
+        57u,
+        69u,
+        56u,
+        14u,
+        17u,
+        22u,
+        29u,
+        51u,
+        87u,
+        80u,
+        62u,
+        18u,
+        22u,
+        37u,
+        56u,
+        68u,
+        109u,
+        103u,
+        77u,
+        24u,
+        35u,
+        55u,
+        64u,
+        81u,
+        104u,
+        113u,
+        92u,
+        49u,
+        64u,
+        78u,
+        87u,
+        103u,
+        121u,
+        120u,
+        101u,
+        72u,
+        92u,
+        95u,
+        98u,
+        112u,
+        100u,
+        103u,
+        99u,
+    )
 
 // Table K.2
-private val STD_CHROMA_QTABLE = ubyteArrayOf(
-    17u, 18u, 24u, 47u, 99u, 99u, 99u, 99u,
-    18u, 21u, 26u, 66u, 99u, 99u, 99u, 99u,
-    24u, 26u, 56u, 99u, 99u, 99u, 99u, 99u,
-    47u, 66u, 99u, 99u, 99u, 99u, 99u, 99u,
-    99u, 99u, 99u, 99u, 99u, 99u, 99u, 99u,
-    99u, 99u, 99u, 99u, 99u, 99u, 99u, 99u,
-    99u, 99u, 99u, 99u, 99u, 99u, 99u, 99u,
-    99u, 99u, 99u, 99u, 99u, 99u, 99u, 99u,
-)
+private val STD_CHROMA_QTABLE =
+    ubyteArrayOf(
+        17u,
+        18u,
+        24u,
+        47u,
+        99u,
+        99u,
+        99u,
+        99u,
+        18u,
+        21u,
+        26u,
+        66u,
+        99u,
+        99u,
+        99u,
+        99u,
+        24u,
+        26u,
+        56u,
+        99u,
+        99u,
+        99u,
+        99u,
+        99u,
+        47u,
+        66u,
+        99u,
+        99u,
+        99u,
+        99u,
+        99u,
+        99u,
+        99u,
+        99u,
+        99u,
+        99u,
+        99u,
+        99u,
+        99u,
+        99u,
+        99u,
+        99u,
+        99u,
+        99u,
+        99u,
+        99u,
+        99u,
+        99u,
+        99u,
+        99u,
+        99u,
+        99u,
+        99u,
+        99u,
+        99u,
+        99u,
+        99u,
+        99u,
+        99u,
+        99u,
+        99u,
+        99u,
+        99u,
+        99u,
+    )
 
 // Code lengths and values for Table K.3
-private val STD_LUMA_DC_CODE_LENGTHS = ubyteArrayOf(
-    0x00u, 0x01u, 0x05u, 0x01u, 0x01u, 0x01u, 0x01u, 0x01u,
-    0x01u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u,
-)
+private val STD_LUMA_DC_CODE_LENGTHS =
+    ubyteArrayOf(
+        0x00u,
+        0x01u,
+        0x05u,
+        0x01u,
+        0x01u,
+        0x01u,
+        0x01u,
+        0x01u,
+        0x01u,
+        0x00u,
+        0x00u,
+        0x00u,
+        0x00u,
+        0x00u,
+        0x00u,
+        0x00u,
+    )
 
-private val STD_LUMA_DC_VALUES = ubyteArrayOf(
-    0x00u, 0x01u, 0x02u, 0x03u, 0x04u, 0x05u, 0x06u, 0x07u, 0x08u, 0x09u, 0x0Au, 0x0Bu,
-)
+private val STD_LUMA_DC_VALUES =
+    ubyteArrayOf(
+        0x00u,
+        0x01u,
+        0x02u,
+        0x03u,
+        0x04u,
+        0x05u,
+        0x06u,
+        0x07u,
+        0x08u,
+        0x09u,
+        0x0Au,
+        0x0Bu,
+    )
 
 private val STD_LUMA_DC_HUFF_LUT: Array<Pair<UByte, UShort>> =
     buildHuffLutConst(STD_LUMA_DC_CODE_LENGTHS, STD_LUMA_DC_VALUES)
 
 // Code lengths and values for Table K.4
-private val STD_CHROMA_DC_CODE_LENGTHS = ubyteArrayOf(
-    0x00u, 0x03u, 0x01u, 0x01u, 0x01u, 0x01u, 0x01u, 0x01u,
-    0x01u, 0x01u, 0x01u, 0x00u, 0x00u, 0x00u, 0x00u, 0x00u,
-)
+private val STD_CHROMA_DC_CODE_LENGTHS =
+    ubyteArrayOf(
+        0x00u,
+        0x03u,
+        0x01u,
+        0x01u,
+        0x01u,
+        0x01u,
+        0x01u,
+        0x01u,
+        0x01u,
+        0x01u,
+        0x01u,
+        0x00u,
+        0x00u,
+        0x00u,
+        0x00u,
+        0x00u,
+    )
 
-private val STD_CHROMA_DC_VALUES = ubyteArrayOf(
-    0x00u, 0x01u, 0x02u, 0x03u, 0x04u, 0x05u, 0x06u, 0x07u, 0x08u, 0x09u, 0x0Au, 0x0Bu,
-)
+private val STD_CHROMA_DC_VALUES =
+    ubyteArrayOf(
+        0x00u,
+        0x01u,
+        0x02u,
+        0x03u,
+        0x04u,
+        0x05u,
+        0x06u,
+        0x07u,
+        0x08u,
+        0x09u,
+        0x0Au,
+        0x0Bu,
+    )
 
 private val STD_CHROMA_DC_HUFF_LUT: Array<Pair<UByte, UShort>> =
     buildHuffLutConst(STD_CHROMA_DC_CODE_LENGTHS, STD_CHROMA_DC_VALUES)
 
 // Code lengths and values for Table K.5
-private val STD_LUMA_AC_CODE_LENGTHS = ubyteArrayOf(
-    0x00u, 0x02u, 0x01u, 0x03u, 0x03u, 0x02u, 0x04u, 0x03u,
-    0x05u, 0x05u, 0x04u, 0x04u, 0x00u, 0x00u, 0x01u, 0x7Du,
-)
+private val STD_LUMA_AC_CODE_LENGTHS =
+    ubyteArrayOf(
+        0x00u,
+        0x02u,
+        0x01u,
+        0x03u,
+        0x03u,
+        0x02u,
+        0x04u,
+        0x03u,
+        0x05u,
+        0x05u,
+        0x04u,
+        0x04u,
+        0x00u,
+        0x00u,
+        0x01u,
+        0x7Du,
+    )
 
-private val STD_LUMA_AC_VALUES = ubyteArrayOf(
-    0x01u, 0x02u, 0x03u, 0x00u, 0x04u, 0x11u, 0x05u, 0x12u, 0x21u, 0x31u, 0x41u, 0x06u, 0x13u, 0x51u, 0x61u, 0x07u,
-    0x22u, 0x71u, 0x14u, 0x32u, 0x81u, 0x91u, 0xA1u, 0x08u, 0x23u, 0x42u, 0xB1u, 0xC1u, 0x15u, 0x52u, 0xD1u, 0xF0u,
-    0x24u, 0x33u, 0x62u, 0x72u, 0x82u, 0x09u, 0x0Au, 0x16u, 0x17u, 0x18u, 0x19u, 0x1Au, 0x25u, 0x26u, 0x27u, 0x28u,
-    0x29u, 0x2Au, 0x34u, 0x35u, 0x36u, 0x37u, 0x38u, 0x39u, 0x3Au, 0x43u, 0x44u, 0x45u, 0x46u, 0x47u, 0x48u, 0x49u,
-    0x4Au, 0x53u, 0x54u, 0x55u, 0x56u, 0x57u, 0x58u, 0x59u, 0x5Au, 0x63u, 0x64u, 0x65u, 0x66u, 0x67u, 0x68u, 0x69u,
-    0x6Au, 0x73u, 0x74u, 0x75u, 0x76u, 0x77u, 0x78u, 0x79u, 0x7Au, 0x83u, 0x84u, 0x85u, 0x86u, 0x87u, 0x88u, 0x89u,
-    0x8Au, 0x92u, 0x93u, 0x94u, 0x95u, 0x96u, 0x97u, 0x98u, 0x99u, 0x9Au, 0xA2u, 0xA3u, 0xA4u, 0xA5u, 0xA6u, 0xA7u,
-    0xA8u, 0xA9u, 0xAAu, 0xB2u, 0xB3u, 0xB4u, 0xB5u, 0xB6u, 0xB7u, 0xB8u, 0xB9u, 0xBAu, 0xC2u, 0xC3u, 0xC4u, 0xC5u,
-    0xC6u, 0xC7u, 0xC8u, 0xC9u, 0xCAu, 0xD2u, 0xD3u, 0xD4u, 0xD5u, 0xD6u, 0xD7u, 0xD8u, 0xD9u, 0xDAu, 0xE1u, 0xE2u,
-    0xE3u, 0xE4u, 0xE5u, 0xE6u, 0xE7u, 0xE8u, 0xE9u, 0xEAu, 0xF1u, 0xF2u, 0xF3u, 0xF4u, 0xF5u, 0xF6u, 0xF7u, 0xF8u,
-    0xF9u, 0xFAu,
-)
+private val STD_LUMA_AC_VALUES =
+    ubyteArrayOf(
+        0x01u,
+        0x02u,
+        0x03u,
+        0x00u,
+        0x04u,
+        0x11u,
+        0x05u,
+        0x12u,
+        0x21u,
+        0x31u,
+        0x41u,
+        0x06u,
+        0x13u,
+        0x51u,
+        0x61u,
+        0x07u,
+        0x22u,
+        0x71u,
+        0x14u,
+        0x32u,
+        0x81u,
+        0x91u,
+        0xA1u,
+        0x08u,
+        0x23u,
+        0x42u,
+        0xB1u,
+        0xC1u,
+        0x15u,
+        0x52u,
+        0xD1u,
+        0xF0u,
+        0x24u,
+        0x33u,
+        0x62u,
+        0x72u,
+        0x82u,
+        0x09u,
+        0x0Au,
+        0x16u,
+        0x17u,
+        0x18u,
+        0x19u,
+        0x1Au,
+        0x25u,
+        0x26u,
+        0x27u,
+        0x28u,
+        0x29u,
+        0x2Au,
+        0x34u,
+        0x35u,
+        0x36u,
+        0x37u,
+        0x38u,
+        0x39u,
+        0x3Au,
+        0x43u,
+        0x44u,
+        0x45u,
+        0x46u,
+        0x47u,
+        0x48u,
+        0x49u,
+        0x4Au,
+        0x53u,
+        0x54u,
+        0x55u,
+        0x56u,
+        0x57u,
+        0x58u,
+        0x59u,
+        0x5Au,
+        0x63u,
+        0x64u,
+        0x65u,
+        0x66u,
+        0x67u,
+        0x68u,
+        0x69u,
+        0x6Au,
+        0x73u,
+        0x74u,
+        0x75u,
+        0x76u,
+        0x77u,
+        0x78u,
+        0x79u,
+        0x7Au,
+        0x83u,
+        0x84u,
+        0x85u,
+        0x86u,
+        0x87u,
+        0x88u,
+        0x89u,
+        0x8Au,
+        0x92u,
+        0x93u,
+        0x94u,
+        0x95u,
+        0x96u,
+        0x97u,
+        0x98u,
+        0x99u,
+        0x9Au,
+        0xA2u,
+        0xA3u,
+        0xA4u,
+        0xA5u,
+        0xA6u,
+        0xA7u,
+        0xA8u,
+        0xA9u,
+        0xAAu,
+        0xB2u,
+        0xB3u,
+        0xB4u,
+        0xB5u,
+        0xB6u,
+        0xB7u,
+        0xB8u,
+        0xB9u,
+        0xBAu,
+        0xC2u,
+        0xC3u,
+        0xC4u,
+        0xC5u,
+        0xC6u,
+        0xC7u,
+        0xC8u,
+        0xC9u,
+        0xCAu,
+        0xD2u,
+        0xD3u,
+        0xD4u,
+        0xD5u,
+        0xD6u,
+        0xD7u,
+        0xD8u,
+        0xD9u,
+        0xDAu,
+        0xE1u,
+        0xE2u,
+        0xE3u,
+        0xE4u,
+        0xE5u,
+        0xE6u,
+        0xE7u,
+        0xE8u,
+        0xE9u,
+        0xEAu,
+        0xF1u,
+        0xF2u,
+        0xF3u,
+        0xF4u,
+        0xF5u,
+        0xF6u,
+        0xF7u,
+        0xF8u,
+        0xF9u,
+        0xFAu,
+    )
 
 private val STD_LUMA_AC_HUFF_LUT: Array<Pair<UByte, UShort>> =
     buildHuffLutConst(STD_LUMA_AC_CODE_LENGTHS, STD_LUMA_AC_VALUES)
 
 // Code lengths and values for Table K.6
-private val STD_CHROMA_AC_CODE_LENGTHS = ubyteArrayOf(
-    0x00u, 0x02u, 0x01u, 0x02u, 0x04u, 0x04u, 0x03u, 0x04u,
-    0x07u, 0x05u, 0x04u, 0x04u, 0x00u, 0x01u, 0x02u, 0x77u,
-)
+private val STD_CHROMA_AC_CODE_LENGTHS =
+    ubyteArrayOf(
+        0x00u,
+        0x02u,
+        0x01u,
+        0x02u,
+        0x04u,
+        0x04u,
+        0x03u,
+        0x04u,
+        0x07u,
+        0x05u,
+        0x04u,
+        0x04u,
+        0x00u,
+        0x01u,
+        0x02u,
+        0x77u,
+    )
 
-private val STD_CHROMA_AC_VALUES = ubyteArrayOf(
-    0x00u, 0x01u, 0x02u, 0x03u, 0x11u, 0x04u, 0x05u, 0x21u, 0x31u, 0x06u, 0x12u, 0x41u, 0x51u, 0x07u, 0x61u, 0x71u,
-    0x13u, 0x22u, 0x32u, 0x81u, 0x08u, 0x14u, 0x42u, 0x91u, 0xA1u, 0xB1u, 0xC1u, 0x09u, 0x23u, 0x33u, 0x52u, 0xF0u,
-    0x15u, 0x62u, 0x72u, 0xD1u, 0x0Au, 0x16u, 0x24u, 0x34u, 0xE1u, 0x25u, 0xF1u, 0x17u, 0x18u, 0x19u, 0x1Au, 0x26u,
-    0x27u, 0x28u, 0x29u, 0x2Au, 0x35u, 0x36u, 0x37u, 0x38u, 0x39u, 0x3Au, 0x43u, 0x44u, 0x45u, 0x46u, 0x47u, 0x48u,
-    0x49u, 0x4Au, 0x53u, 0x54u, 0x55u, 0x56u, 0x57u, 0x58u, 0x59u, 0x5Au, 0x63u, 0x64u, 0x65u, 0x66u, 0x67u, 0x68u,
-    0x69u, 0x6Au, 0x73u, 0x74u, 0x75u, 0x76u, 0x77u, 0x78u, 0x79u, 0x7Au, 0x82u, 0x83u, 0x84u, 0x85u, 0x86u, 0x87u,
-    0x88u, 0x89u, 0x8Au, 0x92u, 0x93u, 0x94u, 0x95u, 0x96u, 0x97u, 0x98u, 0x99u, 0x9Au, 0xA2u, 0xA3u, 0xA4u, 0xA5u,
-    0xA6u, 0xA7u, 0xA8u, 0xA9u, 0xAAu, 0xB2u, 0xB3u, 0xB4u, 0xB5u, 0xB6u, 0xB7u, 0xB8u, 0xB9u, 0xBAu, 0xC2u, 0xC3u,
-    0xC4u, 0xC5u, 0xC6u, 0xC7u, 0xC8u, 0xC9u, 0xCAu, 0xD2u, 0xD3u, 0xD4u, 0xD5u, 0xD6u, 0xD7u, 0xD8u, 0xD9u, 0xDAu,
-    0xE2u, 0xE3u, 0xE4u, 0xE5u, 0xE6u, 0xE7u, 0xE8u, 0xE9u, 0xEAu, 0xF2u, 0xF3u, 0xF4u, 0xF5u, 0xF6u, 0xF7u, 0xF8u,
-    0xF9u, 0xFAu,
-)
+private val STD_CHROMA_AC_VALUES =
+    ubyteArrayOf(
+        0x00u,
+        0x01u,
+        0x02u,
+        0x03u,
+        0x11u,
+        0x04u,
+        0x05u,
+        0x21u,
+        0x31u,
+        0x06u,
+        0x12u,
+        0x41u,
+        0x51u,
+        0x07u,
+        0x61u,
+        0x71u,
+        0x13u,
+        0x22u,
+        0x32u,
+        0x81u,
+        0x08u,
+        0x14u,
+        0x42u,
+        0x91u,
+        0xA1u,
+        0xB1u,
+        0xC1u,
+        0x09u,
+        0x23u,
+        0x33u,
+        0x52u,
+        0xF0u,
+        0x15u,
+        0x62u,
+        0x72u,
+        0xD1u,
+        0x0Au,
+        0x16u,
+        0x24u,
+        0x34u,
+        0xE1u,
+        0x25u,
+        0xF1u,
+        0x17u,
+        0x18u,
+        0x19u,
+        0x1Au,
+        0x26u,
+        0x27u,
+        0x28u,
+        0x29u,
+        0x2Au,
+        0x35u,
+        0x36u,
+        0x37u,
+        0x38u,
+        0x39u,
+        0x3Au,
+        0x43u,
+        0x44u,
+        0x45u,
+        0x46u,
+        0x47u,
+        0x48u,
+        0x49u,
+        0x4Au,
+        0x53u,
+        0x54u,
+        0x55u,
+        0x56u,
+        0x57u,
+        0x58u,
+        0x59u,
+        0x5Au,
+        0x63u,
+        0x64u,
+        0x65u,
+        0x66u,
+        0x67u,
+        0x68u,
+        0x69u,
+        0x6Au,
+        0x73u,
+        0x74u,
+        0x75u,
+        0x76u,
+        0x77u,
+        0x78u,
+        0x79u,
+        0x7Au,
+        0x82u,
+        0x83u,
+        0x84u,
+        0x85u,
+        0x86u,
+        0x87u,
+        0x88u,
+        0x89u,
+        0x8Au,
+        0x92u,
+        0x93u,
+        0x94u,
+        0x95u,
+        0x96u,
+        0x97u,
+        0x98u,
+        0x99u,
+        0x9Au,
+        0xA2u,
+        0xA3u,
+        0xA4u,
+        0xA5u,
+        0xA6u,
+        0xA7u,
+        0xA8u,
+        0xA9u,
+        0xAAu,
+        0xB2u,
+        0xB3u,
+        0xB4u,
+        0xB5u,
+        0xB6u,
+        0xB7u,
+        0xB8u,
+        0xB9u,
+        0xBAu,
+        0xC2u,
+        0xC3u,
+        0xC4u,
+        0xC5u,
+        0xC6u,
+        0xC7u,
+        0xC8u,
+        0xC9u,
+        0xCAu,
+        0xD2u,
+        0xD3u,
+        0xD4u,
+        0xD5u,
+        0xD6u,
+        0xD7u,
+        0xD8u,
+        0xD9u,
+        0xDAu,
+        0xE2u,
+        0xE3u,
+        0xE4u,
+        0xE5u,
+        0xE6u,
+        0xE7u,
+        0xE8u,
+        0xE9u,
+        0xEAu,
+        0xF2u,
+        0xF3u,
+        0xF4u,
+        0xF5u,
+        0xF6u,
+        0xF7u,
+        0xF8u,
+        0xF9u,
+        0xFAu,
+    )
 
 private val STD_CHROMA_AC_HUFF_LUT: Array<Pair<UByte, UShort>> =
     buildHuffLutConst(STD_CHROMA_AC_CODE_LENGTHS, STD_CHROMA_AC_VALUES)
@@ -136,16 +638,73 @@ private const val LUMAID: UByte = 1u
 private const val CHROMABLUEID: UByte = 2u
 private const val CHROMAREDID: UByte = 3u
 
-private val UNZIGZAG = intArrayOf(
-    0, 1, 8, 16, 9, 2, 3, 10,
-    17, 24, 32, 25, 18, 11, 4, 5,
-    12, 19, 26, 33, 40, 48, 41, 34,
-    27, 20, 13, 6, 7, 14, 21, 28,
-    35, 42, 49, 56, 57, 50, 43, 36,
-    29, 22, 15, 23, 30, 37, 44, 51,
-    58, 59, 52, 45, 38, 31, 39, 46,
-    53, 60, 61, 54, 47, 55, 62, 63,
-)
+private val UNZIGZAG =
+    intArrayOf(
+        0,
+        1,
+        8,
+        16,
+        9,
+        2,
+        3,
+        10,
+        17,
+        24,
+        32,
+        25,
+        18,
+        11,
+        4,
+        5,
+        12,
+        19,
+        26,
+        33,
+        40,
+        48,
+        41,
+        34,
+        27,
+        20,
+        13,
+        6,
+        7,
+        14,
+        21,
+        28,
+        35,
+        42,
+        49,
+        56,
+        57,
+        50,
+        43,
+        36,
+        29,
+        22,
+        15,
+        23,
+        30,
+        37,
+        44,
+        51,
+        58,
+        59,
+        52,
+        45,
+        38,
+        31,
+        39,
+        46,
+        53,
+        60,
+        61,
+        54,
+        47,
+        55,
+        62,
+        63,
+    )
 
 private val EXIF_HEADER = byteArrayOf(0x45, 0x78, 0x69, 0x66, 0x00, 0x00)
 
@@ -310,11 +869,12 @@ private fun encodeCoefficient(coefficient: Int): Pair<UByte, UShort> {
     }
 
     val mask = (1 shl numBits.toInt()) - 1
-    val value = if (coefficient < 0) {
-        ((coefficient - 1) and mask).toUShort()
-    } else {
-        (coefficient and mask).toUShort()
-    }
+    val value =
+        if (coefficient < 0) {
+            ((coefficient - 1) and mask).toUShort()
+        } else {
+            (coefficient and mask).toUShort()
+        }
 
     return numBits to value
 }
@@ -454,23 +1014,25 @@ public class JpegEncoder internal constructor(
     private var iccProfile: ByteArray = ByteArray(0)
     private var exifMetadata: ByteArray = ByteArray(0)
 
-    private val components = listOf(
-        Component(id = LUMAID, h = 1u, v = 1u, tq = LUMADESTINATION, dcTable = LUMADESTINATION, acTable = LUMADESTINATION),
-        Component(id = CHROMABLUEID, h = 1u, v = 1u, tq = CHROMADESTINATION, dcTable = CHROMADESTINATION, acTable = CHROMADESTINATION),
-        Component(id = CHROMAREDID, h = 1u, v = 1u, tq = CHROMADESTINATION, dcTable = CHROMADESTINATION, acTable = CHROMADESTINATION),
-    )
+    private val components =
+        listOf(
+            Component(id = LUMAID, h = 1u, v = 1u, tq = LUMADESTINATION, dcTable = LUMADESTINATION, acTable = LUMADESTINATION),
+            Component(id = CHROMABLUEID, h = 1u, v = 1u, tq = CHROMADESTINATION, dcTable = CHROMADESTINATION, acTable = CHROMADESTINATION),
+            Component(id = CHROMAREDID, h = 1u, v = 1u, tq = CHROMADESTINATION, dcTable = CHROMADESTINATION, acTable = CHROMADESTINATION),
+        )
 
-    private val tables: List<UByteArray> = run {
-        val q = quality.toInt().coerceIn(1, 100)
-        val scale = if (q < 50) 5000 / q else 200 - q * 2
-        val lumaTable = UByteArray(64)
-        val chromaTable = UByteArray(64)
-        for (i in 0 until 64) {
-            lumaTable[i] = ((STD_LUMA_QTABLE[i].toInt() * scale + 50) / 100).coerceIn(1, 255).toUByte()
-            chromaTable[i] = ((STD_CHROMA_QTABLE[i].toInt() * scale + 50) / 100).coerceIn(1, 255).toUByte()
+    private val tables: List<UByteArray> =
+        run {
+            val q = quality.toInt().coerceIn(1, 100)
+            val scale = if (q < 50) 5000 / q else 200 - q * 2
+            val lumaTable = UByteArray(64)
+            val chromaTable = UByteArray(64)
+            for (i in 0 until 64) {
+                lumaTable[i] = ((STD_LUMA_QTABLE[i].toInt() * scale + 50) / 100).coerceIn(1, 255).toUByte()
+                chromaTable[i] = ((STD_CHROMA_QTABLE[i].toInt() * scale + 50) / 100).coerceIn(1, 255).toUByte()
+            }
+            listOf(lumaTable, chromaTable)
         }
-        listOf(lumaTable, chromaTable)
-    }
 
     /**
      * Set the pixel density of the images the encoder will encode.
@@ -546,11 +1108,12 @@ public class JpegEncoder internal constructor(
     override fun makeCompatibleImg(
         sealed: MethodSealedToImage,
         input: DynamicImage,
-    ): DynamicImage? = when (input.color()) {
-        ColorType.L8, ColorType.Rgb8 -> null
-        ColorType.La8, ColorType.L16, ColorType.La16 -> DynamicImage.ImageLuma8(input.toLuma8())
-        ColorType.Rgba8, ColorType.Rgb16, ColorType.Rgb32F, ColorType.Rgba16, ColorType.Rgba32F -> DynamicImage.ImageRgb8(input.toRgb8())
-    }
+    ): DynamicImage? =
+        when (input.color()) {
+            ColorType.L8, ColorType.Rgb8 -> null
+            ColorType.La8, ColorType.L16, ColorType.La16 -> DynamicImage.ImageLuma8(input.toLuma8())
+            ColorType.Rgba8, ColorType.Rgb16, ColorType.Rgb32F, ColorType.Rgba16, ColorType.Rgba32F -> DynamicImage.ImageRgb8(input.toRgb8())
+        }
 
     private fun encodeImageRaw(
         image: ByteArray,

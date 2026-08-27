@@ -10,11 +10,8 @@ import io.github.kotlinmania.image.metadata.Orientation
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
 
 class JpegDecoderTest {
-
     @Test
     fun testJpegRoundtripRgb() {
         val width = 8u
