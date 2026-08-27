@@ -94,11 +94,6 @@ public data class UnsupportedError(
      */
     public fun formatHint(): ImageFormatHint = format
 
-    /**
-     * Returns the specific kind of unsupported error.
-     */
-    public fun kind(): UnsupportedErrorKind = kind
-
     public fun source(): Throwable? = null
 
     public fun fmt(): String =
@@ -224,9 +219,6 @@ public data class ParameterError(
     public val underlying: Throwable? = null,
 ) {
 
-    /** Returns the kind of parameter error. */
-    public fun kind(): ParameterErrorKind = kind
-
     public fun source(): Throwable? = underlying
 
     public fun fmt(): String {
@@ -288,9 +280,6 @@ public sealed interface ParameterErrorKind {
 public data class LimitError(
     public val kind: LimitErrorKind,
 ) {
-
-    /** Returns the kind of limit error. */
-    public fun kind(): LimitErrorKind = kind
 
     public fun source(): Throwable? = null
 
