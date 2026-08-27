@@ -362,6 +362,14 @@ public data class FlatSamples<Buffer>(
 
     public fun fmt(): String = "FlatSamples(layout=$layout, colorHint=$colorHint)"
 
+    public fun asSlice(): Buffer = samples
+
+    public fun asMutSlice(): Buffer = samples
+
+    public fun asRef(): FlatSamples<Buffer> = this
+
+    public fun asMut(): FlatSamples<Buffer> = this
+
     public fun shrinkTo(channels: UByte, width: UInt, height: UInt): FlatSamples<Buffer> =
         copy(layout = layout.shrinkTo(channels, width, height))
 
@@ -464,14 +472,6 @@ public fun FlatSamples<ByteArray>.setSample(channel: Int, x: UInt, y: UInt, valu
     val idx = layout.sampleIndex(channel, x, y).toInt()
     samples[idx] = value
 }
-
-public fun FlatSamples<ByteArray>.asSlice(): ByteArray = samples
-
-public fun FlatSamples<ByteArray>.asMutSlice(): ByteArray = samples
-
-public fun FlatSamples<ByteArray>.asRef(): FlatSamples<ByteArray> = this
-
-public fun FlatSamples<ByteArray>.asMut(): FlatSamples<ByteArray> = this
 
 public fun FlatSamples<ByteArray>.toVec(): FlatSamples<ByteArray> =
     FlatSamples(samples.copyOf(), layout, colorHint)
