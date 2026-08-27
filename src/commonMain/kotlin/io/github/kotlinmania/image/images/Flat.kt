@@ -354,14 +354,20 @@ public data class FlatSamples<Buffer>(
 
     public fun index(channel: UByte, x: UInt, y: UInt): Int? = layout.index(channel, x, y)
 
+    public fun indexMut(channel: UByte, x: UInt, y: UInt): Int? = layout.index(channel, x, y)
+
     public fun indexIgnoringBounds(channel: Int, x: Int, y: Int): Int? = layout.indexIgnoringBounds(channel, x, y)
 
     public fun inBoundsIndex(channel: UByte, x: UInt, y: UInt): Int = layout.inBoundsIndex(channel, x, y)
+
+    public fun fmt(): String = "FlatSamples(layout=$layout, colorHint=$colorHint)"
 
     public fun shrinkTo(channels: UByte, width: UInt, height: UInt): FlatSamples<Buffer> =
         copy(layout = layout.shrinkTo(channels, width, height))
 
     public companion object {
+        public fun <Buffer> from(samples: Buffer, layout: SampleLayout, colorHint: ColorType? = null): FlatSamples<Buffer> =
+            FlatSamples(samples, layout, colorHint)
         public fun withMonocolor(pixel: Rgb<UByte>, width: UInt, height: UInt): FlatSamples<ByteArray> {
             val bytes = byteArrayOf(pixel.r.toByte(), pixel.g.toByte(), pixel.b.toByte())
             return FlatSamples(
@@ -781,6 +787,14 @@ public fun FlatSamples<ByteArray>.tryIntoBufferLuma(): Result<GrayImage> = tryIn
 
 public fun FlatSamples<ByteArray>.tryIntoBufferLumaA(): Result<GrayAlphaImage> = tryIntoGrayAlphaImage()
 
+public fun FlatSamples<ByteArray>.tryIntoBuffer(): Result<RgbImage> = tryIntoRgbImage()
+
+public fun FlatSamples<ByteArray>.asView(): Result<View<ByteArray, Rgb<UByte>>> = asViewRgb()
+
+public fun FlatSamples<ByteArray>.asViewWithMutSamples(): Result<View<ByteArray, Rgb<UByte>>> = asViewWithMutSamplesRgb()
+
+public fun FlatSamples<ByteArray>.asViewMut(): Result<ViewMut<ByteArray, Rgb<UByte>>> = asViewMutRgb()
+
 /**
  * A flat buffer that can be used as an image view.
  */
@@ -845,6 +859,8 @@ public class ViewMut<Buffer, P>(
         require(inBounds(x, y)) { "Image index ($x, $y) out of bounds ${dimensions()}" }
         return pixelReader(inner, x, y)
     }
+
+    public fun getPixelMut(x: UInt, y: UInt): P = getPixel(x, y)
 
     override fun putPixel(x: UInt, y: UInt, pixel: P) {
         require(inBounds(x, y)) { "Image index ($x, $y) out of bounds ${dimensions()}" }

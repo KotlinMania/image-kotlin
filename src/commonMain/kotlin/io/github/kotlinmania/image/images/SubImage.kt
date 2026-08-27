@@ -104,3 +104,18 @@ public class SubImage<P>(
             SubImage(image, x, y, width, height)
     }
 }
+
+/**
+ * The inner type of [SubImage] that holds positional offsets and strides.
+ */
+public data class SubImageInner<I>(
+    public val image: I,
+    public val xOffset: UInt,
+    public val yOffset: UInt,
+    public val xStride: UInt,
+    public val yStride: UInt,
+)
+
+public typealias DerefPixel<I> = Any?
+public typealias DerefSubpixel<I> = Any?
+public typealias Target = Any?

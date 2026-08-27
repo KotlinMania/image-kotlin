@@ -72,6 +72,10 @@ public sealed class ImageError(
             }
 
         public fun from(t: Throwable): ImageError = fromThrowable(t)
+
+        public fun assertSendSync() {
+            // Marker for Send + Sync trait bounds
+        }
     }
 }
 
@@ -84,6 +88,7 @@ public data class UnsupportedError(
     public val format: ImageFormatHint,
     public val kind: UnsupportedErrorKind,
 ) {
+
     /**
      * Returns the image format associated with this error.
      */
@@ -213,6 +218,7 @@ public data class ParameterError(
     public val kind: ParameterErrorKind,
     public val underlying: Throwable? = null,
 ) {
+
     public fun source(): Throwable? = underlying
 
     public fun fmt(): String {
@@ -274,6 +280,7 @@ public sealed interface ParameterErrorKind {
 public data class LimitError(
     public val kind: LimitErrorKind,
 ) {
+
     public fun source(): Throwable? = null
 
     public fun fmt(): String =
