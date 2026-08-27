@@ -10,6 +10,7 @@ package io.github.kotlinmania.image.io
 )
 public typealias Reader = ImageReader
 
+
 /**
  * Interface providing extension functions for byte-oriented reading.
  */
