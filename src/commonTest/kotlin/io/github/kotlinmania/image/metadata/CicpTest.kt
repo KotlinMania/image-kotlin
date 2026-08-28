@@ -9,7 +9,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 class CicpTest {
-    private fun noCoefficientFallback(): FloatArray = throw IllegalStateException("Fallback coefficients required")
+    internal fun noCoefficientFallback(): FloatArray = throw IllegalStateException("Fallback coefficients required")
 
     @Test
     fun moxcms() {
