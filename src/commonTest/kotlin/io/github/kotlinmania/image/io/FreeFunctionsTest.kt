@@ -20,9 +20,9 @@ class FreeFunctionsTest {
         assertEquals(ImageFormat.Gif, guessFormat(gifBytes))
     }
 
-    private class MockDecoder(
-        var scanlineNumber: Long = 0,
-        val scanlineBytes: Int = 5,
+    public class MockDecoder(
+        public var scanlineNumber: Long = 0,
+        public val scanlineBytes: Int = 5,
     ) : ImageDecoder {
         override fun dimensions(): Pair<UInt, UInt> = Pair(5u, 5u)
 
@@ -38,16 +38,34 @@ class FreeFunctionsTest {
             readImage(buf)
         }
 
-        fun seekScanline(n: ULong) {
+        public fun seekScanline(n: ULong) {
             scanlineNumber = n.toLong()
         }
 
-        fun readScanline(buf: ByteArray, data: ByteArray) {
+        public fun readScanline(buf: ByteArray) {
             val bytesRead = scanlineNumber * scanlineBytes
-            if (bytesRead >= data.size) return
-            val len = minOf(scanlineBytes.toLong(), data.size - bytesRead).toInt()
+            if (bytesRead >= 25) return
+            val len = minOf(scanlineBytes.toLong(), 25 - bytesRead).toInt()
+            val data = DATA
             data.copyInto(buf, destinationOffset = 0, startIndex = bytesRead.toInt(), endIndex = bytesRead.toInt() + len)
             scanlineNumber += 1
+        }
+    }
+
+    public companion object {
+        public val DATA: ByteArray = ByteArray(25) { it.toByte() }
+
+        public fun seekScanline(d: ImageDecoder, n: ULong) {
+            (d as MockDecoder).scanlineNumber = n.toLong()
+        }
+
+        public fun readScanline(d: ImageDecoder, buf: ByteArray) {
+            val mock = d as MockDecoder
+            val bytesRead = mock.scanlineNumber * mock.scanlineBytes
+            if (bytesRead >= 25) return
+            val len = minOf(mock.scanlineBytes.toLong(), 25 - bytesRead).toInt()
+            DATA.copyInto(buf, destinationOffset = 0, startIndex = bytesRead.toInt(), endIndex = bytesRead.toInt() + len)
+            mock.scanlineNumber += 1
         }
     }
 
@@ -71,21 +89,6 @@ class FreeFunctionsTest {
 
     @Test
     fun testLoadRect() {
-        val data = ByteArray(25) { it.toByte() }
-
-        fun seekScanline(d: ImageDecoder, n: ULong) {
-            (d as MockDecoder).scanlineNumber = n.toLong()
-        }
-
-        fun readScanline(d: ImageDecoder, buf: ByteArray) {
-            val mock = d as MockDecoder
-            val bytesRead = mock.scanlineNumber * mock.scanlineBytes
-            if (bytesRead >= 25) return
-            val len = minOf(mock.scanlineBytes.toLong(), 25 - bytesRead).toInt()
-            data.copyInto(buf, destinationOffset = 0, startIndex = bytesRead.toInt(), endIndex = bytesRead.toInt() + len)
-            mock.scanlineNumber += 1
-        }
-
         for (scanlineBytes in 1 until 30) {
             var output = ByteArray(26)
             var decoder = MockDecoder(scanlineNumber = 0, scanlineBytes = scanlineBytes)
@@ -101,7 +104,7 @@ class FreeFunctionsTest {
                 ::seekScanline,
                 ::readScanline,
             )
-            assertContentEquals(data, output.copyOfRange(0, 25))
+            assertContentEquals(DATA, output.copyOfRange(0, 25))
             assertEquals(0, output[25])
 
             output = ByteArray(26)
@@ -156,19 +159,18 @@ class FreeFunctionsTest {
 
     @Test
     fun testLoadRectSingleScanline() {
-        val data = ByteArray(25) { it.toByte() }
         val output = ByteArray(26)
         var seeks = 0
         val decoder = MockDecoder()
 
-        fun seekScanline(d: ImageDecoder, n: ULong) {
+        fun singleSeekScanline(d: ImageDecoder, n: ULong) {
             seeks += 1
             assertEquals(0uL, n)
             assertEquals(1, seeks)
         }
 
-        fun readScanline(d: ImageDecoder, buf: ByteArray) {
-            data.copyInto(buf)
+        fun singleReadScanline(d: ImageDecoder, buf: ByteArray) {
+            DATA.copyInto(buf)
         }
 
         loadRect(
@@ -179,9 +181,9 @@ class FreeFunctionsTest {
             output,
             2,
             decoder,
-            data.size,
-            ::seekScanline,
-            ::readScanline,
+            DATA.size,
+            ::singleSeekScanline,
+            ::singleReadScanline,
         )
         assertContentEquals(byteArrayOf(6, 7, 11, 12, 16, 17, 21, 22, 0), output.copyOfRange(0, 9))
     }
