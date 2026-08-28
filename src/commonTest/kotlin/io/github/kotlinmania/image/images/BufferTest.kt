@@ -1,11 +1,17 @@
 // port-lint: tests images/buffer.rs
 package io.github.kotlinmania.image.images
 
+import io.github.kotlinmania.image.Luma
 import io.github.kotlinmania.image.Rgb
+import io.github.kotlinmania.image.Rgba
+import io.github.kotlinmania.image.ImageError
 import io.github.kotlinmania.image.math.Rect
+import io.github.kotlinmania.image.metadata.Cicp
+import io.github.kotlinmania.image.metadata.CicpTransform
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -158,5 +164,93 @@ class BufferTest {
         val image = ImageBuffer.createGray(4u, 4u, data)!!
         assertTrue(image.copyWithin(Rect(1u, 1u, 3u, 3u), 0u, 0u))
         assertContentEquals(expected, image.intoRaw())
+    }
+
+    @Test
+    fun colorConversion() {
+        val source = ImageBuffer.createRgb(128u, 128u) { _, _ -> Rgb(255u.toUByte(), 0u.toUByte(), 0u.toUByte()) }
+        val target = ImageBuffer.createRgba(128u, 128u) { _, _ -> Rgba(0u.toUByte(), 0u.toUByte(), 0u.toUByte(), 0u.toUByte()) }
+
+        source.setRgbPrimaries(Cicp.SRGB.primaries)
+        source.setTransferFunction(Cicp.SRGB.transfer)
+
+        target.setRgbPrimaries(Cicp.DISPLAY_P3.primaries)
+        target.setTransferFunction(Cicp.DISPLAY_P3.transfer)
+
+        target.copyFromColorSpace(source, ConvertColorOptions())
+
+        assertEquals(Rgba(234u.toUByte(), 51u.toUByte(), 35u.toUByte(), 255u.toUByte()), target.getPixel(0u, 0u))
+    }
+
+    @Test
+    fun grayConversions() {
+        val source = ImageBuffer.createGray(128u, 128u) { _, _ -> Luma(255u.toUByte()) }
+        val target = ImageBuffer.createRgba(128u, 128u) { _, _ -> Rgba(0u.toUByte(), 0u.toUByte(), 0u.toUByte(), 0u.toUByte()) }
+
+        source.setRgbPrimaries(Cicp.SRGB.primaries)
+        source.setTransferFunction(Cicp.SRGB.transfer)
+
+        target.setRgbPrimaries(Cicp.SRGB.primaries)
+        target.setTransferFunction(Cicp.SRGB.transfer)
+
+        target.copyFromColorSpace(source, ConvertColorOptions())
+
+        assertEquals(Rgba(255u.toUByte(), 255u.toUByte(), 255u.toUByte(), 255u.toUByte()), target.getPixel(0u, 0u))
+    }
+
+    @Test
+    fun rgbToGrayConversion() {
+        val source = ImageBuffer.createRgb(128u, 128u) { _, _ -> Rgb(128u.toUByte(), 128u.toUByte(), 128u.toUByte()) }
+        val target = ImageBuffer.createGray(128u, 128u) { _, _ -> Luma(0u.toUByte()) }
+
+        source.setRgbPrimaries(Cicp.SRGB.primaries)
+        source.setTransferFunction(Cicp.SRGB.transfer)
+
+        target.setRgbPrimaries(Cicp.SRGB.primaries)
+        target.setTransferFunction(Cicp.SRGB.transfer)
+
+        target.copyFromColorSpace(source, ConvertColorOptions())
+
+        assertEquals(Luma(128u.toUByte()), target.getPixel(0u, 0u))
+    }
+
+    @Test
+    fun applyColor() {
+        val buffer = ImageBuffer.createRgb(128u, 128u) { _, _ -> Rgb(255u.toUByte(), 0u.toUByte(), 0u.toUByte()) }
+
+        buffer.setRgbPrimaries(Cicp.SRGB.primaries)
+        buffer.setTransferFunction(Cicp.SRGB.transfer)
+
+        buffer.applyColorSpace(Cicp.DISPLAY_P3, ConvertColorOptions())
+
+        for ((_, _, p) in buffer.pixels()) {
+            assertEquals(Rgb(234u.toUByte(), 51u.toUByte(), 35u.toUByte()), p)
+        }
+    }
+
+    @Test
+    fun toColor() {
+        val source = ImageBuffer.createRgb(128u, 128u) { _, _ -> Rgb(255u.toUByte(), 0u.toUByte(), 0u.toUByte()) }
+        source.setRgbPrimaries(Cicp.SRGB.primaries)
+        source.setTransferFunction(Cicp.SRGB.transfer)
+
+        val target = source.toColorSpace(Cicp.DISPLAY_P3, ConvertColorOptions())
+
+        assertEquals(Rgb(234u.toUByte(), 51u.toUByte(), 35u.toUByte()), target.getPixel(0u, 0u))
+    }
+
+    @Test
+    fun transformationMismatch() {
+        val source = ImageBuffer.createGray(128u, 128u) { _, _ -> Luma(255u.toUByte()) }
+        val target = ImageBuffer.createRgba(128u, 128u) { _, _ -> Rgba(0u.toUByte(), 0u.toUByte(), 0u.toUByte(), 0u.toUByte()) }
+
+        source.setColorSpace(Cicp.SRGB)
+        target.setColorSpace(Cicp.DISPLAY_P3)
+
+        val options = ConvertColorOptions(transform = CicpTransform.new(Cicp.SRGB, Cicp.SRGB))
+
+        assertFailsWith<ImageError.Parameter> {
+            target.copyFromColorSpace(source, options)
+        }
     }
 }

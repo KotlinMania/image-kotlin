@@ -7,6 +7,9 @@ import io.github.kotlinmania.image.Rgb
 import io.github.kotlinmania.image.Rgba
 import io.github.kotlinmania.image.ImageError
 import io.github.kotlinmania.image.ImageFormatHint
+import io.github.kotlinmania.image.LayoutWithColor
+import io.github.kotlinmania.image.ParameterError
+import io.github.kotlinmania.image.ParameterErrorKind
 import io.github.kotlinmania.image.UnsupportedError
 import io.github.kotlinmania.image.UnsupportedErrorKind
 import io.github.kotlinmania.image.blendUByte
@@ -69,8 +72,92 @@ public class ImageBuffer<P, Container>(
         color = cicp.intoRgb()
     }
 
+    public fun setRgbColorSpace(primaries: CicpColorPrimaries, transfer: CicpTransferCharacteristics) {
+        setRgbPrimaries(primaries)
+        setTransferFunction(transfer)
+    }
+
     public fun copyColorSpaceFrom(other: ImageBuffer<*, *>) {
         color = other.color
+    }
+
+    public fun layoutWithColor(): LayoutWithColor =
+        when (channelCount) {
+            1 -> LayoutWithColor.Luma
+            2 -> LayoutWithColor.LumaAlpha
+            3 -> LayoutWithColor.Rgb
+            4 -> LayoutWithColor.Rgba
+            else -> throw UnsupportedOperationException("Unsupported channel count $channelCount")
+        }
+
+    public fun copyFromColorSpace(
+        from: ImageBuffer<*, *>,
+        options: ConvertColorOptions = ConvertColorOptions(),
+    ) {
+        val (fw, fh) = from.dimensions()
+        val (tw, th) = dimensions()
+        if (fw != tw || fh != th) {
+            throw ImageError.Parameter(
+                ParameterError.fromKind(
+                    ParameterErrorKind.DimensionMismatch
+                )
+            )
+        }
+        val fromCicp = from.colorSpace()
+        val intoCicp = colorSpace()
+        val transform = options.asTransform(fromCicp, intoCicp)
+        val applicable = transform.selectTransformU8(from.layoutWithColor(), layoutWithColor())
+        val fromBytes = from.data
+        val inputList = ArrayList<UByte>(fromBytes.size)
+        for (b in fromBytes) {
+            inputList.add(b.toUByte())
+        }
+        val outputList = ArrayList<UByte>(data.size)
+        applicable(inputList, outputList)
+        for (i in 0 until minOf(data.size, outputList.size)) {
+            data[i] = outputList[i].toByte()
+        }
+    }
+
+    public fun toColorSpace(
+        color: Cicp,
+        options: ConvertColorOptions = ConvertColorOptions(),
+    ): ImageBuffer<P, ByteArray> {
+        val (w, h) = dimensions()
+        val copy = bufferWithDimensions(w, h)
+        copy.setColorSpace(color)
+        copy.copyFromColorSpace(this, options)
+        return copy
+    }
+
+    public fun applyColorSpace(
+        color: Cicp,
+        options: ConvertColorOptions = ConvertColorOptions(),
+    ) {
+        val converted = toColorSpace(color, options)
+        converted.data.copyInto(data)
+        this.color = color.intoRgb()
+    }
+
+    internal fun innerPixels(): ByteArray = data
+
+    internal fun innerPixelsMut(): ByteArray = data
+
+    public fun intoVec(): ByteArray = data
+
+    public fun getPixelMut(x: UInt, y: UInt): P = getPixel(x, y)
+
+    public fun getPixelMutChecked(x: UInt, y: UInt): P? = getPixelChecked(x, y)
+
+    internal fun pixelIndices(x: UInt, y: UInt): IntRange? {
+        if (x >= width || y >= height) return null
+        val idx = (y.toInt() * width.toInt() + x.toInt()) * channelCount
+        return idx until (idx + channelCount)
+    }
+
+    internal fun pixelIndicesUnchecked(x: UInt, y: UInt): IntRange {
+        val idx = (y.toInt() * width.toInt() + x.toInt()) * channelCount
+        return idx until (idx + channelCount)
     }
 
     public fun sampleLayout(): SampleLayout =
@@ -265,6 +352,44 @@ public class ImageBuffer<P, Container>(
             if (buf.size.toLong() < expected) return null
             return ImageBuffer(width, height, buf, channels, reader, writer, blender)
         }
+
+        public fun checkImageFits(width: UInt, height: UInt, channels: Int, len: Int): Boolean {
+            val total = width.toLong() * height.toLong() * channels.toLong()
+            return total <= len.toLong() && total <= Int.MAX_VALUE.toLong()
+        }
+
+        public fun imageBufferLen(width: UInt, height: UInt, channels: Int): Long? {
+            val total = width.toLong() * height.toLong() * channels.toLong()
+            return if (total <= Int.MAX_VALUE.toLong()) total else null
+        }
+
+        public fun <P> fromPixel(
+            width: UInt,
+            height: UInt,
+            channels: Int,
+            pixel: P,
+            reader: (ByteArray, Int) -> P,
+            writer: (ByteArray, Int, P) -> Unit,
+            blender: (ByteArray, Int, P) -> Unit = writer,
+        ): ImageBuffer<P, ByteArray> {
+            val img = new(width, height, channels, reader, writer, blender)
+            for (y in 0u until height) {
+                for (x in 0u until width) {
+                    img.putPixel(x, y, pixel)
+                }
+            }
+            return img
+        }
+
+        public fun <P> fromVec(
+            width: UInt,
+            height: UInt,
+            vec: ByteArray,
+            channels: Int,
+            reader: (ByteArray, Int) -> P,
+            writer: (ByteArray, Int, P) -> Unit,
+            blender: (ByteArray, Int, P) -> Unit = writer,
+        ): ImageBuffer<P, ByteArray>? = fromRaw(width, height, vec, channels, reader, writer, blender)
 
         public fun createRgb(width: UInt, height: UInt): RgbImage =
             new(
@@ -973,7 +1098,7 @@ public class ConvertColorOptions(
     ): CicpTransform {
         val tr = transform
         if (tr != null) {
-            tr.checkApplicable(fromColor, intoColor)
+            tr.checkApplicable(fromColor, intoColor).getOrThrow()
             return tr
         }
         val created = CicpTransform.new(fromColor, intoColor)
