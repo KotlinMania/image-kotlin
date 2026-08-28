@@ -13,35 +13,79 @@ public typealias ImageResult<T> = Result<T>
 
 /**
  * The generic error type for image operations.
+ *
+ * This high level enum allows, by variant matching, a rough separation of concerns between
+ * underlying IO, the caller, format specifications, and the `image` implementation.
  */
 public sealed class ImageError(
     message: String? = null,
     cause: Throwable? = null,
 ) : Exception(message, cause) {
+    /**
+     * An error was encountered while decoding.
+     *
+     * This means that the input data did not conform to the specification of some image format,
+     * or that no format could be determined, or that it did not match format specific
+     * requirements set by the caller.
+     */
     public data class Decoding(
         public val error: DecodingError,
     ) : ImageError(error.toString(), error.underlying)
 
+    /**
+     * An error was encountered while encoding.
+     *
+     * The input image can not be encoded with the chosen format, for example because the
+     * specification has no representation for its color space or because a necessary conversion
+     * is ambiguous. In some cases it might also happen that the dimensions can not be used with
+     * the format.
+     */
     public data class Encoding(
         public val error: EncodingError,
     ) : ImageError(error.toString(), error.underlying)
 
+    /**
+     * An error was encountered in input arguments.
+     *
+     * This is a catch-all case for strictly internal operations such as scaling, conversions,
+     * etc. that involve no external format specifications.
+     */
     public data class Parameter(
         public val error: ParameterError,
     ) : ImageError(error.toString(), error.underlying)
 
+    /**
+     * Completing the operation would have required more resources than allowed.
+     *
+     * Errors of this type are limits set by the user or environment, *not* inherent in a specific
+     * format or operation that was executed.
+     */
     public data class Limits(
         public val error: LimitError,
     ) : ImageError(error.toString(), null)
 
+    /**
+     * An operation can not be completed by the chosen abstraction.
+     *
+     * This means that it might be possible for the operation to succeed in general but
+     * * it requires a disabled feature,
+     * * the implementation does not yet exist, or
+     * * no abstraction for a lower level could be found.
+     */
     public data class Unsupported(
         public val error: UnsupportedError,
     ) : ImageError(error.toString(), null)
 
+    /**
+     * An error occurred while interacting with the environment.
+     */
     public data class IoError(
         public val error: Throwable,
     ) : ImageError(error.message, error)
 
+    /**
+     * Returns the underlying source exception if available.
+     */
     public fun source(): Throwable? =
         when (this) {
             is Decoding -> error.source()
@@ -52,6 +96,9 @@ public sealed class ImageError(
             is IoError -> error
         }
 
+    /**
+     * Formats this error into a human-readable display string.
+     */
     public fun fmt(): String =
         when (this) {
             is Decoding -> error.fmt()
@@ -65,14 +112,23 @@ public sealed class ImageError(
     override fun toString(): String = fmt()
 
     public companion object {
+        /**
+         * Wraps a generic [Throwable] as an [ImageError].
+         */
         public fun fromThrowable(t: Throwable): ImageError =
             when (t) {
                 is ImageError -> t
                 else -> IoError(t)
             }
 
+        /**
+         * Wraps a generic [Throwable] as an [ImageError].
+         */
         public fun from(t: Throwable): ImageError = fromThrowable(t)
 
+        /**
+         * Thread safety validation assertion marker.
+         */
         public fun assertSendSync() {
             // Thread safety validation marker
         }
@@ -93,8 +149,14 @@ public data class UnsupportedError(
      */
     public fun formatHint(): ImageFormatHint = format
 
+    /**
+     * Returns the underlying source exception if available.
+     */
     public fun source(): Throwable? = null
 
+    /**
+     * Formats the unsupported error into a human-readable description.
+     */
     public fun fmt(): String =
         when (kind) {
             is UnsupportedErrorKind.Format ->
@@ -125,45 +187,85 @@ public data class UnsupportedError(
         public fun fromFormatAndKind(format: ImageFormatHint, kind: UnsupportedErrorKind): UnsupportedError =
             UnsupportedError(format, kind)
 
+        /**
+         * Create an [UnsupportedError] for an unsupported image format hint.
+         */
         public fun fromFormatHint(hint: ImageFormatHint): UnsupportedError =
             UnsupportedError(hint, UnsupportedErrorKind.Format(hint))
 
+        /**
+         * Create an [UnsupportedError] from an image format hint.
+         */
         public fun from(hint: ImageFormatHint): UnsupportedError = fromFormatHint(hint)
     }
 }
 
+/**
+ * Details what feature is not supported.
+ */
 public sealed interface UnsupportedErrorKind {
+    /**
+     * The required color type can not be handled.
+     */
     public data class Color(
         public val color: ExtendedColorType,
     ) : UnsupportedErrorKind
 
+    /**
+     * Dealing with an intricate layout is not implemented for an algorithm.
+     */
     public data class ColorLayout(
         public val layout: ExtendedColorType,
     ) : UnsupportedErrorKind
 
+    /**
+     * The colors or transfer function of the CICP are not supported.
+     */
     public data class ColorspaceCicp(
         public val cicp: Cicp,
     ) : UnsupportedErrorKind
 
+    /**
+     * An image format is not supported.
+     */
     public data class Format(
         public val hint: ImageFormatHint,
     ) : UnsupportedErrorKind
 
+    /**
+     * Some feature specified by string.
+     * This is discouraged and is likely to get deprecated (but not removed).
+     */
     public data class GenericFeature(
         public val message: String,
     ) : UnsupportedErrorKind
 }
 
+/**
+ * An error was encountered while decoding an image.
+ *
+ * This is used as an opaque representation for the [ImageError.Decoding] variant. See its
+ * documentation for more information.
+ */
 public data class DecodingError(
     public val format: ImageFormatHint,
     public val underlying: Throwable? = null,
 ) {
     public constructor(format: ImageFormatHint, message: String) : this(format, Exception(message))
 
+    /**
+     * Returns the image format associated with this error.
+     */
     public fun formatHint(): ImageFormatHint = format
 
+    /**
+     * Returns the underlying source exception if available.
+     */
     public fun source(): Throwable? = underlying
 
+    /**
+     * Formats the decoding error into a human-readable description.
+     */
     public fun fmt(): String =
         when (underlying) {
             null ->
@@ -177,22 +279,45 @@ public data class DecodingError(
     override fun toString(): String = fmt()
 
     public companion object {
+        /**
+         * Create a [DecodingError] that stems from an arbitrary error of an underlying decoder.
+         */
         public fun new(format: ImageFormatHint, err: Throwable): DecodingError = DecodingError(format, err)
 
+        /**
+         * Create a [DecodingError] for an image format.
+         *
+         * The error will not contain any further information but is very easy to create.
+         */
         public fun fromFormatHint(format: ImageFormatHint): DecodingError = DecodingError(format, null)
     }
 }
 
+/**
+ * An error was encountered while encoding an image.
+ *
+ * This is used as an opaque representation for the [ImageError.Encoding] variant. See its
+ * documentation for more information.
+ */
 public data class EncodingError(
     public val format: ImageFormatHint,
     public val underlying: Throwable? = null,
 ) {
     public constructor(format: ImageFormatHint, message: String) : this(format, Exception(message))
 
+    /**
+     * Return the image format associated with this error.
+     */
     public fun formatHint(): ImageFormatHint = format
 
+    /**
+     * Returns the underlying source exception if available.
+     */
     public fun source(): Throwable? = underlying
 
+    /**
+     * Formats the encoding error into a human-readable description.
+     */
     public fun fmt(): String =
         when (underlying) {
             null -> "Format error encoding $format"
@@ -202,8 +327,16 @@ public data class EncodingError(
     override fun toString(): String = fmt()
 
     public companion object {
+        /**
+         * Create an [EncodingError] that stems from an arbitrary error of an underlying encoder.
+         */
         public fun new(format: ImageFormatHint, err: Throwable): EncodingError = EncodingError(format, err)
 
+        /**
+         * Create an [EncodingError] for an image format.
+         *
+         * The error will not contain any further information but is very easy to create.
+         */
         public fun fromFormatHint(format: ImageFormatHint): EncodingError = EncodingError(format, null)
     }
 }
@@ -211,14 +344,21 @@ public data class EncodingError(
 /**
  * An error was encountered in inputs arguments.
  *
- * This is used as an opaque representation for the [ImageError.Parameter] variant.
+ * This is used as an opaque representation for the [ImageError.Parameter] variant. See its
+ * documentation for more information.
  */
 public data class ParameterError(
     public val kind: ParameterErrorKind,
     public val underlying: Throwable? = null,
 ) {
+    /**
+     * Returns the underlying source exception if available.
+     */
     public fun source(): Throwable? = underlying
 
+    /**
+     * Formats the parameter error into a human-readable description.
+     */
     public fun fmt(): String {
         val base =
             when (kind) {
@@ -238,11 +378,14 @@ public data class ParameterError(
         /** Construct a [ParameterError] directly from a corresponding kind. */
         public fun fromKind(kind: ParameterErrorKind): ParameterError = ParameterError(kind, null)
 
+        /** Construct a [ParameterError] directly from a corresponding kind. */
         public fun from(kind: ParameterErrorKind): ParameterError = ParameterError(kind, null)
     }
 }
 
-/** Details how a parameter is malformed. */
+/**
+ * Details how a parameter is malformed.
+ */
 public sealed interface ParameterErrorKind {
     /** The dimensions passed are wrong. */
     public data object DimensionMismatch : ParameterErrorKind
@@ -255,7 +398,10 @@ public sealed interface ParameterErrorKind {
         public val cicp: Cicp,
     ) : ParameterErrorKind
 
-    /** A string describing the parameter. */
+    /**
+     * A string describing the parameter.
+     * This is discouraged and is likely to get deprecated (but not removed).
+     */
     public data class Generic(
         public val message: String,
     ) : ParameterErrorKind
@@ -265,7 +411,9 @@ public sealed interface ParameterErrorKind {
 
     /** An operation expected a concrete color space but another was found. */
     public data class CicpMismatch(
+        /** The cicp that was expected. */
         public val expected: Cicp,
+        /** The cicp that was found. */
         public val found: Cicp,
     ) : ParameterErrorKind
 }
@@ -273,13 +421,20 @@ public sealed interface ParameterErrorKind {
 /**
  * Completing the operation would have required more resources than allowed.
  *
- * This is used as an opaque representation for the [ImageError.Limits] variant.
+ * This is used as an opaque representation for the [ImageError.Limits] variant. See its
+ * documentation for more information.
  */
 public data class LimitError(
     public val kind: LimitErrorKind,
 ) {
+    /**
+     * Returns the underlying source exception if available.
+     */
     public fun source(): Throwable? = null
 
+    /**
+     * Formats the limit error into a human-readable description.
+     */
     public fun fmt(): String =
         when (kind) {
             LimitErrorKind.InsufficientMemory -> "Memory limit exceeded"
@@ -293,11 +448,17 @@ public data class LimitError(
         /** Construct a generic [LimitError] directly from a corresponding kind. */
         public fun fromKind(kind: LimitErrorKind): LimitError = LimitError(kind)
 
+        /** Construct a generic [LimitError] directly from a corresponding kind. */
         public fun from(kind: LimitErrorKind): LimitError = LimitError(kind)
     }
 }
 
-/** Indicates the limit that prevented an operation from completing. */
+/**
+ * Indicates the limit that prevented an operation from completing.
+ *
+ * Note that this enumeration is not exhaustive and may in the future be extended to provide more
+ * detailed information or to incorporate other resources types.
+ */
 public sealed interface LimitErrorKind {
     /** The resulting image exceed dimension limits in either direction. */
     public data object DimensionError : LimitErrorKind
@@ -307,12 +468,20 @@ public sealed interface LimitErrorKind {
 
     /** The specified strict limits are not supported for this operation. */
     public data class Unsupported(
+        /** The given limits. */
         public val limits: Limits,
+        /** The supported strict limits. */
         public val supported: LimitSupport,
     ) : LimitErrorKind
 }
 
+/**
+ * A best effort representation for image formats.
+ */
 public sealed interface ImageFormatHint {
+    /**
+     * Formats this format hint into a display string.
+     */
     public fun fmt(): String =
         when (this) {
             is Exact -> "$format"
@@ -321,25 +490,32 @@ public sealed interface ImageFormatHint {
             Unknown -> "`Unknown`"
         }
 
+    /** The format is known exactly. */
     public data class Exact(
         public val format: ImageFormat,
     ) : ImageFormatHint
 
+    /** The format can be identified by a name. */
     public data class Name(
         public val name: String,
     ) : ImageFormatHint
 
+    /** A common path extension for the format is known. */
     public data class PathExtension(
         public val ext: String,
     ) : ImageFormatHint
 
+    /** The format is not known or could not be determined. */
     public data object Unknown : ImageFormatHint
 
     public companion object {
+        /** Create an [ImageFormatHint.Exact] from an [ImageFormat]. */
         public fun fromFormat(format: ImageFormat): ImageFormatHint = Exact(format)
 
+        /** Create an [ImageFormatHint.Exact] from an [ImageFormat]. */
         public fun from(format: ImageFormat): ImageFormatHint = Exact(format)
 
+        /** Create an [ImageFormatHint] from a file path by looking at its extension. */
         public fun from(path: String): ImageFormatHint {
             val lastDot = path.lastIndexOf('.')
             return if (lastDot != -1 && lastDot < path.length - 1) {
@@ -351,6 +527,11 @@ public sealed interface ImageFormatHint {
     }
 }
 
+/**
+ * Converting [ExtendedColorType] to [ColorType] failed.
+ *
+ * This type is convertible to [ImageError] as [ImageError.Unsupported].
+ */
 public data class TryFromExtendedColorError(
     public val was: ExtendedColorType,
 ) : Exception("The pixel layout $was is not supported as a buffer ColorType") {
@@ -358,6 +539,9 @@ public data class TryFromExtendedColorError(
 
     public fun fmt(format: Any?): String = fmt()
 
+    /**
+     * Converts this error into an [ImageError.Unsupported].
+     */
     public fun toImageError(): ImageError =
         ImageError.Unsupported(
             UnsupportedError.fromFormatAndKind(
@@ -367,6 +551,7 @@ public data class TryFromExtendedColorError(
         )
 
     public companion object {
+        /** Converts a [TryFromExtendedColorError] into an [ImageError]. */
         public fun from(err: TryFromExtendedColorError): ImageError = err.toImageError()
     }
 }
