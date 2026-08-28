@@ -51,7 +51,6 @@ class ErrorTest {
         val err = ParameterError.fromKind(ParameterErrorKind.DimensionMismatch)
         assertEquals("The Image's dimensions are either too small or too large", err.toString())
         assertEquals(ParameterErrorKind.DimensionMismatch, err.kind)
-        assertEquals(ParameterErrorKind.DimensionMismatch, err.kind())
     }
 
     @Test
@@ -59,7 +58,6 @@ class ErrorTest {
         val err = LimitError.fromKind(LimitErrorKind.InsufficientMemory)
         assertEquals("Memory limit exceeded", err.toString())
         assertEquals(LimitErrorKind.InsufficientMemory, err.kind)
-        assertEquals(LimitErrorKind.InsufficientMemory, err.kind())
     }
 
     @Test
