@@ -31,10 +31,15 @@ public data class PaletteColor(
 /**
  * The representation of a BMP encoder.
  */
-public class BmpEncoder internal constructor(
+public class BmpEncoder(
     private val writer: IoWrite,
 ) : ImageEncoder {
     internal constructor(writeBuffer: BufferIoWrite) : this(writeBuffer as IoWrite)
+
+    public companion object {
+        /** Create a new encoder that writes its output to [writer]. */
+        public fun new(writer: IoWrite): BmpEncoder = BmpEncoder(writer)
+    }
 
     /**
      * Encodes the image that has dimensions [width] and [height] and [ExtendedColorType] [colorType].
@@ -245,6 +250,12 @@ public class BmpEncoder internal constructor(
             if (pad.isNotEmpty()) {
                 writer.writeAll(pad)
             }
+        }
+    }
+
+    private fun writeRowPad(rowPadSize: UInt) {
+        if (rowPadSize > 0u) {
+            writer.writeAll(ByteArray(rowPadSize.toInt()))
         }
     }
 

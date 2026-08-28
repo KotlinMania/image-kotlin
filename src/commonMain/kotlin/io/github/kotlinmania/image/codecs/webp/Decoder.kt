@@ -220,6 +220,12 @@ public class WebPDecoder(
     }
 
     public companion object {
+        /** Create a new [WebPDecoder] from the reader [r]. */
+        public fun new(r: IoRead): WebPDecoder = WebPDecoder(r)
+
+        /** Create a new [WebPDecoder] from the input [bytes]. */
+        public fun new(bytes: ByteArray): WebPDecoder = WebPDecoder(bytes)
+
         private fun readAllBytes(r: IoRead): ByteArray {
             val buf = ByteArray(4096)
             val result = mutableListOf<Byte>()

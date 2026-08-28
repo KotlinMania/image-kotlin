@@ -68,4 +68,11 @@ class AffineTest {
         flipVerticalInPlace(image, 3, 2, 1)
         assertEquals(expected.toList(), image.toList())
     }
+
+    private fun <P> pixelDiffs(
+        left: List<Triple<UInt, UInt, P>>,
+        right: List<Triple<UInt, UInt, P>>,
+    ): List<Pair<Triple<UInt, UInt, P>, Triple<UInt, UInt, P>>> {
+        return left.zip(right).filter { (p, q) -> p != q }
+    }
 }

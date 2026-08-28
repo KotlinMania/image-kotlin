@@ -93,6 +93,14 @@ class BmpTest {
     }
 
     @Test
+    fun hugeFilesReturnError() {
+        val encoder = BmpEncoder(BufferIoWrite())
+        assertFailsWith<Throwable> {
+            encoder.encode(ByteArray(0), 40_000u, 40_000u, ExtendedColorType.Rgb8)
+        }
+    }
+
+    @Test
     fun regressionIssue2604() {
         val image = ByteArray(0)
         val encoder = BmpEncoder(BufferIoWrite())
