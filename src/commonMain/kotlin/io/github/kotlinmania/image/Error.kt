@@ -88,6 +88,7 @@ public data class UnsupportedError(
     public val format: ImageFormatHint,
     public val kind: UnsupportedErrorKind,
 ) {
+
     /**
      * Returns the image format associated with this error.
      */

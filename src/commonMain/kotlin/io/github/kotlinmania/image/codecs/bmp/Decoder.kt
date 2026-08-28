@@ -5,10 +5,13 @@ import io.github.kotlinmania.image.ColorType
 import io.github.kotlinmania.image.DecodingError
 import io.github.kotlinmania.image.ImageError
 import io.github.kotlinmania.image.ImageFormatHint
+import io.github.kotlinmania.image.ParameterError
+import io.github.kotlinmania.image.ParameterErrorKind
 import io.github.kotlinmania.image.UnsupportedError
 import io.github.kotlinmania.image.UnsupportedErrorKind
 import io.github.kotlinmania.image.io.BufferIoRead
 import io.github.kotlinmania.image.io.ImageDecoder
+import io.github.kotlinmania.image.io.ImageDecoderRect
 import io.github.kotlinmania.image.io.ImageFormat
 import io.github.kotlinmania.image.io.IoRead
 import io.github.kotlinmania.image.io.readExact
@@ -20,6 +23,22 @@ private const val BITMAPV2HEADER_SIZE: UInt = 52u
 private const val BITMAPV3HEADER_SIZE: UInt = 56u
 private const val BITMAPV4HEADER_SIZE: UInt = 108u
 private const val BITMAPV5HEADER_SIZE: UInt = 124u
+
+private val LOOKUP_TABLE_3_BIT_TO_8_BIT: IntArray = intArrayOf(0, 36, 73, 109, 146, 182, 219, 255)
+private val LOOKUP_TABLE_4_BIT_TO_8_BIT: IntArray =
+    intArrayOf(0, 17, 34, 51, 68, 85, 102, 119, 136, 153, 170, 187, 204, 221, 238, 255)
+private val LOOKUP_TABLE_5_BIT_TO_8_BIT: IntArray =
+    intArrayOf(
+        0, 8, 16, 25, 33, 41, 49, 58, 66, 74, 82, 90, 99, 107, 115, 123, 132, 140, 148, 156, 165, 173,
+        181, 189, 197, 206, 214, 222, 230, 239, 247, 255,
+    )
+private val LOOKUP_TABLE_6_BIT_TO_8_BIT: IntArray =
+    intArrayOf(
+        0, 4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 45, 49, 53, 57, 61, 65, 69, 73, 77, 81, 85, 89, 93,
+        97, 101, 105, 109, 113, 117, 121, 125, 130, 134, 138, 142, 146, 150, 154, 158, 162, 166, 170,
+        174, 178, 182, 186, 190, 194, 198, 202, 206, 210, 215, 219, 223, 227, 231, 235, 239, 243, 247,
+        251, 255,
+    )
 
 private const val RLE_ESCAPE: Int = 0
 private const val RLE_ESCAPE_EOL: Int = 0
@@ -38,40 +57,97 @@ private enum class ImageType {
     Bitfields32,
 }
 
-private data class Bitfield(
-    val len: Int,
+internal data class Bitfield(
     val shift: Int,
-)
+    val len: Int,
+) {
+    fun read(data: UInt): Int {
+        val d = (data.toLong() ushr shift).toInt()
+        return when (len) {
+            1 -> (d and 0b1) * 0xFF
+            2 -> (d and 0b11) * 0x55
+            3 -> LOOKUP_TABLE_3_BIT_TO_8_BIT[d and 0b00_0111]
+            4 -> LOOKUP_TABLE_4_BIT_TO_8_BIT[d and 0b00_1111]
+            5 -> LOOKUP_TABLE_5_BIT_TO_8_BIT[d and 0b01_1111]
+            6 -> LOOKUP_TABLE_6_BIT_TO_8_BIT[d and 0b11_1111]
+            7 -> (((d and 0x7F) shl 1) or ((d and 0x7F) ushr 6))
+            8 -> (d and 0xFF)
+            else -> 0
+        }
+    }
 
-private data class Bitfields(
+    companion object {
+        fun fromMask(mask: Long, maxLen: Int = 32): Bitfield {
+            if (mask == 0L) return Bitfield(0, 0)
+            val umask = mask.toUInt()
+            var shift = umask.countTrailingZeroBits()
+            var len = (umask shr shift).inv().countTrailingZeroBits()
+            if (len != umask.countOneBits()) {
+                throw ImageError.Decoding(DecodingError(ImageFormatHint.Exact(ImageFormat.Bmp), "Bitfield mask non-contiguous"))
+            }
+            if (len + shift > maxLen) {
+                throw ImageError.Decoding(DecodingError(ImageFormatHint.Exact(ImageFormat.Bmp), "Bitfield mask invalid"))
+            }
+            if (len > 8) {
+                shift += len - 8
+                len = 8
+            }
+            return Bitfield(shift = shift, len = len)
+        }
+    }
+}
+
+internal data class Bitfields(
     val r: Bitfield,
     val g: Bitfield,
     val b: Bitfield,
     val a: Bitfield,
-)
+) {
+    companion object {
+        fun fromMask(
+            rMask: Long,
+            gMask: Long,
+            bMask: Long,
+            aMask: Long,
+            maxLen: Int = 32,
+        ): Bitfields {
+            val bitfields =
+                Bitfields(
+                    r = Bitfield.fromMask(rMask, maxLen),
+                    g = Bitfield.fromMask(gMask, maxLen),
+                    b = Bitfield.fromMask(bMask, maxLen),
+                    a = Bitfield.fromMask(aMask, maxLen),
+                )
+            if (bitfields.r.len == 0 || bitfields.g.len == 0 || bitfields.b.len == 0) {
+                throw ImageError.Decoding(DecodingError(ImageFormatHint.Exact(ImageFormat.Bmp), "Bitfield mask missing"))
+            }
+            return bitfields
+        }
+    }
+}
 
 private val R5_G5_B5_COLOR_MASK =
     Bitfields(
-        r = Bitfield(5, 10),
-        g = Bitfield(5, 5),
-        b = Bitfield(5, 0),
-        a = Bitfield(0, 0),
+        r = Bitfield(shift = 10, len = 5),
+        g = Bitfield(shift = 5, len = 5),
+        b = Bitfield(shift = 0, len = 5),
+        a = Bitfield(shift = 0, len = 0),
     )
 
 private val R8_G8_B8_COLOR_MASK =
     Bitfields(
-        r = Bitfield(8, 16),
-        g = Bitfield(8, 8),
-        b = Bitfield(8, 0),
-        a = Bitfield(0, 0),
+        r = Bitfield(shift = 16, len = 8),
+        g = Bitfield(shift = 8, len = 8),
+        b = Bitfield(shift = 0, len = 8),
+        a = Bitfield(shift = 0, len = 0),
     )
 
 private val R8_G8_B8_A8_COLOR_MASK =
     Bitfields(
-        r = Bitfield(8, 16),
-        g = Bitfield(8, 8),
-        b = Bitfield(8, 0),
-        a = Bitfield(8, 24),
+        r = Bitfield(shift = 16, len = 8),
+        g = Bitfield(shift = 8, len = 8),
+        b = Bitfield(shift = 0, len = 8),
+        a = Bitfield(shift = 24, len = 8),
     )
 
 /**
@@ -80,10 +156,13 @@ private val R8_G8_B8_A8_COLOR_MASK =
 public class BmpDecoder(
     private val reader: IoRead,
     private val isIco: Boolean = false,
-) : ImageDecoder {
-    public constructor(bytes: ByteArray) : this(BufferIoRead(bytes), false)
-    public constructor(bytes: ByteArray, isIco: Boolean) : this(BufferIoRead(bytes), isIco)
+    private val noFileHeader: Boolean = false,
+) : ImageDecoderRect {
+    public constructor(bytes: ByteArray) : this(BufferIoRead(bytes), false, false)
+    public constructor(bytes: ByteArray, isIco: Boolean) : this(BufferIoRead(bytes), isIco, false)
+    public constructor(bytes: ByteArray, isIco: Boolean, noFileHeader: Boolean) : this(BufferIoRead(bytes), isIco, noFileHeader)
 
+    private var indexedColor: Boolean = false
     private val width: UInt
     private val height: UInt
     private val topDown: Boolean
@@ -99,7 +178,7 @@ public class BmpDecoder(
         val dibHeaderSize: UInt
         val dibRest: ByteArray
 
-        if (!isIco) {
+        if (!isIco && !noFileHeader) {
             // Read 14-byte file header
             val fileHeader = ByteArray(14)
             reader.readExact(fileHeader)
@@ -125,6 +204,7 @@ public class BmpDecoder(
             dibRest = ByteArray((dibHeaderSize.toInt() - 4).coerceAtLeast(0))
             reader.readExact(dibRest)
             currentBytesRead = dibHeaderSize.toInt()
+            dataOffset = currentBytesRead
         }
 
         var w: Int
@@ -206,33 +286,23 @@ public class BmpDecoder(
             }
 
         // Read bitfield masks if bitfields compression and not in V4+ header
-        currentBytesRead = (if (!isIco) 14 else 0) + dibHeaderSize.toInt()
-        if (compression == 3L && dibHeaderSize < BITMAPV4HEADER_SIZE) {
-            val maskBuf = ByteArray(12)
-            reader.readExact(maskBuf)
-            currentBytesRead += 12
-            val rMask = readU32Le(maskBuf, 0)
-            val gMask = readU32Le(maskBuf, 4)
-            val bMask = readU32Le(maskBuf, 8)
-            parsedBitfields =
-                Bitfields(
-                    r = maskToBitfield(rMask),
-                    g = maskToBitfield(gMask),
-                    b = maskToBitfield(bMask),
-                    a = Bitfield(0, 0),
-                )
-        } else if (dibHeaderSize >= BITMAPV4HEADER_SIZE) {
-            val rMask = readU32Le(dibRest, 36)
-            val gMask = readU32Le(dibRest, 40)
-            val bMask = readU32Le(dibRest, 44)
-            val aMask = readU32Le(dibRest, 48)
-            parsedBitfields =
-                Bitfields(
-                    r = maskToBitfield(rMask),
-                    g = maskToBitfield(gMask),
-                    b = maskToBitfield(bMask),
-                    a = maskToBitfield(aMask),
-                )
+        currentBytesRead = (if (!isIco && !noFileHeader) 14 else 0) + dibHeaderSize.toInt()
+        if (imageType == ImageType.Bitfields16 || imageType == ImageType.Bitfields32) {
+            if (dibHeaderSize < BITMAPV4HEADER_SIZE) {
+                val maskBuf = ByteArray(12)
+                reader.readExact(maskBuf)
+                currentBytesRead += 12
+                val rMask = readU32Le(maskBuf, 0)
+                val gMask = readU32Le(maskBuf, 4)
+                val bMask = readU32Le(maskBuf, 8)
+                parsedBitfields = Bitfields.fromMask(rMask, gMask, bMask, 0L, maxLen = bpp)
+            } else {
+                val rMask = readU32Le(dibRest, 36)
+                val gMask = readU32Le(dibRest, 40)
+                val bMask = readU32Le(dibRest, 44)
+                val aMask = readU32Le(dibRest, 48)
+                parsedBitfields = Bitfields.fromMask(rMask, gMask, bMask, aMask, maxLen = bpp)
+            }
         }
         bitfields = parsedBitfields
 
@@ -634,27 +704,66 @@ public class BmpDecoder(
         }
     }
 
-    private fun extractChannel(px: Long, bf: Bitfield): Int {
-        if (bf.len == 0) return 0
-        val raw = ((px ushr bf.shift) and ((1L shl bf.len) - 1L)).toInt()
-        return (raw * 255) / ((1 shl bf.len) - 1)
+    public fun setIndexedColor(indexedColor: Boolean) {
+        this.indexedColor = indexedColor
     }
-}
 
-private fun maskToBitfield(mask: Long): Bitfield {
-    if (mask == 0L) return Bitfield(0, 0)
-    var shift = 0
-    var m = mask
-    while ((m and 1L) == 0L) {
-        m = m ushr 1
-        shift++
+    public fun getIndexedColor(): Boolean = indexedColor
+
+    public fun getPalette(): ByteArray? = palette
+
+    public fun readMetadataInIcoFormat() {
+        // Metadata is loaded upon construction for ICO format
     }
-    var len = 0
-    while ((m and 1L) == 1L) {
-        m = m ushr 1
-        len++
+
+    public fun readImageData(buf: ByteArray) {
+        readImage(buf)
     }
-    return Bitfield(len, shift)
+
+    public fun rows(pixelData: ByteArray): RowIterator =
+        RowIterator(pixelData, width.toInt() * colorType().bytesPerPixel().toInt(), height.toInt(), topDown)
+
+    override fun readRect(
+        x: UInt,
+        y: UInt,
+        width: UInt,
+        height: UInt,
+        buf: ByteArray,
+        rowPitch: Int,
+    ) {
+        val totalDecoded = ByteArray(totalBytes().toInt())
+        readImage(totalDecoded)
+        val (imgW, imgH) = dimensions()
+        val bpp = colorType().bytesPerPixel().toInt()
+        val imgRowBytes = imgW.toInt() * bpp
+        val w = width.toInt()
+        val h = height.toInt()
+        val x0 = x.toInt()
+        val y0 = y.toInt()
+
+        if (x0 + w > imgW.toInt() || y0 + h > imgH.toInt() || w == 0 || h == 0) {
+            throw ImageError.Parameter(
+                ParameterError(ParameterErrorKind.DimensionMismatch),
+            )
+        }
+
+        for (r in 0 until h) {
+            val srcOffset = (y0 + r) * imgRowBytes + x0 * bpp
+            val dstOffset = r * rowPitch
+            totalDecoded.copyInto(buf, destinationOffset = dstOffset, startIndex = srcOffset, endIndex = srcOffset + w * bpp)
+        }
+    }
+
+    private fun extractChannel(px: Long, bf: Bitfield): Int =
+        if (bf.len == 0) 0 else bf.read(px.toUInt())
+
+    public companion object {
+        public fun new(reader: IoRead): BmpDecoder = BmpDecoder(reader, isIco = false, noFileHeader = false)
+
+        public fun newWithoutFileHeader(reader: IoRead): BmpDecoder = BmpDecoder(reader, isIco = false, noFileHeader = true)
+
+        public fun newWithIcoFormat(reader: IoRead): BmpDecoder = BmpDecoder(reader, isIco = true, noFileHeader = false)
+    }
 }
 
 private fun readU16Le(buf: ByteArray, offset: Int): Int {
