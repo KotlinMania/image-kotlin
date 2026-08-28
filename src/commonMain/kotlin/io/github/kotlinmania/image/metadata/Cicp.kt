@@ -7,6 +7,7 @@ import io.github.kotlinmania.image.ParameterError
 import io.github.kotlinmania.image.ParameterErrorKind
 import io.github.kotlinmania.image.images.DynamicImage
 import io.github.kotlinmania.image.math.multiplyAccumulate
+import kotlin.math.pow
 
 /**
  * CICP (coding independent code points) defines the colorimetric interpretation of rgb-ish color components.
@@ -541,6 +542,67 @@ public class CicpTransform internal constructor(
             outputCoefs: FloatArray,
             component: ColorComponentForCicp<C>,
         ): RgbTransforms<C>? {
+            fun transformRgbFloat(r: Float, g: Float, b: Float, out: FloatArray, outOffset: Int) {
+                val linR =
+                    if (from.transfer == CicpTransferCharacteristics.SRgb) {
+                        if (r <= 0.04045f) r / 12.92f else ((r + 0.055f) / 1.055f).pow(2.4f)
+                    } else {
+                        r
+                    }
+                val linG =
+                    if (from.transfer == CicpTransferCharacteristics.SRgb) {
+                        if (g <= 0.04045f) g / 12.92f else ((g + 0.055f) / 1.055f).pow(2.4f)
+                    } else {
+                        g
+                    }
+                val linB =
+                    if (from.transfer == CicpTransferCharacteristics.SRgb) {
+                        if (b <= 0.04045f) b / 12.92f else ((b + 0.055f) / 1.055f).pow(2.4f)
+                    } else {
+                        b
+                    }
+
+                val pR: Float
+                val pG: Float
+                val pB: Float
+                if (from.primaries == CicpColorPrimaries.SRgb && into.primaries == CicpColorPrimaries.SmpteRp432) {
+                    pR = 0.822462f * linR + 0.177538f * linG
+                    pG = 0.033194f * linR + 0.966806f * linG
+                    pB = 0.017087f * linR + 0.072397f * linG + 0.910516f * linB
+                } else if (from.primaries == CicpColorPrimaries.SmpteRp432 && into.primaries == CicpColorPrimaries.SRgb) {
+                    pR = 1.224940f * linR - 0.224940f * linG
+                    pG = -0.042057f * linR + 1.042057f * linG
+                    pB = -0.019638f * linR - 0.078636f * linG + 1.098274f * linB
+                } else {
+                    pR = linR
+                    pG = linG
+                    pB = linB
+                }
+
+                val outR =
+                    if (into.transfer == CicpTransferCharacteristics.SRgb) {
+                        if (pR <= 0.0031308f) pR * 12.92f else 1.055f * pR.pow(1.0f / 2.4f) - 0.055f
+                    } else {
+                        pR
+                    }
+                val outG =
+                    if (into.transfer == CicpTransferCharacteristics.SRgb) {
+                        if (pG <= 0.0031308f) pG * 12.92f else 1.055f * pG.pow(1.0f / 2.4f) - 0.055f
+                    } else {
+                        pG
+                    }
+                val outB =
+                    if (into.transfer == CicpTransferCharacteristics.SRgb) {
+                        if (pB <= 0.0031308f) pB * 12.92f else 1.055f * pB.pow(1.0f / 2.4f) - 0.055f
+                    } else {
+                        pB
+                    }
+
+                out[outOffset] = outR
+                out[outOffset + 1] = outG
+                out[outOffset + 2] = outB
+            }
+
             fun makeSlice(fromLayout: LayoutWithColor, intoLayout: LayoutWithColor): CicpApplicable<C> =
                 { input, output ->
                     val pixels = input.size / fromLayout.channels
@@ -554,27 +616,16 @@ public class CicpTransform internal constructor(
                         LayoutWithColor.LumaAlpha -> expandLumaRgba(input, ibuffer, component)
                     }
 
-                    val obuffer: FloatArray =
-                        if (ibufStep == 3 && obufStep == 4) {
-                            val ob = FloatArray(4 * pixels)
-                            for (c in 0 until pixels) {
-                                ob[4 * c] = ibuffer[3 * c]
-                                ob[4 * c + 1] = ibuffer[3 * c + 1]
-                                ob[4 * c + 2] = ibuffer[3 * c + 2]
-                                ob[4 * c + 3] = 1.0f
-                            }
-                            ob
-                        } else if (ibufStep == 4 && obufStep == 3) {
-                            val ob = FloatArray(3 * pixels)
-                            for (c in 0 until pixels) {
-                                ob[3 * c] = ibuffer[4 * c]
-                                ob[3 * c + 1] = ibuffer[4 * c + 1]
-                                ob[3 * c + 2] = ibuffer[4 * c + 2]
-                            }
-                            ob
-                        } else {
-                            ibuffer
+                    val obuffer = FloatArray(obufStep * pixels)
+                    for (c in 0 until pixels) {
+                        val inR = ibuffer[ibufStep * c]
+                        val inG = ibuffer[ibufStep * c + 1]
+                        val inB = ibuffer[ibufStep * c + 2]
+                        transformRgbFloat(inR, inG, inB, obuffer, obufStep * c)
+                        if (obufStep == 4) {
+                            obuffer[obufStep * c + 3] = if (ibufStep == 4) ibuffer[ibufStep * c + 3] else 1.0f
                         }
+                    }
 
                     when (intoLayout) {
                         LayoutWithColor.Rgb -> clampRgb(obuffer, output, component)

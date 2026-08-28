@@ -87,8 +87,8 @@ class FreeFunctionsTest {
         }
 
         for (scanlineBytes in 1 until 30) {
-            val output = ByteArray(26)
-            val decoder = MockDecoder(scanlineNumber = 0, scanlineBytes = scanlineBytes)
+            var output = ByteArray(26)
+            var decoder = MockDecoder(scanlineNumber = 0, scanlineBytes = scanlineBytes)
             loadRect(
                 0u,
                 0u,
@@ -103,6 +103,54 @@ class FreeFunctionsTest {
             )
             assertContentEquals(data, output.copyOfRange(0, 25))
             assertEquals(0, output[25])
+
+            output = ByteArray(26)
+            decoder = MockDecoder(scanlineNumber = 0, scanlineBytes = scanlineBytes)
+            loadRect(
+                3u,
+                2u,
+                1u,
+                1u,
+                output,
+                1,
+                decoder,
+                scanlineBytes,
+                ::seekScanline,
+                ::readScanline,
+            )
+            assertContentEquals(byteArrayOf(13, 0), output.copyOfRange(0, 2))
+
+            output = ByteArray(26)
+            decoder = MockDecoder(scanlineNumber = 0, scanlineBytes = scanlineBytes)
+            loadRect(
+                3u,
+                2u,
+                2u,
+                2u,
+                output,
+                2,
+                decoder,
+                scanlineBytes,
+                ::seekScanline,
+                ::readScanline,
+            )
+            assertContentEquals(byteArrayOf(13, 14, 18, 19, 0), output.copyOfRange(0, 5))
+
+            output = ByteArray(26)
+            decoder = MockDecoder(scanlineNumber = 0, scanlineBytes = scanlineBytes)
+            loadRect(
+                1u,
+                1u,
+                2u,
+                4u,
+                output,
+                2,
+                decoder,
+                scanlineBytes,
+                ::seekScanline,
+                ::readScanline,
+            )
+            assertContentEquals(byteArrayOf(6, 7, 11, 12, 16, 17, 21, 22, 0), output.copyOfRange(0, 9))
         }
     }
 
