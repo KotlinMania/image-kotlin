@@ -280,3 +280,16 @@ public fun loadRect(
 
     seekScanline(decoder, 0uL)
 }
+
+/**
+ * Reads all of the bytes of a decoder into a [ByteArray].
+ */
+internal fun decoderToByteArray(decoder: ImageDecoder): ByteArray {
+    val totalBytes = decoder.totalBytes()
+    if (totalBytes > Int.MAX_VALUE.toULong()) {
+        throw ImageError.Limits(LimitError.fromKind(LimitErrorKind.InsufficientMemory))
+    }
+    val buf = ByteArray(totalBytes.toInt())
+    decoder.readImage(buf)
+    return buf
+}
