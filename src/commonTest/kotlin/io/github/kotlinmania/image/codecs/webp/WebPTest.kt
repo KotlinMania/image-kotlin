@@ -64,6 +64,11 @@ class WebPTest {
     }
 
     @Test
+    fun addWithOverflowSize() {
+        testWebpAddWithOverflowSize()
+    }
+
+    @Test
     fun testWebpAddWithOverflowSize() {
         val bytes =
             byteArrayOf(
