@@ -152,13 +152,39 @@ class FarbfeldTest {
     }
 
     @Test
-    fun testReadRect1x2() {
+    fun dimensionOverflow() {
+        val header =
+            byteArrayOf(
+                0x66,
+                0x61,
+                0x72,
+                0x62,
+                0x66,
+                0x65,
+                0x6c,
+                0x64, // farbfeld
+                0xFF.toByte(),
+                0xFF.toByte(),
+                0xFF.toByte(),
+                0xFF.toByte(),
+                0xFF.toByte(),
+                0xFF.toByte(),
+                0xFF.toByte(),
+                0xFF.toByte(),
+            )
+        assertFailsWith<ImageError> {
+            FarbfeldDecoder(header)
+        }
+    }
+
+    @Test
+    fun readRect1x2() {
         val exp = ushortArrayOf(0xF30Du, 0xF20Eu, 0xF10Fu, 0xF010u, 0xEB15u, 0xEA16u, 0xE917u, 0xE818u)
         assertReadRect(1u, 1u, 1u, 2u, exp)
     }
 
     @Test
-    fun testReadRect2x2() {
+    fun readRect2x2() {
         val exp =
             ushortArrayOf(
                 0xFF01u,
@@ -182,13 +208,13 @@ class FarbfeldTest {
     }
 
     @Test
-    fun testReadRect2x1() {
+    fun readRect2x1() {
         val exp = ushortArrayOf(0xEF11u, 0xEE12u, 0xED13u, 0xEC14u, 0xEB15u, 0xEA16u, 0xE917u, 0xE818u)
         assertReadRect(0u, 2u, 2u, 1u, exp)
     }
 
     @Test
-    fun testReadRect2x3() {
+    fun readRect2x3() {
         val exp =
             ushortArrayOf(
                 0xFF01u,
@@ -218,4 +244,24 @@ class FarbfeldTest {
             )
         assertReadRect(0u, 0u, 2u, 3u, exp)
     }
+
+    @Test
+    fun readRectInStream() {
+        val expWide = ushortArrayOf(0xEF11u, 0xEE12u, 0xED13u, 0xEC14u)
+        val prologue = "This is a 31-byte-long prologue".encodeToByteArray()
+        val input = prologue + rectangleIn
+        val decoder = FarbfeldDecoder(input.copyOfRange(31, input.size))
+        val outBuf = ByteArray(64)
+        decoder.readRect(0u, 2u, 1u, 1u, outBuf, 8)
+        val exp = ByteArray(expWide.size * 2)
+        for (i in expWide.indices) {
+            val v = expWide[i].toInt()
+            exp[i * 2] = (v ushr 8).toByte()
+            exp[i * 2 + 1] = v.toByte()
+        }
+        for (i in exp.indices) {
+            assertEquals(exp[i], outBuf[i])
+        }
+    }
 }
+
