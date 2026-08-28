@@ -45,6 +45,37 @@ public interface GenericImageView<P> {
         }
         return SubImage(this as GenericImage<P>, x, y, width, height)
     }
+
+    /** Allocate a buffer with dimensions (width, height) suited for this image. */
+    @Suppress("UNCHECKED_CAST")
+    public fun bufferWithDimensions(width: UInt, height: UInt): ImageBuffer<P, ByteArray> {
+        val imgBuf = this as? ImageBuffer<P, *>
+        if (imgBuf != null) {
+            return (imgBuf as ImageBuffer<P, ByteArray>).bufferWithDimensions(width, height)
+        }
+        val subImg = this as? SubImage<P>
+        if (subImg != null) {
+            val inner = subImg.image
+            if (inner is ImageBuffer<P, *>) {
+                return (inner as ImageBuffer<P, ByteArray>).bufferWithDimensions(width, height)
+            }
+        }
+        if (width() > 0u && height() > 0u) {
+            val p = getPixel(0u, 0u)
+            val buf: ImageBuffer<*, ByteArray> = when (p) {
+                is io.github.kotlinmania.image.Rgba<*> -> ImageBuffer.createRgba(width, height)
+                is io.github.kotlinmania.image.Rgb<*> -> ImageBuffer.createRgb(width, height)
+                is io.github.kotlinmania.image.LumaA<*> -> ImageBuffer.createGrayAlpha(width, height)
+                is io.github.kotlinmania.image.Luma<*> -> ImageBuffer.createGray(width, height)
+                else -> ImageBuffer.createRgba(width, height)
+            }
+            return buf as ImageBuffer<P, ByteArray>
+        }
+        return ImageBuffer.createRgba(width, height) as ImageBuffer<P, ByteArray>
+    }
+
+    /** Allocate a buffer with dimensions equal to this image. */
+    public fun bufferLike(): ImageBuffer<P, ByteArray> = bufferWithDimensions(width(), height())
 }
 
 /**

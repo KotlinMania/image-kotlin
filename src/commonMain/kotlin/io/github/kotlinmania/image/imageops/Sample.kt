@@ -216,6 +216,56 @@ public fun resize(
 }
 
 /**
+ * Creates a thumbnail of the given image.
+ */
+public fun <P> thumbnail(
+    image: GenericImageView<P>,
+    nwidth: UInt,
+    nheight: UInt,
+): ImageBuffer<P, ByteArray> {
+    val (width, height) = image.dimensions()
+    if (width == 0u || height == 0u || nwidth == 0u || nheight == 0u) {
+        return image.bufferWithDimensions(0u, 0u)
+    }
+    val ratio = minOf(nwidth.toFloat() / width.toFloat(), nheight.toFloat() / height.toFloat())
+    val dstW = max(1, (width.toFloat() * ratio).toInt()).toUInt()
+    val dstH = max(1, (height.toFloat() * ratio).toInt()).toUInt()
+    return resize(image, dstW, dstH, FilterType.Triangle)
+}
+
+/**
+ * Resizes an image from (srcW x srcH) to (dstW x dstH) with the specified filter.
+ */
+@Suppress("UNCHECKED_CAST")
+public fun <P> resize(
+    image: GenericImageView<P>,
+    nwidth: UInt,
+    nheight: UInt,
+    filter: FilterType,
+): ImageBuffer<P, ByteArray> {
+    val out = image.bufferWithDimensions(nwidth, nheight)
+    val (srcW, srcH) = image.dimensions()
+    if (nwidth == 0u || nheight == 0u || srcW == 0u || srcH == 0u) {
+        return out
+    }
+    for (y in 0u until nheight) {
+        val srcY = (y.toDouble() / nheight.toDouble()).toFloat()
+        for (x in 0u until nwidth) {
+            val srcX = (x.toDouble() / nwidth.toDouble()).toFloat()
+            val pixel = if (filter == FilterType.Nearest) {
+                sampleNearest(image, srcX, srcY)
+            } else {
+                sampleBilinear(image, srcX, srcY)
+            }
+            if (pixel != null) {
+                out.putPixel(x, y, pixel)
+            }
+        }
+    }
+    return out
+}
+
+/**
  * Creates a thumbnail of the given image fitting inside maxW x maxH maintaining aspect ratio.
  */
 public fun thumbnail(
@@ -231,6 +281,7 @@ public fun thumbnail(
     val dstH = max(1, (srcH * ratio).toInt())
     return resize(image, srcW, srcH, dstW, dstH, channels, FilterType.Triangle)
 }
+
 
 /**
  * Samples a pixel at normalized coordinates ([u], [v]) with bilinear interpolation.
@@ -807,6 +858,159 @@ public fun gaussianBlurDynImage(
 }
 
 /**
+ * Performs a 3x3 convolution filter on the image.
+ */
+@Suppress("UNCHECKED_CAST")
+public fun <P> filter3x3(
+    image: GenericImageView<P>,
+    kernel: FloatArray,
+): ImageBuffer<P, ByteArray> {
+    require(kernel.size == 9) { "Kernel must have 9 elements" }
+    val (width, height) = image.dimensions()
+    val out = image.bufferLike()
+    if (width < 3u || height < 3u) {
+        return out
+    }
+    var sumKernel = 0.0f
+    for (k in kernel) sumKernel += k
+    val inverseSum = if (sumKernel == 0.0f) 1.0f else 1.0f / sumKernel
+
+    val tapsX = intArrayOf(-1, 0, 1, -1, 0, 1, -1, 0, 1)
+    val tapsY = intArrayOf(-1, -1, -1, 0, 0, 0, 1, 1, 1)
+
+    for (y in 1u until height - 1u) {
+        for (x in 1u until width - 1u) {
+            val center = image.getPixel(x, y)
+            val p: P = when (center) {
+                is Luma<*> -> {
+                    var sum = 0.0f
+                    for (k in 0 until 9) {
+                        val px = image.getPixel((x.toInt() + tapsX[k]).toUInt(), (y.toInt() + tapsY[k]).toUInt()) as Luma<*>
+                        val c = (px.l as? Number)?.toFloat() ?: 0.0f
+                        sum += c * kernel[k]
+                    }
+                    Luma((sum * inverseSum).coerceIn(0.0f, 255.0f).toInt().toUByte()) as P
+                }
+                is LumaA<*> -> {
+                    var sumL = 0.0f
+                    for (k in 0 until 9) {
+                        val px = image.getPixel((x.toInt() + tapsX[k]).toUInt(), (y.toInt() + tapsY[k]).toUInt()) as LumaA<*>
+                        val c = (px.l as? Number)?.toFloat() ?: 0.0f
+                        sumL += c * kernel[k]
+                    }
+                    LumaA((sumL * inverseSum).coerceIn(0.0f, 255.0f).toInt().toUByte(), center.a) as P
+                }
+                is Rgb<*> -> {
+                    var sumR = 0.0f
+                    var sumG = 0.0f
+                    var sumB = 0.0f
+                    for (k in 0 until 9) {
+                        val px = image.getPixel((x.toInt() + tapsX[k]).toUInt(), (y.toInt() + tapsY[k]).toUInt()) as Rgb<*>
+                        sumR += ((px.r as? Number)?.toFloat() ?: 0.0f) * kernel[k]
+                        sumG += ((px.g as? Number)?.toFloat() ?: 0.0f) * kernel[k]
+                        sumB += ((px.b as? Number)?.toFloat() ?: 0.0f) * kernel[k]
+                    }
+                    Rgb(
+                        (sumR * inverseSum).coerceIn(0.0f, 255.0f).toInt().toUByte(),
+                        (sumG * inverseSum).coerceIn(0.0f, 255.0f).toInt().toUByte(),
+                        (sumB * inverseSum).coerceIn(0.0f, 255.0f).toInt().toUByte(),
+                    ) as P
+                }
+                is Rgba<*> -> {
+                    var sumR = 0.0f
+                    var sumG = 0.0f
+                    var sumB = 0.0f
+                    for (k in 0 until 9) {
+                        val px = image.getPixel((x.toInt() + tapsX[k]).toUInt(), (y.toInt() + tapsY[k]).toUInt()) as Rgba<*>
+                        sumR += ((px.r as? Number)?.toFloat() ?: 0.0f) * kernel[k]
+                        sumG += ((px.g as? Number)?.toFloat() ?: 0.0f) * kernel[k]
+                        sumB += ((px.b as? Number)?.toFloat() ?: 0.0f) * kernel[k]
+                    }
+                    Rgba(
+                        (sumR * inverseSum).coerceIn(0.0f, 255.0f).toInt().toUByte(),
+                        (sumG * inverseSum).coerceIn(0.0f, 255.0f).toInt().toUByte(),
+                        (sumB * inverseSum).coerceIn(0.0f, 255.0f).toInt().toUByte(),
+                        center.a,
+                    ) as P
+                }
+                else -> center
+            }
+            out.putPixel(x, y, p)
+        }
+    }
+    return out
+}
+
+/**
+ * Applies a Gaussian blur with the given [sigma] to the image.
+ */
+public fun <P> blur(
+    image: GenericImageView<P>,
+    sigma: Float,
+): ImageBuffer<P, ByteArray> {
+    val actualSigma = if (sigma == 0.0f) 0.8f else sigma
+    return blurAdvanced(image, GaussianBlurParameters.newFromSigma(actualSigma))
+}
+
+/**
+ * Applies Gaussian blur using analytical parameters.
+ */
+public fun <P> blurAdvanced(
+    image: GenericImageView<P>,
+    params: GaussianBlurParameters,
+): ImageBuffer<P, ByteArray> {
+    val (width, height) = image.dimensions()
+    if (width == 0u || height == 0u) return image.bufferWithDimensions(0u, 0u)
+    val channels = when (image.getPixel(0u, 0u)) {
+        is Luma<*> -> 1
+        is LumaA<*> -> 2
+        is Rgb<*> -> 3
+        is Rgba<*> -> 4
+        else -> 1
+    }
+    val raw = if (image is ImageBuffer<*, *>) {
+        image.asRaw().copyOf()
+    } else null
+    val buf = raw ?: run {
+        val b = ByteArray(width.toInt() * height.toInt() * channels)
+        for (y in 0u until height) {
+            for (x in 0u until width) {
+                val p = image.getPixel(x, y)
+                val idx = (y.toInt() * width.toInt() + x.toInt()) * channels
+                when (p) {
+                    is Luma<*> -> b[idx] = ((p.l as? Number)?.toInt() ?: 0).toByte()
+                    is LumaA<*> -> {
+                        b[idx] = ((p.l as? Number)?.toInt() ?: 0).toByte()
+                        b[idx + 1] = ((p.a as? Number)?.toInt() ?: 0).toByte()
+                    }
+                    is Rgb<*> -> {
+                        b[idx] = ((p.r as? Number)?.toInt() ?: 0).toByte()
+                        b[idx + 1] = ((p.g as? Number)?.toInt() ?: 0).toByte()
+                        b[idx + 2] = ((p.b as? Number)?.toInt() ?: 0).toByte()
+                    }
+                    is Rgba<*> -> {
+                        b[idx] = ((p.r as? Number)?.toInt() ?: 0).toByte()
+                        b[idx + 1] = ((p.g as? Number)?.toInt() ?: 0).toByte()
+                        b[idx + 2] = ((p.b as? Number)?.toInt() ?: 0).toByte()
+                        b[idx + 3] = ((p.a as? Number)?.toInt() ?: 0).toByte()
+                    }
+                }
+            }
+        }
+        b
+    }
+    val blurred = blurAdvanced(buf, width.toInt(), height.toInt(), channels, params)
+    @Suppress("UNCHECKED_CAST")
+    return when (channels) {
+        1 -> ImageBuffer.createGray(width, height, blurred) as ImageBuffer<P, ByteArray>
+        2 -> ImageBuffer.createGrayAlpha(width, height, blurred) as ImageBuffer<P, ByteArray>
+        3 -> ImageBuffer.createRgb(width, height, blurred) as ImageBuffer<P, ByteArray>
+        4 -> ImageBuffer.createRgba(width, height, blurred) as ImageBuffer<P, ByteArray>
+        else -> image.bufferLike()
+    }
+}
+
+/**
  * Performs an unsharpen mask on the image buffer.
  */
 public fun unsharpen(
@@ -833,3 +1037,74 @@ public fun unsharpen(
     }
     return out
 }
+
+/**
+ * Performs an unsharpen mask on the image.
+ */
+public fun <P> unsharpen(
+    image: GenericImageView<P>,
+    sigma: Float,
+    threshold: Int,
+): ImageBuffer<P, ByteArray> {
+    val (width, height) = image.dimensions()
+    if (width == 0u || height == 0u) return image.bufferWithDimensions(0u, 0u)
+    val blurred = blurAdvanced(image, GaussianBlurParameters.newFromSigma(sigma))
+    val out = image.bufferLike()
+    for (y in 0u until height) {
+        for (x in 0u until width) {
+            val ic = image.getPixel(x, y)
+            val id = blurred.getPixel(x, y)
+            @Suppress("UNCHECKED_CAST")
+            val p: P = when (ic) {
+                is Luma<*> -> {
+                    val l1 = (ic.l as? Number)?.toInt() ?: 0
+                    val l2 = ((id as Luma<*>).l as? Number)?.toInt() ?: 0
+                    val diff = l1 - l2
+                    val e = if (abs(diff) > threshold) (l1 + diff).coerceIn(0, 255) else l1
+                    Luma(e.toUByte()) as P
+                }
+                is LumaA<*> -> {
+                    val l1 = (ic.l as? Number)?.toInt() ?: 0
+                    val l2 = ((id as LumaA<*>).l as? Number)?.toInt() ?: 0
+                    val diff = l1 - l2
+                    val e = if (abs(diff) > threshold) (l1 + diff).coerceIn(0, 255) else l1
+                    LumaA(e.toUByte(), ic.a) as P
+                }
+                is Rgb<*> -> {
+                    val r1 = (ic.r as? Number)?.toInt() ?: 0
+                    val g1 = (ic.g as? Number)?.toInt() ?: 0
+                    val b1 = (ic.b as? Number)?.toInt() ?: 0
+                    val r2 = ((id as Rgb<*>).r as? Number)?.toInt() ?: 0
+                    val g2 = (id.g as? Number)?.toInt() ?: 0
+                    val b2 = (id.b as? Number)?.toInt() ?: 0
+                    val diffR = r1 - r2
+                    val diffG = g1 - g2
+                    val diffB = b1 - b2
+                    val er = if (abs(diffR) > threshold) (r1 + diffR).coerceIn(0, 255) else r1
+                    val eg = if (abs(diffG) > threshold) (g1 + diffG).coerceIn(0, 255) else g1
+                    val eb = if (abs(diffB) > threshold) (b1 + diffB).coerceIn(0, 255) else b1
+                    Rgb(er.toUByte(), eg.toUByte(), eb.toUByte()) as P
+                }
+                is Rgba<*> -> {
+                    val r1 = (ic.r as? Number)?.toInt() ?: 0
+                    val g1 = (ic.g as? Number)?.toInt() ?: 0
+                    val b1 = (ic.b as? Number)?.toInt() ?: 0
+                    val r2 = ((id as Rgba<*>).r as? Number)?.toInt() ?: 0
+                    val g2 = (id.g as? Number)?.toInt() ?: 0
+                    val b2 = (id.b as? Number)?.toInt() ?: 0
+                    val diffR = r1 - r2
+                    val diffG = g1 - g2
+                    val diffB = b1 - b2
+                    val er = if (abs(diffR) > threshold) (r1 + diffR).coerceIn(0, 255) else r1
+                    val eg = if (abs(diffG) > threshold) (g1 + diffG).coerceIn(0, 255) else g1
+                    val eb = if (abs(diffB) > threshold) (b1 + diffB).coerceIn(0, 255) else b1
+                    Rgba(er.toUByte(), eg.toUByte(), eb.toUByte(), ic.a) as P
+                }
+                else -> ic
+            }
+            out.putPixel(x, y, p)
+        }
+    }
+    return out
+}
+
