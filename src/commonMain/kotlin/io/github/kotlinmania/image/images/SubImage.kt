@@ -5,7 +5,7 @@ package io.github.kotlinmania.image.images
  * A view into a rectangular region of another image buffer.
  */
 public class SubImage<P>(
-    private val image: GenericImageView<P>,
+    public val image: GenericImageView<P>,
     private var xOffset: UInt,
     private var yOffset: UInt,
     private var width: UInt,
@@ -85,16 +85,17 @@ public class SubImage<P>(
 
     public fun getPixelMut(x: UInt, y: UInt): P = getPixel(x, y)
 
-    public fun bufferWithDimensions(width: UInt, height: UInt): GenericImage<P> {
+    @Suppress("UNCHECKED_CAST")
+    override fun bufferWithDimensions(width: UInt, height: UInt): ImageBuffer<P, ByteArray> {
         val imgBuf = image as? ImageBuffer<P, *>
         return if (imgBuf != null) {
-            imgBuf.bufferWithDimensions(width, height)
+            (imgBuf as ImageBuffer<P, ByteArray>).bufferWithDimensions(width, height)
         } else {
-            image.view(0u, 0u, width, height)
+            super.bufferWithDimensions(width, height)
         }
     }
 
-    public fun bufferLike(): GenericImage<P> = bufferWithDimensions(width, height)
+    override fun bufferLike(): ImageBuffer<P, ByteArray> = bufferWithDimensions(width, height)
 
     public fun colorSpace(): io.github.kotlinmania.image.metadata.Cicp =
         (image as? ImageBuffer<*, *>)?.colorSpace() ?: io.github.kotlinmania.image.metadata.Cicp.SRGB

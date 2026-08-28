@@ -1,8 +1,109 @@
 // port-lint: source imageops/colorops.rs
 package io.github.kotlinmania.image.imageops
 
+import io.github.kotlinmania.image.GrayAlphaImage
+import io.github.kotlinmania.image.GrayImage
+import io.github.kotlinmania.image.Luma
+import io.github.kotlinmania.image.LumaA
+import io.github.kotlinmania.image.Rgb
+import io.github.kotlinmania.image.Rgba
+import io.github.kotlinmania.image.images.GenericImage
+import io.github.kotlinmania.image.images.GenericImageView
+import io.github.kotlinmania.image.images.ImageBuffer
 import kotlin.math.cos
 import kotlin.math.sin
+
+/**
+ * Convert the supplied image to grayscale. Alpha channel is discarded.
+ */
+public fun <I : GenericImageView<*>> grayscale(
+    image: I,
+): GrayImage = grayscaleWithType(image)
+
+/**
+ * Convert the supplied image to grayscale. Alpha channel is preserved.
+ */
+public fun <I : GenericImageView<*>> grayscaleAlpha(
+    image: I,
+): GrayAlphaImage = grayscaleWithTypeAlpha(image)
+
+/**
+ * Convert the supplied image to a grayscale image with the specified pixel type. Alpha channel is discarded.
+ */
+public fun <I : GenericImageView<*>> grayscaleWithType(
+    image: I,
+): GrayImage {
+    val (width, height) = image.dimensions()
+    val out = ImageBuffer.createGray(width, height)
+    for (y in 0u until height) {
+        for (x in 0u until width) {
+            val p = image.getPixel(x, y)
+            val luma = when (p) {
+                is Luma<*> -> (p.l as? UByte) ?: ((p.l as? Number)?.toLong()?.coerceIn(0, 255)?.toUByte() ?: 0u.toUByte())
+                is LumaA<*> -> (p.l as? UByte) ?: ((p.l as? Number)?.toLong()?.coerceIn(0, 255)?.toUByte() ?: 0u.toUByte())
+                is Rgb<*> -> {
+                    val r = (p.r as? Number)?.toDouble()?.coerceIn(0.0, 255.0) ?: 0.0
+                    val g = (p.g as? Number)?.toDouble()?.coerceIn(0.0, 255.0) ?: 0.0
+                    val b = (p.b as? Number)?.toDouble()?.coerceIn(0.0, 255.0) ?: 0.0
+                    (0.299 * r + 0.587 * g + 0.114 * b).coerceIn(0.0, 255.0).toInt().toUByte()
+                }
+                is Rgba<*> -> {
+                    val r = (p.r as? Number)?.toDouble()?.coerceIn(0.0, 255.0) ?: 0.0
+                    val g = (p.g as? Number)?.toDouble()?.coerceIn(0.0, 255.0) ?: 0.0
+                    val b = (p.b as? Number)?.toDouble()?.coerceIn(0.0, 255.0) ?: 0.0
+                    (0.299 * r + 0.587 * g + 0.114 * b).coerceIn(0.0, 255.0).toInt().toUByte()
+                }
+                else -> 0u.toUByte()
+            }
+            out.putPixel(x, y, Luma(luma))
+        }
+    }
+    return out
+}
+
+/**
+ * Convert the supplied image to a grayscale image with the specified pixel type. Alpha channel is preserved.
+ */
+public fun <I : GenericImageView<*>> grayscaleWithTypeAlpha(
+    image: I,
+): GrayAlphaImage {
+    val (width, height) = image.dimensions()
+    val out = ImageBuffer.createGrayAlpha(width, height)
+    for (y in 0u until height) {
+        for (x in 0u until width) {
+            val p = image.getPixel(x, y)
+            val (luma, alpha) = when (p) {
+                is Luma<*> -> {
+                    val l = (p.l as? UByte) ?: ((p.l as? Number)?.toLong()?.coerceIn(0, 255)?.toUByte() ?: 0u.toUByte())
+                    Pair(l, 255u.toUByte())
+                }
+                is LumaA<*> -> {
+                    val l = (p.l as? UByte) ?: ((p.l as? Number)?.toLong()?.coerceIn(0, 255)?.toUByte() ?: 0u.toUByte())
+                    val a = (p.a as? UByte) ?: ((p.a as? Number)?.toLong()?.coerceIn(0, 255)?.toUByte() ?: 255u.toUByte())
+                    Pair(l, a)
+                }
+                is Rgb<*> -> {
+                    val r = (p.r as? Number)?.toDouble()?.coerceIn(0.0, 255.0) ?: 0.0
+                    val g = (p.g as? Number)?.toDouble()?.coerceIn(0.0, 255.0) ?: 0.0
+                    val b = (p.b as? Number)?.toDouble()?.coerceIn(0.0, 255.0) ?: 0.0
+                    val l = (0.299 * r + 0.587 * g + 0.114 * b).coerceIn(0.0, 255.0).toInt().toUByte()
+                    Pair(l, 255u.toUByte())
+                }
+                is Rgba<*> -> {
+                    val r = (p.r as? Number)?.toDouble()?.coerceIn(0.0, 255.0) ?: 0.0
+                    val g = (p.g as? Number)?.toDouble()?.coerceIn(0.0, 255.0) ?: 0.0
+                    val b = (p.b as? Number)?.toDouble()?.coerceIn(0.0, 255.0) ?: 0.0
+                    val l = (0.299 * r + 0.587 * g + 0.114 * b).coerceIn(0.0, 255.0).toInt().toUByte()
+                    val a = (p.a as? UByte) ?: ((p.a as? Number)?.toLong()?.coerceIn(0, 255)?.toUByte() ?: 255u.toUByte())
+                    Pair(l, a)
+                }
+                else -> Pair(0u.toUByte(), 255u.toUByte())
+            }
+            out.putPixel(x, y, LumaA(luma, alpha))
+        }
+    }
+    return out
+}
 
 /**
  * Inverts pixel values in-place (255 - value). Alpha channel if present is left untouched.
@@ -12,6 +113,50 @@ public fun invert(image: ByteArray, channels: Int = 4) {
         if (channels == 4 && (i % 4 == 3)) continue
         val v = image[i].toInt() and 0xFF
         image[i] = (255 - v).toByte()
+    }
+}
+
+/**
+ * Invert each pixel within the supplied image in place.
+ */
+@Suppress("UNCHECKED_CAST")
+public fun <P> invert(image: GenericImage<P>) {
+    val (width, height) = image.dimensions()
+    for (y in 0u until height) {
+        for (x in 0u until width) {
+            val p = image.getPixel(x, y)
+            val inv: P = when (p) {
+                is Luma<*> -> {
+                    if (p.l is UByte) Luma((255 - (p.l as UByte).toInt()).toUByte()) as P
+                    else p
+                }
+                is LumaA<*> -> {
+                    if (p.l is UByte) LumaA((255 - (p.l as UByte).toInt()).toUByte(), p.a) as P
+                    else p
+                }
+                is Rgb<*> -> {
+                    if (p.r is UByte) {
+                        Rgb(
+                            (255 - (p.r as UByte).toInt()).toUByte(),
+                            (255 - (p.g as UByte).toInt()).toUByte(),
+                            (255 - (p.b as UByte).toInt()).toUByte(),
+                        ) as P
+                    } else p
+                }
+                is Rgba<*> -> {
+                    if (p.r is UByte) {
+                        Rgba(
+                            (255 - (p.r as UByte).toInt()).toUByte(),
+                            (255 - (p.g as UByte).toInt()).toUByte(),
+                            (255 - (p.b as UByte).toInt()).toUByte(),
+                            p.a,
+                        ) as P
+                    } else p
+                }
+                else -> p
+            }
+            image.putPixel(x, y, inv)
+        }
     }
 }
 
@@ -69,6 +214,73 @@ public fun contrast(
 }
 
 /**
+ * Adjusts contrast of an image.
+ */
+@Suppress("UNCHECKED_CAST")
+public fun <P> contrast(image: GenericImageView<P>, contrast: Float): ImageBuffer<P, ByteArray> {
+    val (width, height) = image.dimensions()
+    val out = image.bufferLike()
+    val factor = (100.0f + contrast) / 100.0f
+    val percent = factor * factor
+
+    for (y in 0u until height) {
+        for (x in 0u until width) {
+            val p = image.getPixel(x, y)
+            val res: P = when (p) {
+                is Luma<*> -> {
+                    if (p.l is UByte) {
+                        val c = (p.l as UByte).toFloat()
+                        val d = ((c / 255.0f - 0.5f) * percent + 0.5f) * 255.0f
+                        Luma(d.coerceIn(0.0f, 255.0f).toInt().toUByte()) as P
+                    } else p
+                }
+                is LumaA<*> -> {
+                    if (p.l is UByte) {
+                        val c = (p.l as UByte).toFloat()
+                        val d = ((c / 255.0f - 0.5f) * percent + 0.5f) * 255.0f
+                        LumaA(d.coerceIn(0.0f, 255.0f).toInt().toUByte(), p.a) as P
+                    } else p
+                }
+                is Rgb<*> -> {
+                    if (p.r is UByte) {
+                        val r = (p.r as UByte).toFloat()
+                        val g = (p.g as UByte).toFloat()
+                        val b = (p.b as UByte).toFloat()
+                        val dr = ((r / 255.0f - 0.5f) * percent + 0.5f) * 255.0f
+                        val dg = ((g / 255.0f - 0.5f) * percent + 0.5f) * 255.0f
+                        val db = ((b / 255.0f - 0.5f) * percent + 0.5f) * 255.0f
+                        Rgb(
+                            dr.coerceIn(0.0f, 255.0f).toInt().toUByte(),
+                            dg.coerceIn(0.0f, 255.0f).toInt().toUByte(),
+                            db.coerceIn(0.0f, 255.0f).toInt().toUByte(),
+                        ) as P
+                    } else p
+                }
+                is Rgba<*> -> {
+                    if (p.r is UByte) {
+                        val r = (p.r as UByte).toFloat()
+                        val g = (p.g as UByte).toFloat()
+                        val b = (p.b as UByte).toFloat()
+                        val dr = ((r / 255.0f - 0.5f) * percent + 0.5f) * 255.0f
+                        val dg = ((g / 255.0f - 0.5f) * percent + 0.5f) * 255.0f
+                        val db = ((b / 255.0f - 0.5f) * percent + 0.5f) * 255.0f
+                        Rgba(
+                            dr.coerceIn(0.0f, 255.0f).toInt().toUByte(),
+                            dg.coerceIn(0.0f, 255.0f).toInt().toUByte(),
+                            db.coerceIn(0.0f, 255.0f).toInt().toUByte(),
+                            p.a,
+                        ) as P
+                    } else p
+                }
+                else -> p
+            }
+            out.putPixel(x, y, res)
+        }
+    }
+    return out
+}
+
+/**
  * Adjusts contrast of an image in place.
  */
 public fun contrastInPlace(
@@ -89,6 +301,71 @@ public fun contrastInPlace(
 }
 
 /**
+ * Adjusts contrast of an image in place.
+ */
+@Suppress("UNCHECKED_CAST")
+public fun <P> contrastInPlace(image: GenericImage<P>, contrast: Float) {
+    val (width, height) = image.dimensions()
+    val factor = (100.0f + contrast) / 100.0f
+    val percent = factor * factor
+
+    for (y in 0u until height) {
+        for (x in 0u until width) {
+            val p = image.getPixel(x, y)
+            val res: P = when (p) {
+                is Luma<*> -> {
+                    if (p.l is UByte) {
+                        val c = (p.l as UByte).toFloat()
+                        val d = ((c / 255.0f - 0.5f) * percent + 0.5f) * 255.0f
+                        Luma(d.coerceIn(0.0f, 255.0f).toInt().toUByte()) as P
+                    } else p
+                }
+                is LumaA<*> -> {
+                    if (p.l is UByte) {
+                        val c = (p.l as UByte).toFloat()
+                        val d = ((c / 255.0f - 0.5f) * percent + 0.5f) * 255.0f
+                        LumaA(d.coerceIn(0.0f, 255.0f).toInt().toUByte(), p.a) as P
+                    } else p
+                }
+                is Rgb<*> -> {
+                    if (p.r is UByte) {
+                        val r = (p.r as UByte).toFloat()
+                        val g = (p.g as UByte).toFloat()
+                        val b = (p.b as UByte).toFloat()
+                        val dr = ((r / 255.0f - 0.5f) * percent + 0.5f) * 255.0f
+                        val dg = ((g / 255.0f - 0.5f) * percent + 0.5f) * 255.0f
+                        val db = ((b / 255.0f - 0.5f) * percent + 0.5f) * 255.0f
+                        Rgb(
+                            dr.coerceIn(0.0f, 255.0f).toInt().toUByte(),
+                            dg.coerceIn(0.0f, 255.0f).toInt().toUByte(),
+                            db.coerceIn(0.0f, 255.0f).toInt().toUByte(),
+                        ) as P
+                    } else p
+                }
+                is Rgba<*> -> {
+                    if (p.r is UByte) {
+                        val r = (p.r as UByte).toFloat()
+                        val g = (p.g as UByte).toFloat()
+                        val b = (p.b as UByte).toFloat()
+                        val dr = ((r / 255.0f - 0.5f) * percent + 0.5f) * 255.0f
+                        val dg = ((g / 255.0f - 0.5f) * percent + 0.5f) * 255.0f
+                        val db = ((b / 255.0f - 0.5f) * percent + 0.5f) * 255.0f
+                        Rgba(
+                            dr.coerceIn(0.0f, 255.0f).toInt().toUByte(),
+                            dg.coerceIn(0.0f, 255.0f).toInt().toUByte(),
+                            db.coerceIn(0.0f, 255.0f).toInt().toUByte(),
+                            p.a,
+                        ) as P
+                    } else p
+                }
+                else -> p
+            }
+            image.putPixel(x, y, res)
+        }
+    }
+}
+
+/**
  * Brightens the supplied image.
  */
 public fun brighten(
@@ -101,6 +378,62 @@ public fun brighten(
     require(width >= 0 && height >= 0)
     val out = image.copyOf()
     brightenInPlace(out, channels, value)
+    return out
+}
+
+/**
+ * Brightens the supplied image.
+ */
+@Suppress("UNCHECKED_CAST")
+public fun <P> brighten(image: GenericImageView<P>, value: Int): ImageBuffer<P, ByteArray> {
+    val (width, height) = image.dimensions()
+    val out = image.bufferLike()
+    for (y in 0u until height) {
+        for (x in 0u until width) {
+            val p = image.getPixel(x, y)
+            val res: P = when (p) {
+                is Luma<*> -> {
+                    if (p.l is UByte) {
+                        val c = (p.l as UByte).toInt()
+                        Luma((c + value).coerceIn(0, 255).toUByte()) as P
+                    } else p
+                }
+                is LumaA<*> -> {
+                    if (p.l is UByte) {
+                        val c = (p.l as UByte).toInt()
+                        LumaA((c + value).coerceIn(0, 255).toUByte(), p.a) as P
+                    } else p
+                }
+                is Rgb<*> -> {
+                    if (p.r is UByte) {
+                        val r = (p.r as UByte).toInt()
+                        val g = (p.g as UByte).toInt()
+                        val b = (p.b as UByte).toInt()
+                        Rgb(
+                            (r + value).coerceIn(0, 255).toUByte(),
+                            (g + value).coerceIn(0, 255).toUByte(),
+                            (b + value).coerceIn(0, 255).toUByte(),
+                        ) as P
+                    } else p
+                }
+                is Rgba<*> -> {
+                    if (p.r is UByte) {
+                        val r = (p.r as UByte).toInt()
+                        val g = (p.g as UByte).toInt()
+                        val b = (p.b as UByte).toInt()
+                        Rgba(
+                            (r + value).coerceIn(0, 255).toUByte(),
+                            (g + value).coerceIn(0, 255).toUByte(),
+                            (b + value).coerceIn(0, 255).toUByte(),
+                            p.a,
+                        ) as P
+                    } else p
+                }
+                else -> p
+            }
+            out.putPixel(x, y, res)
+        }
+    }
     return out
 }
 
@@ -123,6 +456,60 @@ public fun brightenInPlace(
 }
 
 /**
+ * Brightens the supplied image in place.
+ */
+@Suppress("UNCHECKED_CAST")
+public fun <P> brightenInPlace(image: GenericImage<P>, value: Int) {
+    val (width, height) = image.dimensions()
+    for (y in 0u until height) {
+        for (x in 0u until width) {
+            val p = image.getPixel(x, y)
+            val res: P = when (p) {
+                is Luma<*> -> {
+                    if (p.l is UByte) {
+                        val c = (p.l as UByte).toInt()
+                        Luma((c + value).coerceIn(0, 255).toUByte()) as P
+                    } else p
+                }
+                is LumaA<*> -> {
+                    if (p.l is UByte) {
+                        val c = (p.l as UByte).toInt()
+                        LumaA((c + value).coerceIn(0, 255).toUByte(), p.a) as P
+                    } else p
+                }
+                is Rgb<*> -> {
+                    if (p.r is UByte) {
+                        val r = (p.r as UByte).toInt()
+                        val g = (p.g as UByte).toInt()
+                        val b = (p.b as UByte).toInt()
+                        Rgb(
+                            (r + value).coerceIn(0, 255).toUByte(),
+                            (g + value).coerceIn(0, 255).toUByte(),
+                            (b + value).coerceIn(0, 255).toUByte(),
+                        ) as P
+                    } else p
+                }
+                is Rgba<*> -> {
+                    if (p.r is UByte) {
+                        val r = (p.r as UByte).toInt()
+                        val g = (p.g as UByte).toInt()
+                        val b = (p.b as UByte).toInt()
+                        Rgba(
+                            (r + value).coerceIn(0, 255).toUByte(),
+                            (g + value).coerceIn(0, 255).toUByte(),
+                            (b + value).coerceIn(0, 255).toUByte(),
+                            p.a,
+                        ) as P
+                    } else p
+                }
+                else -> p
+            }
+            image.putPixel(x, y, res)
+        }
+    }
+}
+
+/**
  * Hue rotates RGB/RGBA image in degrees.
  */
 public fun huerotate(
@@ -134,6 +521,63 @@ public fun huerotate(
 ): ByteArray {
     val out = image.copyOf()
     huerotateInPlace(out, width, height, channels, degrees)
+    return out
+}
+
+/**
+ * Hue rotates RGB/RGBA image in degrees.
+ */
+@Suppress("UNCHECKED_CAST")
+public fun <P> huerotate(image: GenericImageView<P>, degrees: Int): ImageBuffer<P, ByteArray> {
+    val (width, height) = image.dimensions()
+    val out = image.bufferLike()
+    val rad = degrees.toDouble() * 3.141592653589793 / 180.0
+    val cosv = cos(rad)
+    val sinv = sin(rad)
+
+    val m0 = 0.213 + cosv * 0.787 - sinv * 0.213
+    val m1 = 0.715 - cosv * 0.715 - sinv * 0.715
+    val m2 = 0.072 - cosv * 0.072 + sinv * 0.928
+
+    val m3 = 0.213 - cosv * 0.213 + sinv * 0.143
+    val m4 = 0.715 + cosv * 0.285 + sinv * 0.140
+    val m5 = 0.072 - cosv * 0.072 - sinv * 0.283
+
+    val m6 = 0.213 - cosv * 0.213 - sinv * 0.787
+    val m7 = 0.715 - cosv * 0.715 + sinv * 0.715
+    val m8 = 0.072 + cosv * 0.928 + sinv * 0.072
+
+    for (y in 0u until height) {
+        for (x in 0u until width) {
+            val p = image.getPixel(x, y)
+            val res: P = when (p) {
+                is Rgb<*> -> {
+                    if (p.r is UByte) {
+                        val r = (p.r as UByte).toDouble()
+                        val g = (p.g as UByte).toDouble()
+                        val b = (p.b as UByte).toDouble()
+                        val nr = (m0 * r + m1 * g + m2 * b).coerceIn(0.0, 255.0).toInt().toUByte()
+                        val ng = (m3 * r + m4 * g + m5 * b).coerceIn(0.0, 255.0).toInt().toUByte()
+                        val nb = (m6 * r + m7 * g + m8 * b).coerceIn(0.0, 255.0).toInt().toUByte()
+                        Rgb(nr, ng, nb) as P
+                    } else p
+                }
+                is Rgba<*> -> {
+                    if (p.r is UByte) {
+                        val r = (p.r as UByte).toDouble()
+                        val g = (p.g as UByte).toDouble()
+                        val b = (p.b as UByte).toDouble()
+                        val nr = (m0 * r + m1 * g + m2 * b).coerceIn(0.0, 255.0).toInt().toUByte()
+                        val ng = (m3 * r + m4 * g + m5 * b).coerceIn(0.0, 255.0).toInt().toUByte()
+                        val nb = (m6 * r + m7 * g + m8 * b).coerceIn(0.0, 255.0).toInt().toUByte()
+                        Rgba(nr, ng, nb, p.a) as P
+                    } else p
+                }
+                else -> p
+            }
+            out.putPixel(x, y, res)
+        }
+    }
     return out
 }
 
@@ -177,6 +621,61 @@ public fun huerotateInPlace(
         image[idx] = nr.toByte()
         image[idx + 1] = ng.toByte()
         image[idx + 2] = nb.toByte()
+    }
+}
+
+/**
+ * Hue rotates RGB/RGBA image in degrees in place.
+ */
+@Suppress("UNCHECKED_CAST")
+public fun <P> huerotateInPlace(image: GenericImage<P>, degrees: Int) {
+    val (width, height) = image.dimensions()
+    val rad = degrees.toDouble() * 3.141592653589793 / 180.0
+    val cosv = cos(rad)
+    val sinv = sin(rad)
+
+    val m0 = 0.213 + cosv * 0.787 - sinv * 0.213
+    val m1 = 0.715 - cosv * 0.715 - sinv * 0.715
+    val m2 = 0.072 - cosv * 0.072 + sinv * 0.928
+
+    val m3 = 0.213 - cosv * 0.213 + sinv * 0.143
+    val m4 = 0.715 + cosv * 0.285 + sinv * 0.140
+    val m5 = 0.072 - cosv * 0.072 - sinv * 0.283
+
+    val m6 = 0.213 - cosv * 0.213 - sinv * 0.787
+    val m7 = 0.715 - cosv * 0.715 + sinv * 0.715
+    val m8 = 0.072 + cosv * 0.928 + sinv * 0.072
+
+    for (y in 0u until height) {
+        for (x in 0u until width) {
+            val p = image.getPixel(x, y)
+            val res: P = when (p) {
+                is Rgb<*> -> {
+                    if (p.r is UByte) {
+                        val r = (p.r as UByte).toDouble()
+                        val g = (p.g as UByte).toDouble()
+                        val b = (p.b as UByte).toDouble()
+                        val nr = (m0 * r + m1 * g + m2 * b).coerceIn(0.0, 255.0).toInt().toUByte()
+                        val ng = (m3 * r + m4 * g + m5 * b).coerceIn(0.0, 255.0).toInt().toUByte()
+                        val nb = (m6 * r + m7 * g + m8 * b).coerceIn(0.0, 255.0).toInt().toUByte()
+                        Rgb(nr, ng, nb) as P
+                    } else p
+                }
+                is Rgba<*> -> {
+                    if (p.r is UByte) {
+                        val r = (p.r as UByte).toDouble()
+                        val g = (p.g as UByte).toDouble()
+                        val b = (p.b as UByte).toDouble()
+                        val nr = (m0 * r + m1 * g + m2 * b).coerceIn(0.0, 255.0).toInt().toUByte()
+                        val ng = (m3 * r + m4 * g + m5 * b).coerceIn(0.0, 255.0).toInt().toUByte()
+                        val nb = (m6 * r + m7 * g + m8 * b).coerceIn(0.0, 255.0).toInt().toUByte()
+                        Rgba(nr, ng, nb, p.a) as P
+                    } else p
+                }
+                else -> p
+            }
+            image.putPixel(x, y, res)
+        }
     }
 }
 
@@ -290,6 +789,16 @@ public fun dither(
 }
 
 /**
+ * Reduces the colors of the grayscale ImageBuffer using Floyd-Steinberg dithering.
+ */
+public fun dither(
+    image: ImageBuffer<Luma<UByte>, ByteArray>,
+    colorMap: ColorMap<UByte>,
+) {
+    dither(image.asRaw(), image.width().toInt(), image.height().toInt(), colorMap)
+}
+
+/**
  * Reduces the colors using the supplied color map and returns an image of the indices.
  */
 public fun indexColors(
@@ -304,4 +813,39 @@ public fun indexColors(
         out[i] = colorMap.indexOf(pixel).toByte()
     }
     return out
+}
+
+/**
+ * Reduces the colors using the supplied color map and returns an ImageBuffer of the indices.
+ */
+public fun indexColors(
+    image: ImageBuffer<Luma<UByte>, ByteArray>,
+    colorMap: ColorMap<UByte>,
+): ImageBuffer<Luma<UByte>, ByteArray> {
+    val raw = indexColors(image.asRaw(), image.width().toInt(), image.height().toInt(), colorMap)
+    return ImageBuffer.createGray(image.width(), image.height(), raw)!!
+}
+
+/**
+ * Collects pixel differences between two generic images.
+ */
+public fun <P> pixelDiffs(
+    left: GenericImageView<P>,
+    right: GenericImageView<P>,
+): List<Pair<Pair<UInt, UInt>, Pair<P, P>>> {
+    val (w1, h1) = left.dimensions()
+    val (w2, h2) = right.dimensions()
+    val minW = minOf(w1, w2)
+    val minH = minOf(h1, h2)
+    val diffs = mutableListOf<Pair<Pair<UInt, UInt>, Pair<P, P>>>()
+    for (y in 0u until minH) {
+        for (x in 0u until minW) {
+            val p1 = left.getPixel(x, y)
+            val p2 = right.getPixel(x, y)
+            if (p1 != p2) {
+                diffs.add(Pair(Pair(x, y), Pair(p1, p2)))
+            }
+        }
+    }
+    return diffs
 }

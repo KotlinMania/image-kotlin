@@ -48,9 +48,9 @@ public class ImageBuffer<P, Container>(
         return copy
     }
 
-    public fun bufferWithDimensions(w: UInt, h: UInt): ImageBuffer<P, ByteArray> {
-        val buf = ByteArray((w.toLong() * h.toLong() * channelCount.toLong()).toInt())
-        val img = ImageBuffer<P, ByteArray>(w, h, buf, channelCount, pixelReader, pixelWriter, pixelBlender)
+    override fun bufferWithDimensions(width: UInt, height: UInt): ImageBuffer<P, ByteArray> {
+        val buf = ByteArray((width.toLong() * height.toLong() * channelCount.toLong()).toInt())
+        val img = ImageBuffer<P, ByteArray>(width, height, buf, channelCount, pixelReader, pixelWriter, pixelBlender)
         img.color = color
         return img
     }
