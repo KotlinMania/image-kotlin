@@ -34,6 +34,7 @@ import io.github.kotlinmania.image.io.ImageDecoder
 import io.github.kotlinmania.image.io.ImageEncoder
 import io.github.kotlinmania.image.io.ImageFormat
 import io.github.kotlinmania.image.io.IoWrite
+import io.github.kotlinmania.image.io.MethodSealedToImage
 import io.github.kotlinmania.image.io.encoderForFormat
 import io.github.kotlinmania.image.io.guessFormat
 import io.github.kotlinmania.image.io.load
@@ -1061,7 +1062,9 @@ public sealed class DynamicImage : GenericImage<Rgba<UByte>> {
     }
 
     public fun writeWithEncoder(encoder: ImageEncoder) {
-        encoder.writeImage(asBytes(), width(), height(), color().toExtendedColorType())
+        val compatible = encoder.makeCompatibleImg(MethodSealedToImage, this)
+        val img = compatible ?: this
+        encoder.writeImage(img.asBytes(), img.width(), img.height(), img.color().toExtendedColorType())
     }
 
     private fun cloneImage(): DynamicImage =

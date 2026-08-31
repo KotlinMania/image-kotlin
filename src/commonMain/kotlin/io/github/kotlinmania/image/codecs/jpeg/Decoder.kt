@@ -18,6 +18,52 @@ import kotlin.math.cos
 import kotlin.math.sqrt
 
 /**
+ * Zune color space representation for JPEG decoding parity.
+ */
+public enum class ZuneColorSpace {
+    Rgb,
+    Rgba,
+    Luma,
+    LumaA,
+    Ycbcr,
+    Unknown,
+}
+
+/**
+ * Maps a Zune color space to a supported decoding color space.
+ */
+public fun toSupportedColorSpace(orig: ZuneColorSpace): ZuneColorSpace =
+    when (orig) {
+        ZuneColorSpace.Rgb, ZuneColorSpace.Rgba, ZuneColorSpace.Luma, ZuneColorSpace.LumaA -> orig
+        else -> ZuneColorSpace.Rgb
+    }
+
+/**
+ * Maps a Zune color space to an Image ColorType.
+ */
+public fun fromJpeg(colorspace: ZuneColorSpace): ColorType =
+    when (toSupportedColorSpace(colorspace)) {
+        ZuneColorSpace.Rgb -> ColorType.Rgb8
+        ZuneColorSpace.Rgba -> ColorType.Rgba8
+        ZuneColorSpace.Luma -> ColorType.L8
+        ZuneColorSpace.LumaA -> ColorType.La8
+        else -> ColorType.Rgb8
+    }
+
+/**
+ * Constructs a new JPEG decoder configured with the specified limits.
+ */
+public fun newZuneDecoder(
+    input: ByteArray,
+    origColorSpace: ZuneColorSpace = ZuneColorSpace.Rgb,
+    limits: Limits = Limits.noLimits(),
+): JpegDecoder {
+    val decoder = JpegDecoder(input)
+    decoder.setLimits(limits)
+    return decoder
+}
+
+/**
  * JPEG decoder supporting baseline JPEG decoding and metadata extraction.
  */
 public class JpegDecoder(
@@ -586,6 +632,15 @@ public class JpegDecoder(
     }
 
     public companion object {
+        /**
+         * Creates a new decoder reading from [r].
+         */
+        public fun new(r: IoRead): JpegDecoder = JpegDecoder(r)
+
+        /**
+         * Creates a new decoder from [input].
+         */
+        public fun new(input: ByteArray): JpegDecoder = JpegDecoder(input)
         private val ZIGZAG =
             intArrayOf(
                 0,
