@@ -1,4 +1,4 @@
-// port-lint: source image/src/codecs/hdr/mod.rs
+// port-lint: source codecs/hdr/mod.rs
 package io.github.kotlinmania.image.codecs.hdr
 
 /**

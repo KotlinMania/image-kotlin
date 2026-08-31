@@ -1,4 +1,4 @@
-// port-lint: tests image/src/codecs/openexr.rs
+// port-lint: tests codecs/openexr.rs
 package io.github.kotlinmania.image.codecs
 
 import io.github.kotlinmania.image.ExtendedColorType

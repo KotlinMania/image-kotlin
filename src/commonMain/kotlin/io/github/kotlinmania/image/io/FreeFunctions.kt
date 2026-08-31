@@ -1,4 +1,4 @@
-// port-lint: source image/src/io/free_functions.rs
+// port-lint: source io/free_functions.rs
 package io.github.kotlinmania.image.io
 
 import io.github.kotlinmania.image.ExtendedColorType

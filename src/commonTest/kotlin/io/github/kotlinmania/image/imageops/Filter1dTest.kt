@@ -1,4 +1,4 @@
-// port-lint: tests image/src/imageops/filter_1d.rs
+// port-lint: tests imageops/filter_1d.rs
 package io.github.kotlinmania.image.imageops
 
 import kotlin.test.Test

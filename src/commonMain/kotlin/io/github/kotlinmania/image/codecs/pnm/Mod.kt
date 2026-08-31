@@ -1,4 +1,4 @@
-// port-lint: source image/src/codecs/pnm/mod.rs
+// port-lint: source codecs/pnm/mod.rs
 package io.github.kotlinmania.image.codecs.pnm
 
 /*

@@ -1,4 +1,4 @@
-// port-lint: source image/src/traits.rs
+// port-lint: source traits.rs
 package io.github.kotlinmania.image
 
 /**

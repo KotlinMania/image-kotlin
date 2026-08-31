@@ -1,4 +1,4 @@
-// port-lint: tests image/src/images/buffer_par.rs
+// port-lint: tests images/buffer_par.rs
 package io.github.kotlinmania.image.images
 
 import io.github.kotlinmania.image.Rgb

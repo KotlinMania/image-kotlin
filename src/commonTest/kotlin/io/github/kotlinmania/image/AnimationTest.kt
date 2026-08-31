@@ -1,4 +1,4 @@
-// port-lint: tests image/src/animation.rs
+// port-lint: tests animation.rs
 package io.github.kotlinmania.image
 
 import kotlin.test.Test

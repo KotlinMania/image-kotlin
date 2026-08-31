@@ -1,4 +1,4 @@
-// port-lint: tests image/src/codecs/dxt.rs
+// port-lint: tests codecs/dxt.rs
 package io.github.kotlinmania.image.codecs
 
 import io.github.kotlinmania.image.ColorType

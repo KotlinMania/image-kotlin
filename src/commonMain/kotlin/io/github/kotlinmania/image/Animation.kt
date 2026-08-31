@@ -1,4 +1,4 @@
-// port-lint: source image/src/animation.rs
+// port-lint: source animation.rs
 package io.github.kotlinmania.image
 
 import kotlin.time.Duration

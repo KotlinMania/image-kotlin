@@ -1,4 +1,4 @@
-// port-lint: tests image/benches/encode.rs
+// port-lint: tests encode.rs
 package io.github.kotlinmania.image.benches
 
 import io.github.kotlinmania.image.ColorType

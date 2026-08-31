@@ -1,4 +1,4 @@
-// port-lint: source image/src/metadata/cicp.rs
+// port-lint: source metadata/cicp.rs
 package io.github.kotlinmania.image.metadata
 
 import io.github.kotlinmania.image.ImageError
@@ -754,3 +754,5 @@ public class CicpTransform internal constructor(
         }
     }
 }
+
+internal fun noCoefficientFallback(): FloatArray = throw IllegalStateException("Fallback coefficients required")

@@ -1,4 +1,4 @@
-// port-lint: source image/src/images/dynimage.rs
+// port-lint: source images/dynimage.rs
 package io.github.kotlinmania.image.images
 
 import io.github.kotlinmania.image.ColorType
@@ -493,6 +493,93 @@ public sealed class DynamicImage : GenericImage<Rgba<UByte>> {
             is ImageRgb32F -> image.setColorSpace(cicp)
             is ImageRgba32F -> image.setColorSpace(cicp)
         }
+    }
+
+    public fun clone(): DynamicImage = cloneImage()
+
+    public fun copyFromColorSpace(
+        other: DynamicImage,
+        options: ConvertColorOptions = ConvertColorOptions(),
+    ) {
+        if (this is ImageRgb8 && other is ImageRgb8) {
+            image.copyFromColorSpace(other.image, options)
+            return
+        }
+        if (this is ImageRgb8 && other is ImageRgba8) {
+            image.copyFromColorSpace(other.image, options)
+            return
+        }
+        if (this is ImageRgba8 && other is ImageRgb8) {
+            image.copyFromColorSpace(other.image, options)
+            return
+        }
+        if (this is ImageRgba8 && other is ImageRgba8) {
+            image.copyFromColorSpace(other.image, options)
+            return
+        }
+        if (this is ImageRgb16 && other is ImageRgb16) {
+            image.copyFromColorSpace(other.image, options)
+            return
+        }
+        if (this is ImageRgb16 && other is ImageRgba16) {
+            image.copyFromColorSpace(other.image, options)
+            return
+        }
+        if (this is ImageRgba16 && other is ImageRgb16) {
+            image.copyFromColorSpace(other.image, options)
+            return
+        }
+        if (this is ImageRgba16 && other is ImageRgba16) {
+            image.copyFromColorSpace(other.image, options)
+            return
+        }
+        if (this is ImageRgb32F && other is ImageRgb32F) {
+            image.copyFromColorSpace(other.image, options)
+            return
+        }
+        if (this is ImageRgb32F && other is ImageRgba32F) {
+            image.copyFromColorSpace(other.image, options)
+            return
+        }
+        if (this is ImageRgba32F && other is ImageRgb32F) {
+            image.copyFromColorSpace(other.image, options)
+            return
+        }
+        if (this is ImageRgba32F && other is ImageRgba32F) {
+            image.copyFromColorSpace(other.image, options)
+            return
+        }
+
+        val cicp = options.asTransform(other.colorSpace(), this.colorSpace())
+        cicp.transformDynamic(this, other)
+    }
+
+    public fun applyColorSpace(
+        cicp: Cicp,
+        options: ConvertColorOptions = ConvertColorOptions(),
+    ): DynamicImage {
+        if (this.colorSpace() == cicp) {
+            return this
+        }
+        val target = this.clone()
+        target.setColorSpace(cicp)
+        target.copyFromColorSpace(this, options)
+        return target
+    }
+
+    public fun convertColorSpace(
+        cicp: Cicp,
+        color: ColorType,
+        options: ConvertColorOptions = ConvertColorOptions(),
+    ): DynamicImage {
+        if (this.color() == color) {
+            return this.applyColorSpace(cicp, options)
+        }
+        val rgb = cicp.tryIntoRgb().getOrThrow()
+        val target = DynamicImage.new(this.width(), this.height(), color)
+        target.setColorSpace(rgb.toCicp())
+        target.copyFromColorSpace(this, options)
+        return target
     }
 
     override fun getPixel(x: UInt, y: UInt): Rgba<UByte> =

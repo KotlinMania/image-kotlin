@@ -1,4 +1,4 @@
-// port-lint: source image/src/codecs/jpeg/mod.rs
+// port-lint: source codecs/jpeg/mod.rs
 package io.github.kotlinmania.image.codecs.jpeg
 
 /**

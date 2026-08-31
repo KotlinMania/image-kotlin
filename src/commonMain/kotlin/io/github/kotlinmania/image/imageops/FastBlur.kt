@@ -1,4 +1,4 @@
-// port-lint: source image/src/imageops/fast_blur.rs
+// port-lint: source imageops/fast_blur.rs
 package io.github.kotlinmania.image.imageops
 
 import io.github.kotlinmania.image.images.ImageBuffer

@@ -1,4 +1,4 @@
-// port-lint: source image/src/codecs/tga/encoder.rs
+// port-lint: source codecs/tga/encoder.rs
 package io.github.kotlinmania.image.codecs.tga
 
 import io.github.kotlinmania.image.EncodingError

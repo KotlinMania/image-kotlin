@@ -1,4 +1,4 @@
-// port-lint: source image/src/imageops/sample.rs
+// port-lint: source imageops/sample.rs
 package io.github.kotlinmania.image.imageops
 
 import io.github.kotlinmania.image.Luma
