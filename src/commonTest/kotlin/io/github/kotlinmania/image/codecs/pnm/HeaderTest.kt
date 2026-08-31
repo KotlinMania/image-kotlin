@@ -1,4 +1,4 @@
-// port-lint: tests codecs/pnm/header.rs
+// port-lint: tests image/src/codecs/pnm/header.rs
 package io.github.kotlinmania.image.codecs.pnm
 
 import io.github.kotlinmania.image.io.BufferIoWrite

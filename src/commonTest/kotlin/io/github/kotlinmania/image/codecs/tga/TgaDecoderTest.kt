@@ -1,4 +1,4 @@
-// port-lint: tests codecs/tga/decoder.rs
+// port-lint: tests image/src/codecs/tga/decoder.rs
 package io.github.kotlinmania.image.codecs.tga
 
 import io.github.kotlinmania.image.ColorType

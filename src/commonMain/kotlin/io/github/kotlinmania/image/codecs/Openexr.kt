@@ -1,4 +1,4 @@
-// port-lint: source codecs/openexr.rs
+// port-lint: source image/src/codecs/openexr.rs
 package io.github.kotlinmania.image.codecs
 
 import io.github.kotlinmania.image.ColorType

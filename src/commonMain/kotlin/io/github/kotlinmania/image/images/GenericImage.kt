@@ -1,4 +1,4 @@
-// port-lint: source images/generic_image.rs
+// port-lint: source image/src/images/generic_image.rs
 package io.github.kotlinmania.image.images
 
 import io.github.kotlinmania.image.math.Rect

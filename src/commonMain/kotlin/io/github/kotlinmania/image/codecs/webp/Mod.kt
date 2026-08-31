@@ -1,4 +1,4 @@
-// port-lint: source codecs/webp/mod.rs
+// port-lint: source image/src/codecs/webp/mod.rs
 package io.github.kotlinmania.image.codecs.webp
 
 /**

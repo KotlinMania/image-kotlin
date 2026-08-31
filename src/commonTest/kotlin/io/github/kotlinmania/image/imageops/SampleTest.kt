@@ -1,4 +1,4 @@
-// port-lint: tests imageops/sample.rs
+// port-lint: tests image/src/imageops/sample.rs
 package io.github.kotlinmania.image.imageops
 
 import io.github.kotlinmania.image.Rgb

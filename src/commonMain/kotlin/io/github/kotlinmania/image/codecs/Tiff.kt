@@ -1,4 +1,4 @@
-// port-lint: source codecs/tiff.rs
+// port-lint: source image/src/codecs/tiff.rs
 package io.github.kotlinmania.image.codecs
 
 import io.github.kotlinmania.image.ColorType

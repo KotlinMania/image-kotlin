@@ -1,4 +1,4 @@
-// port-lint: source codecs/bmp/mod.rs
+// port-lint: source image/src/codecs/bmp/mod.rs
 package io.github.kotlinmania.image.codecs.bmp
 
 /**

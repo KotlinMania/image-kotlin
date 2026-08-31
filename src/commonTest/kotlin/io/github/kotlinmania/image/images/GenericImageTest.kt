@@ -1,4 +1,4 @@
-// port-lint: tests images/generic_image.rs
+// port-lint: tests image/src/images/generic_image.rs
 package io.github.kotlinmania.image.images
 
 import io.github.kotlinmania.image.Rgba

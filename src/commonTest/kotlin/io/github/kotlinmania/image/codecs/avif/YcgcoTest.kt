@@ -1,4 +1,4 @@
-// port-lint: tests codecs/avif/ycgco.rs
+// port-lint: tests image/src/codecs/avif/ycgco.rs
 package io.github.kotlinmania.image.codecs.avif
 
 import kotlin.test.Test

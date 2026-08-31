@@ -1,4 +1,4 @@
-// port-lint: source codecs/avif/decoder.rs
+// port-lint: source image/src/codecs/avif/decoder.rs
 package io.github.kotlinmania.image.codecs.avif
 
 import io.github.kotlinmania.image.ColorType

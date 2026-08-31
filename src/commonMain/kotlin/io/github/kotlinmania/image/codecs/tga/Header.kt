@@ -1,4 +1,4 @@
-// port-lint: source codecs/tga/header.rs
+// port-lint: source image/src/codecs/tga/header.rs
 package io.github.kotlinmania.image.codecs.tga
 
 import io.github.kotlinmania.image.ExtendedColorType

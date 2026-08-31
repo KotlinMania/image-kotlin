@@ -1,4 +1,4 @@
-// port-lint: source codecs/hdr/encoder.rs
+// port-lint: source image/src/codecs/hdr/encoder.rs
 package io.github.kotlinmania.image.codecs.hdr
 
 import io.github.kotlinmania.image.ExtendedColorType

@@ -1,4 +1,4 @@
-// port-lint: source codecs/tga/mod.rs
+// port-lint: source image/src/codecs/tga/mod.rs
 package io.github.kotlinmania.image.codecs.tga
 
 /**

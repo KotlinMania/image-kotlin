@@ -1,4 +1,4 @@
-// port-lint: tests codecs/webp/encoder.rs
+// port-lint: tests image/src/codecs/webp/encoder.rs
 package io.github.kotlinmania.image.codecs.webp
 
 import io.github.kotlinmania.image.ColorType
