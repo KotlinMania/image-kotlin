@@ -226,6 +226,11 @@ public sealed interface ExtendedColorType {
         val rowPitch = (totalBits + 7uL) / 8uL
         return rowPitch * height.toULong()
     }
+
+    public companion object {
+        /** Returns the corresponding [ExtendedColorType] for the given [ColorType]. */
+        public fun from(color: ColorType): ExtendedColorType = color.toExtendedColorType()
+    }
 }
 
 /**
