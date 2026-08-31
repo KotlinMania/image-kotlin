@@ -133,6 +133,11 @@ class EncoderTest {
 
     @Test
     fun norunCombineTest() {
+        fun <T> a(v: MutableList<T>, other: List<T>): MutableList<T> {
+            v.addAll(other)
+            return v
+        }
+
         val v0 = byteArrayOf()
         val rsi0 = NorunCombineIterator(v0)
         assertNull(rsi0.next())

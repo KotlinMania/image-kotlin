@@ -44,6 +44,11 @@ public class WebPDecoder(
         this.backgroundColor = color.a
     }
 
+    /**
+     * Returns an iterator over animation frames.
+     */
+    public fun intoFrames(): Iterator<io.github.kotlinmania.image.Frame> = FramesInner(this)
+
     private fun parseHeaders() {
         if (input.size < 12) {
             throw ImageError.Decoding(DecodingError(ImageFormatHint.Exact(ImageFormat.WebP), "File is too small for WebP header"))
