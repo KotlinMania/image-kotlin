@@ -1,4 +1,4 @@
-// port-lint: tests image/src/codecs/hdr/encoder.rs
+// port-lint: tests codecs/hdr/encoder.rs
 package io.github.kotlinmania.image.codecs.hdr
 
 import io.github.kotlinmania.image.Rgb

@@ -1,4 +1,4 @@
-// port-lint: source image/src/images/buffer.rs
+// port-lint: source images/buffer.rs
 package io.github.kotlinmania.image.images
 
 import io.github.kotlinmania.image.Luma

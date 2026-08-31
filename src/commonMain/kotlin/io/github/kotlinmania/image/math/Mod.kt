@@ -1,4 +1,4 @@
-// port-lint: source image/src/math/mod.rs
+// port-lint: source math/mod.rs
 package io.github.kotlinmania.image.math
 
 /**

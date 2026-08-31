@@ -1,4 +1,4 @@
-// port-lint: source image/src/lib.rs
+// port-lint: source lib.rs
 package io.github.kotlinmania.image
 
 public typealias FlatSamples<Buffer> = io.github.kotlinmania.image.images.FlatSamples<Buffer>

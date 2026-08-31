@@ -1,4 +1,4 @@
-// port-lint: source image/src/imageops/affine.rs
+// port-lint: source imageops/affine.rs
 package io.github.kotlinmania.image.imageops
 
 import io.github.kotlinmania.image.images.GenericImage

@@ -1,4 +1,4 @@
-// port-lint: source image/src/codecs/bmp/encoder.rs
+// port-lint: source codecs/bmp/encoder.rs
 package io.github.kotlinmania.image.codecs.bmp
 
 import io.github.kotlinmania.image.EncodingError

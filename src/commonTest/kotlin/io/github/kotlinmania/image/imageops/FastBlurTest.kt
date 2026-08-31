@@ -1,4 +1,4 @@
-// port-lint: tests image/src/imageops/fast_blur.rs
+// port-lint: tests imageops/fast_blur.rs
 package io.github.kotlinmania.image.imageops
 
 import io.github.kotlinmania.image.images.DynamicImage

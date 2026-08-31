@@ -1,4 +1,4 @@
-// port-lint: source image/src/math/rect.rs
+// port-lint: source math/rect.rs
 package io.github.kotlinmania.image.math
 
 /**

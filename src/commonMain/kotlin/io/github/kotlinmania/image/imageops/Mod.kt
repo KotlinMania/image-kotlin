@@ -1,4 +1,4 @@
-// port-lint: source image/src/imageops/mod.rs
+// port-lint: source imageops/mod.rs
 package io.github.kotlinmania.image.imageops
 
 import io.github.kotlinmania.image.Rgb

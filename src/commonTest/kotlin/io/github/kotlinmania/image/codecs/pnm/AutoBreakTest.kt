@@ -1,4 +1,4 @@
-// port-lint: tests image/src/codecs/pnm/autobreak.rs
+// port-lint: tests codecs/pnm/autobreak.rs
 package io.github.kotlinmania.image.codecs.pnm
 
 import io.github.kotlinmania.image.io.BufferIoWrite

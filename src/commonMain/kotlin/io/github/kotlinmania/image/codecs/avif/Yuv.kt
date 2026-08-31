@@ -1,4 +1,4 @@
-// port-lint: source image/src/codecs/avif/yuv.rs
+// port-lint: source codecs/avif/yuv.rs
 package io.github.kotlinmania.image.codecs.avif
 
 import io.github.kotlinmania.image.DecodingError

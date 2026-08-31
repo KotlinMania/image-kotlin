@@ -1,4 +1,4 @@
-// port-lint: source image/src/codecs/pnm/decoder.rs
+// port-lint: source codecs/pnm/decoder.rs
 package io.github.kotlinmania.image.codecs.pnm
 
 import io.github.kotlinmania.image.ColorType

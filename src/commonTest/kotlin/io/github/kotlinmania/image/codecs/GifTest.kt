@@ -1,4 +1,4 @@
-// port-lint: tests image/src/codecs/gif.rs
+// port-lint: tests codecs/gif.rs
 package io.github.kotlinmania.image.codecs
 
 import io.github.kotlinmania.image.ExtendedColorType

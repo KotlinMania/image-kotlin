@@ -1,4 +1,4 @@
-// port-lint: source image/src/codecs/avif/ycgco.rs
+// port-lint: source codecs/avif/ycgco.rs
 package io.github.kotlinmania.image.codecs.avif
 
 import kotlin.math.roundToInt

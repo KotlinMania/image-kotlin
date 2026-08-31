@@ -1,4 +1,4 @@
-// port-lint: tests image/src/io/image_reader_type.rs
+// port-lint: tests io/image_reader_type.rs
 package io.github.kotlinmania.image.io
 
 import io.github.kotlinmania.image.ColorType

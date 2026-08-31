@@ -1,4 +1,4 @@
-// port-lint: source image/src/imageops/colorops.rs
+// port-lint: source imageops/colorops.rs
 package io.github.kotlinmania.image.imageops
 
 import io.github.kotlinmania.image.GrayAlphaImage

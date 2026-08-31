@@ -1,4 +1,4 @@
-// port-lint: source image/src/codecs/ico/encoder.rs
+// port-lint: source codecs/ico/encoder.rs
 package io.github.kotlinmania.image.codecs.ico
 
 import io.github.kotlinmania.image.ExtendedColorType

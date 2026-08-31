@@ -1,4 +1,4 @@
-// port-lint: source image/src/images/flat.rs
+// port-lint: source images/flat.rs
 package io.github.kotlinmania.image.images
 
 import io.github.kotlinmania.image.ColorType

@@ -1,4 +1,4 @@
-// port-lint: source image/src/codecs/jpeg/transform.rs
+// port-lint: source codecs/jpeg/transform.rs
 package io.github.kotlinmania.image.codecs.jpeg
 
 /*

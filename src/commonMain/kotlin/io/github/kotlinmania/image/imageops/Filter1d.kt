@@ -1,4 +1,4 @@
-// port-lint: source image/src/imageops/filter_1d.rs
+// port-lint: source imageops/filter_1d.rs
 package io.github.kotlinmania.image.imageops
 
 import io.github.kotlinmania.image.ImageError

@@ -1,4 +1,4 @@
-// port-lint: source image/src/error.rs
+// port-lint: source error.rs
 package io.github.kotlinmania.image
 
 import io.github.kotlinmania.image.io.ImageFormat

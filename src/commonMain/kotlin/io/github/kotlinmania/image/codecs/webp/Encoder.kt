@@ -1,4 +1,4 @@
-// port-lint: source image/src/codecs/webp/encoder.rs
+// port-lint: source codecs/webp/encoder.rs
 package io.github.kotlinmania.image.codecs.webp
 
 import io.github.kotlinmania.image.EncodingError
