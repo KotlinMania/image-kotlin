@@ -802,6 +802,18 @@ public class ImageBuffer<P, Container>(
                     writeF32LE(arr, idx + 4, p.a)
                 },
             )
+
+        public fun fromPixel(width: UInt, height: UInt, pixel: Rgb<UByte>): RgbImage =
+            createRgb(width, height) { _, _ -> pixel }
+
+        public fun fromPixel(width: UInt, height: UInt, pixel: Rgba<UByte>): RgbaImage =
+            createRgba(width, height) { _, _ -> pixel }
+
+        public fun fromPixel(width: UInt, height: UInt, pixel: Luma<UByte>): GrayImage =
+            createGray(width, height) { _, _ -> pixel }
+
+        public fun fromPixel(width: UInt, height: UInt, pixel: LumaA<UByte>): GrayAlphaImage =
+            createGrayAlpha(width, height) { _, _ -> pixel }
     }
 
     public fun copy(): ImageBuffer<P, ByteArray> = clone()
