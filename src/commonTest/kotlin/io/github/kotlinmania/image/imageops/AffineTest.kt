@@ -1,4 +1,4 @@
-// port-lint: tests imageops/affine.rs
+// port-lint: tests image/src/imageops/affine.rs
 package io.github.kotlinmania.image.imageops
 
 import io.github.kotlinmania.image.GrayImage

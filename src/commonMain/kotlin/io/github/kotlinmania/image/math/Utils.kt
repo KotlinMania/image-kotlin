@@ -1,4 +1,4 @@
-// port-lint: source math/utils.rs
+// port-lint: source image/src/math/utils.rs
 package io.github.kotlinmania.image.math
 
 import kotlin.math.roundToLong

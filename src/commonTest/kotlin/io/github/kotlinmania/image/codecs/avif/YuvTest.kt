@@ -1,4 +1,4 @@
-// port-lint: tests codecs/avif/yuv.rs
+// port-lint: tests image/src/codecs/avif/yuv.rs
 package io.github.kotlinmania.image.codecs.avif
 
 import io.github.kotlinmania.image.ImageError

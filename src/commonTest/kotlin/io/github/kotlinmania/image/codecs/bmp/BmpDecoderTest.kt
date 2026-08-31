@@ -1,4 +1,4 @@
-// port-lint: tests codecs/bmp/decoder.rs
+// port-lint: tests image/src/codecs/bmp/decoder.rs
 package io.github.kotlinmania.image.codecs.bmp
 
 import io.github.kotlinmania.image.ExtendedColorType

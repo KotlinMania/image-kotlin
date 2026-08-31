@@ -1,4 +1,4 @@
-// port-lint: source io/limits.rs
+// port-lint: source image/src/io/limits.rs
 package io.github.kotlinmania.image.io
 
 import io.github.kotlinmania.image.ColorType

@@ -1,4 +1,4 @@
-// port-lint: tests images/dynimage.rs
+// port-lint: tests image/src/images/dynimage.rs
 package io.github.kotlinmania.image.images
 
 import io.github.kotlinmania.image.ColorType

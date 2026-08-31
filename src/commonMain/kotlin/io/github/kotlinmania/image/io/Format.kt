@@ -1,4 +1,4 @@
-// port-lint: source io/format.rs
+// port-lint: source image/src/io/format.rs
 package io.github.kotlinmania.image.io
 
 /**

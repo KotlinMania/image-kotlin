@@ -1,4 +1,4 @@
-// port-lint: source hooks.rs
+// port-lint: source image/src/hooks.rs
 package io.github.kotlinmania.image
 
 import io.github.kotlinmania.image.io.ImageDecoder

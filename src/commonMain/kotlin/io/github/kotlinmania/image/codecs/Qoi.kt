@@ -1,4 +1,4 @@
-// port-lint: source codecs/qoi.rs
+// port-lint: source image/src/codecs/qoi.rs
 package io.github.kotlinmania.image.codecs
 
 import io.github.kotlinmania.image.ColorType

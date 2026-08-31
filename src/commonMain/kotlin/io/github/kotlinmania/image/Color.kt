@@ -1,4 +1,4 @@
-// port-lint: source color.rs
+// port-lint: source image/src/color.rs
 package io.github.kotlinmania.image
 
 /**

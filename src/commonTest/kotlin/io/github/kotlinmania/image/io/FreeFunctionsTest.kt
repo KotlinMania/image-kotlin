@@ -1,4 +1,4 @@
-// port-lint: tests io/free_functions.rs
+// port-lint: tests image/src/io/free_functions.rs
 package io.github.kotlinmania.image.io
 
 import io.github.kotlinmania.image.ColorType

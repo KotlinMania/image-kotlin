@@ -1,4 +1,4 @@
-// port-lint: source metadata/cicp.rs
+// port-lint: source image/src/metadata/cicp.rs
 package io.github.kotlinmania.image.metadata
 
 import io.github.kotlinmania.image.ImageError

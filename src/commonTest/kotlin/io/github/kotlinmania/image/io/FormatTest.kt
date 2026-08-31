@@ -1,4 +1,4 @@
-// port-lint: tests io/format.rs
+// port-lint: tests image/src/io/format.rs
 package io.github.kotlinmania.image.io
 
 import kotlin.test.Test

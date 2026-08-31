@@ -1,4 +1,4 @@
-// port-lint: tests codecs/farbfeld.rs
+// port-lint: tests image/src/codecs/farbfeld.rs
 package io.github.kotlinmania.image.codecs
 
 import io.github.kotlinmania.image.ColorType

@@ -1,4 +1,4 @@
-// port-lint: source codecs/ico/mod.rs
+// port-lint: source image/src/codecs/ico/mod.rs
 package io.github.kotlinmania.image.codecs.ico
 
 /**

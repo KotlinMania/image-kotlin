@@ -1,4 +1,4 @@
-// port-lint: tests metadata/cicp.rs
+// port-lint: tests image/src/metadata/cicp.rs
 package io.github.kotlinmania.image.metadata
 
 import io.github.kotlinmania.image.LayoutWithColor

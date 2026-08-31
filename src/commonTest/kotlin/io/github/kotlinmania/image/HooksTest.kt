@@ -1,4 +1,4 @@
-// port-lint: tests hooks.rs
+// port-lint: tests image/src/hooks.rs
 package io.github.kotlinmania.image
 
 import io.github.kotlinmania.image.io.BufferIoRead

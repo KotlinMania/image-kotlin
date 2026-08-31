@@ -1,4 +1,4 @@
-// port-lint: tests codecs/hdr/decoder.rs
+// port-lint: tests image/src/codecs/hdr/decoder.rs
 package io.github.kotlinmania.image.codecs.hdr
 
 import io.github.kotlinmania.image.ImageError

@@ -1,4 +1,4 @@
-// port-lint: tests traits.rs
+// port-lint: tests image/src/traits.rs
 package io.github.kotlinmania.image
 
 import kotlin.test.Test

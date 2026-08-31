@@ -1,4 +1,4 @@
-// port-lint: source io/encoder.rs
+// port-lint: source image/src/io/encoder.rs
 package io.github.kotlinmania.image.io
 
 import io.github.kotlinmania.image.ColorType
