@@ -113,6 +113,7 @@ internal fun encoderForFormat(format: ImageFormat, writer: IoWrite): ImageEncode
         ImageFormat.Qoi -> QoiEncoder(writer)
         ImageFormat.Pnm -> PnmEncoder(writer)
         ImageFormat.Hdr -> HdrEncoder.new(writer)
+        ImageFormat.Jpeg -> io.github.kotlinmania.image.codecs.jpeg.JpegEncoder.new(writer)
         else -> throw ImageError.Unsupported(
             UnsupportedError(
                 ImageFormatHint.Exact(format),
@@ -134,6 +135,7 @@ internal fun decoderForFormat(format: ImageFormat, reader: IoRead): ImageDecoder
         ImageFormat.Pnm -> PnmDecoder(reader)
         ImageFormat.Dds -> DdsDecoder(reader)
         ImageFormat.Hdr -> HdrDecoder.new(reader)
+        ImageFormat.Jpeg -> io.github.kotlinmania.image.codecs.jpeg.JpegDecoder.new(reader)
         else -> throw ImageError.Unsupported(
             UnsupportedError(
                 ImageFormatHint.Exact(format),

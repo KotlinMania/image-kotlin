@@ -169,7 +169,7 @@ private val STD_CHROMA_QTABLE =
     )
 
 // Code lengths and values for Table K.3
-private val STD_LUMA_DC_CODE_LENGTHS =
+internal val STD_LUMA_DC_CODE_LENGTHS =
     ubyteArrayOf(
         0x00u,
         0x01u,
@@ -189,7 +189,7 @@ private val STD_LUMA_DC_CODE_LENGTHS =
         0x00u,
     )
 
-private val STD_LUMA_DC_VALUES =
+internal val STD_LUMA_DC_VALUES =
     ubyteArrayOf(
         0x00u,
         0x01u,
@@ -628,15 +628,15 @@ private val STD_CHROMA_AC_VALUES =
 private val STD_CHROMA_AC_HUFF_LUT: Array<Pair<UByte, UShort>> =
     buildHuffLutConst(STD_CHROMA_AC_CODE_LENGTHS, STD_CHROMA_AC_VALUES)
 
-private const val DCCLASS: UByte = 0u
-private const val ACCLASS: UByte = 1u
+internal const val DCCLASS: UByte = 0u
+internal const val ACCLASS: UByte = 1u
 
-private const val LUMADESTINATION: UByte = 0u
-private const val CHROMADESTINATION: UByte = 1u
+internal const val LUMADESTINATION: UByte = 0u
+internal const val CHROMADESTINATION: UByte = 1u
 
-private const val LUMAID: UByte = 1u
-private const val CHROMABLUEID: UByte = 2u
-private const val CHROMAREDID: UByte = 3u
+internal const val LUMAID: UByte = 1u
+internal const val CHROMABLUEID: UByte = 2u
+internal const val CHROMAREDID: UByte = 3u
 
 private val UNZIGZAG =
     intArrayOf(
@@ -708,7 +708,7 @@ private val UNZIGZAG =
 
 private val EXIF_HEADER = byteArrayOf(0x45, 0x78, 0x69, 0x66, 0x00, 0x00)
 
-private data class Component(
+internal data class Component(
     val id: UByte,
     val h: UByte,
     val v: UByte,
@@ -858,7 +858,23 @@ public class PixelDensity(
     override fun toString(): String = "PixelDensity(density=($xDensity, $yDensity), unit=$unit)"
 }
 
-private fun encodeCoefficient(coefficient: Int): Pair<UByte, UShort> {
+/**
+ * Errors that can occur when encoding a JPEG image.
+ */
+public sealed class EncoderError {
+    /**
+     * JPEG does not support this image size.
+     */
+    public data class InvalidSize(
+        public val width: UInt,
+        public val height: UInt,
+    ) : EncoderError() {
+        override fun toString(): String =
+            "Invalid image size ($width x $height) to encode as JPEG: width and height must be >= 1 and <= 65535"
+    }
+}
+
+internal fun encodeCoefficient(coefficient: Int): Pair<UByte, UShort> {
     val magnitude = kotlin.math.abs(coefficient)
     var temp = magnitude
     var numBits: UByte = 0u
@@ -879,7 +895,7 @@ private fun encodeCoefficient(coefficient: Int): Pair<UByte, UShort> {
     return numBits to value
 }
 
-private fun buildJfifHeader(density: PixelDensity): ByteArray {
+internal fun buildJfifHeader(density: PixelDensity): ByteArray {
     val result = mutableListOf<Byte>()
     result.add('J'.code.toByte())
     result.add('F'.code.toByte())
@@ -906,7 +922,7 @@ private fun buildJfifHeader(density: PixelDensity): ByteArray {
     return result.toByteArray()
 }
 
-private fun buildFrameHeader(
+internal fun buildFrameHeader(
     precision: UByte,
     width: UShort,
     height: UShort,
@@ -931,7 +947,7 @@ private fun buildFrameHeader(
     return result.toByteArray()
 }
 
-private fun buildScanHeader(components: List<Component>): ByteArray {
+internal fun buildScanHeader(components: List<Component>): ByteArray {
     val result = mutableListOf<Byte>()
     result.add(components.size.toByte())
 
@@ -947,7 +963,7 @@ private fun buildScanHeader(components: List<Component>): ByteArray {
     return result.toByteArray()
 }
 
-private fun buildHuffmanSegment(
+internal fun buildHuffmanSegment(
     cls: UByte,
     destination: UByte,
     numcodes: UByteArray,
@@ -966,7 +982,7 @@ private fun buildHuffmanSegment(
     return result.toByteArray()
 }
 
-private fun buildQuantizationSegment(precision: UByte, identifier: UByte, qtable: UByteArray): ByteArray {
+internal fun buildQuantizationSegment(precision: UByte, identifier: UByte, qtable: UByteArray): ByteArray {
     val result = mutableListOf<Byte>()
     val p = if (precision == 8.toUByte()) 0 else 1
     val pqtq = ((p shl 4) or identifier.toInt()).toByte()
@@ -978,7 +994,7 @@ private fun buildQuantizationSegment(precision: UByte, identifier: UByte, qtable
     return result.toByteArray()
 }
 
-private fun rgbToYcbcr(r: Int, g: Int, b: Int): Triple<UByte, UByte, UByte> {
+internal fun rgbToYcbcr(r: Int, g: Int, b: Int): Triple<UByte, UByte, UByte> {
     val cYr = 19595
     val cYg = 38469
     val cYb = 7471
@@ -998,16 +1014,113 @@ private fun rgbToYcbcr(r: Int, g: Int, b: Int): Triple<UByte, UByte, UByte> {
     return Triple(y.coerceIn(0, 255).toUByte(), cb.coerceIn(0, 255).toUByte(), cr.coerceIn(0, 255).toUByte())
 }
 
+internal fun pixelAtOrNear(image: ByteArray, width: Int, height: Int, channels: Int, x: Int, y: Int): ByteArray {
+    val clampedX = x.coerceIn(0, width - 1)
+    val clampedY = y.coerceIn(0, height - 1)
+    val offset = (clampedY * width + clampedX) * channels
+    return image.copyOfRange(offset, offset + channels)
+}
+
+internal fun copyBlocksYcbcr(
+    image: ByteArray,
+    width: Int,
+    height: Int,
+    x0: Int,
+    y0: Int,
+    yb: UByteArray,
+    cbb: UByteArray,
+    crb: UByteArray,
+) {
+    for (y in 0 until 8) {
+        for (x in 0 until 8) {
+            val px = pixelAtOrNear(image, width, height, 3, x0 + x, y0 + y)
+            val r = px[0].toInt() and 0xFF
+            val g = px[1].toInt() and 0xFF
+            val b = px[2].toInt() and 0xFF
+            val (yc, cb, cr) = rgbToYcbcr(r, g, b)
+            val idx = y * 8 + x
+            yb[idx] = yc
+            cbb[idx] = cb
+            crb[idx] = cr
+        }
+    }
+}
+
+internal fun copyBlocksGray(
+    image: ByteArray,
+    width: Int,
+    height: Int,
+    x0: Int,
+    y0: Int,
+    gb: UByteArray,
+) {
+    for (y in 0 until 8) {
+        for (x in 0 until 8) {
+            val px = pixelAtOrNear(image, width, height, 1, x0 + x, y0 + y)
+            val idx = y * 8 + x
+            gb[idx] = (px[0].toInt() and 0xFF).toUByte()
+        }
+    }
+}
+
 /**
  * Representation of a JPEG encoder.
  */
-public class JpegEncoder internal constructor(
+public class JpegEncoder(
     private val writer: IoWrite,
     private val quality: UByte = 75u,
 ) : ImageEncoder {
     public constructor(writeBuffer: BufferIoWrite) : this(writeBuffer as IoWrite, 75u)
 
     public constructor(writeBuffer: BufferIoWrite, quality: UByte) : this(writeBuffer as IoWrite, quality)
+
+    public fun writeExif() {
+        if (exifMetadata.isNotEmpty()) {
+            val formatted = EXIF_HEADER + exifMetadata
+            bitWriter.writeSegment(APP1, formatted)
+        }
+    }
+
+    /**
+     * Encodes a dynamic image to the JPEG writer.
+     */
+    public fun encodeImage(image: DynamicImage) {
+        val w = image.width()
+        val h = image.height()
+        when (val color = image.color()) {
+            ColorType.L8 -> encode(image.asBytes(), w, h, ExtendedColorType.L8)
+            ColorType.Rgb8 -> encode(image.asBytes(), w, h, ExtendedColorType.Rgb8)
+            ColorType.Rgba8 -> encode(image.asBytes(), w, h, ExtendedColorType.Rgba8)
+            ColorType.La8, ColorType.L16, ColorType.La16 -> {
+                val luma = DynamicImage.ImageLuma8(image.toLuma8())
+                encode(luma.asBytes(), w, h, ExtendedColorType.L8)
+            }
+            ColorType.Rgb16, ColorType.Rgba16, ColorType.Rgb32F, ColorType.Rgba32F -> {
+                val rgb = DynamicImage.ImageRgb8(image.toRgb8())
+                encode(rgb.asBytes(), w, h, ExtendedColorType.Rgb8)
+            }
+        }
+    }
+
+    /**
+     * Encodes the image as grayscale.
+     */
+    public fun encodeGray(image: DynamicImage) {
+        val w = image.width()
+        val h = image.height()
+        val luma = if (image.color() == ColorType.L8) image else DynamicImage.ImageLuma8(image.toLuma8())
+        encode(luma.asBytes(), w, h, ExtendedColorType.L8)
+    }
+
+    /**
+     * Encodes the image as RGB.
+     */
+    public fun encodeRgb(image: DynamicImage) {
+        val w = image.width()
+        val h = image.height()
+        val rgb = if (image.color() == ColorType.Rgb8) image else DynamicImage.ImageRgb8(image.toRgb8())
+        encode(rgb.asBytes(), w, h, ExtendedColorType.Rgb8)
+    }
 
     private val bitWriter = BitWriter(writer)
     private var pixelDensity: PixelDensity = PixelDensity.defaultDensity()
@@ -1265,5 +1378,27 @@ public class JpegEncoder internal constructor(
             chunk.toByteArray().copyInto(segment, header.size + 2)
             bitWriter.writeSegment(APP2, segment)
         }
+    }
+
+    public companion object {
+        /**
+         * Creates a new encoder with default quality (75).
+         */
+        public fun new(w: IoWrite): JpegEncoder = JpegEncoder(w, 75u)
+
+        /**
+         * Creates a new encoder with the specified quality (1-100).
+         */
+        public fun newWithQuality(w: IoWrite, quality: UByte): JpegEncoder = JpegEncoder(w, quality)
+
+        /**
+         * Creates a new encoder with default quality writing to [w].
+         */
+        public fun new(w: BufferIoWrite): JpegEncoder = JpegEncoder(w, 75u)
+
+        /**
+         * Creates a new encoder with specified quality writing to [w].
+         */
+        public fun newWithQuality(w: BufferIoWrite, quality: UByte): JpegEncoder = JpegEncoder(w, quality)
     }
 }
