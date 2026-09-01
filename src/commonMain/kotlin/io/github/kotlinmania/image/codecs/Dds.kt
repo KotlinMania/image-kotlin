@@ -25,6 +25,32 @@ private fun IoRead.readU32Le(): UInt {
 }
 
 /**
+ * Errors that can occur during decoding and parsing a DDS image.
+ */
+public sealed class DecoderError(message: String) : Exception(message) {
+    public fun fmt(): String = message ?: ""
+
+    public fun toImageError(): ImageError =
+        ImageError.Decoding(DecodingError(ImageFormatHint.Exact(ImageFormat.Dds), this))
+
+    public companion object {
+        public fun from(e: DecoderError): ImageError = e.toImageError()
+    }
+
+    public data class PixelFormatSizeInvalid(val size: UInt) : DecoderError("Invalid DDS PixelFormat size: $size")
+    public data class HeaderSizeInvalid(val size: UInt) : DecoderError("Invalid DDS header size: $size")
+    public data class HeaderFlagsInvalid(val flags: UInt) : DecoderError("Invalid DDS header flags: 0x${flags.toString(16)}")
+    public data class DxgiFormatInvalid(val format: UInt) : DecoderError("Invalid DDS DXGI format: $format")
+    public data class ResourceDimensionInvalid(val dimension: UInt) : DecoderError("Invalid DDS resource dimension: $dimension")
+    public data class Dx10FlagsInvalid(val flags: UInt) : DecoderError("Invalid DDS DX10 header flags: 0x${flags.toString(16)}")
+    public data class Dx10ArraySizeInvalid(val size: UInt) : DecoderError("Invalid DDS DX10 array size: $size")
+    public object DdsSignatureInvalid : DecoderError("DDS signature not found")
+}
+
+public typealias DdsDecoderError = DecoderError
+public typealias Header = DdsHeader
+
+/**
  * Extended DX10 header used by some DDS image files.
  */
 public class DX10Header(
@@ -41,16 +67,16 @@ public typealias PixelFormat = DdsPixelFormat
  * DDS pixel format.
  */
 public class DdsPixelFormat(
-    val flags: UInt,
-    val fourcc: ByteArray,
-    val rgbBitCount: UInt,
-    val rBitMask: UInt,
-    val gBitMask: UInt,
-    val bBitMask: UInt,
-    val aBitMask: UInt,
+    public val flags: UInt,
+    public val fourcc: ByteArray,
+    public val rgbBitCount: UInt,
+    public val rBitMask: UInt,
+    public val gBitMask: UInt,
+    public val bBitMask: UInt,
+    public val aBitMask: UInt,
 ) {
-    companion object {
-        fun fromReader(r: IoRead): DdsPixelFormat {
+    public companion object {
+        public fun fromReader(r: IoRead): DdsPixelFormat {
             val size = r.readU32Le()
             if (size != 32u) {
                 throw ImageError.Decoding(
@@ -86,22 +112,22 @@ public class DdsPixelFormat(
 /**
  * DDS file header.
  */
-internal class DdsHeader(
-    val flags: UInt,
-    val height: UInt,
-    val width: UInt,
-    val pitchOrLinearSize: UInt,
-    val depth: UInt,
-    val mipmapCount: UInt,
-    val pixelFormat: DdsPixelFormat,
-    val caps: UInt,
-    val caps2: UInt,
+public class DdsHeader(
+    public val flags: UInt,
+    public val height: UInt,
+    public val width: UInt,
+    public val pitchOrLinearSize: UInt,
+    public val depth: UInt,
+    public val mipmapCount: UInt,
+    public val pixelFormat: DdsPixelFormat,
+    public val caps: UInt,
+    public val caps2: UInt,
 ) {
-    companion object {
+    public companion object {
         private const val REQUIRED_FLAGS: UInt = 0x1007u
         private const val VALID_FLAGS: UInt = 0x008A100Fu
 
-        fun fromReader(r: IoRead): DdsHeader {
+        public fun fromReader(r: IoRead): DdsHeader {
             val size = r.readU32Le()
             if (size != 124u) {
                 throw ImageError.Decoding(
@@ -244,7 +270,15 @@ public class DdsDecoder internal constructor(
 
     public constructor(reader: IoRead) : this(createInner(reader))
 
+    public override fun readImageBoxed(buf: ByteArray) {
+        readImage(buf)
+    }
+
     public companion object {
+        public fun new(reader: IoRead): DdsDecoder = DdsDecoder(reader)
+
+        public fun new(bytes: ByteArray): DdsDecoder = DdsDecoder(bytes)
+
         private val DDS_MAGIC = byteArrayOf(0x44, 0x44, 0x53, 0x20) // "DDS "
 
         private fun createInner(reader: IoRead): DxtDecoder {

@@ -9,6 +9,11 @@ import kotlin.test.assertFailsWith
 
 class DdsTest {
     @Test
+    fun dimensionOverflow() {
+        testDimensionOverflow()
+    }
+
+    @Test
     fun testDimensionOverflow() {
         // A DXT1 header set to 0xFFFF_FFFC width and height (the highest u32%4 == 0)
         val header =
