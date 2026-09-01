@@ -62,13 +62,14 @@ public interface GenericImageView<P> {
         }
         if (width() > 0u && height() > 0u) {
             val p = getPixel(0u, 0u)
-            val buf: ImageBuffer<*, ByteArray> = when (p) {
-                is io.github.kotlinmania.image.Rgba<*> -> ImageBuffer.createRgba(width, height)
-                is io.github.kotlinmania.image.Rgb<*> -> ImageBuffer.createRgb(width, height)
-                is io.github.kotlinmania.image.LumaA<*> -> ImageBuffer.createGrayAlpha(width, height)
-                is io.github.kotlinmania.image.Luma<*> -> ImageBuffer.createGray(width, height)
-                else -> ImageBuffer.createRgba(width, height)
-            }
+            val buf: ImageBuffer<*, ByteArray> =
+                when (p) {
+                    is io.github.kotlinmania.image.Rgba<*> -> ImageBuffer.createRgba(width, height)
+                    is io.github.kotlinmania.image.Rgb<*> -> ImageBuffer.createRgb(width, height)
+                    is io.github.kotlinmania.image.LumaA<*> -> ImageBuffer.createGrayAlpha(width, height)
+                    is io.github.kotlinmania.image.Luma<*> -> ImageBuffer.createGray(width, height)
+                    else -> ImageBuffer.createRgba(width, height)
+                }
             return buf as ImageBuffer<P, ByteArray>
         }
         return ImageBuffer.createRgba(width, height) as ImageBuffer<P, ByteArray>

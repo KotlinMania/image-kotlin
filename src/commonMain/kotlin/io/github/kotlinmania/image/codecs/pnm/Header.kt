@@ -260,4 +260,3 @@ internal class TupltypeWriter(
     override fun toString(): String =
         if (tupltype != null) "TUPLTYPE ${tupltype.name()}\n" else ""
 }
-

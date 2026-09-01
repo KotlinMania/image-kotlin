@@ -29,14 +29,15 @@ class EncodeBenchTest {
 
     @Test
     fun benchEncodeAll() {
-        val benchDefs = listOf(
-            BenchDef(
-                encoder = Bmp(),
-                name = "bmp",
-                sizes = listOf(64u, 128u),
-                colors = listOf(ColorType.L8, ColorType.Rgb8, ColorType.Rgba8),
-            ),
-        )
+        val benchDefs =
+            listOf(
+                BenchDef(
+                    encoder = Bmp(),
+                    name = "bmp",
+                    sizes = listOf(64u, 128u),
+                    colors = listOf(ColorType.L8, ColorType.Rgb8, ColorType.Rgba8),
+                ),
+            )
 
         for (def in benchDefs) {
             for (color in def.colors) {

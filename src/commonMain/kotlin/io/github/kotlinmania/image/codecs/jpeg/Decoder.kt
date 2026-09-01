@@ -641,6 +641,7 @@ public class JpegDecoder(
          * Creates a new decoder from [input].
          */
         public fun new(input: ByteArray): JpegDecoder = JpegDecoder(input)
+
         private val ZIGZAG =
             intArrayOf(
                 0,

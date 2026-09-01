@@ -21,10 +21,11 @@ class DecodeBenchTest {
 
     @Test
     fun benchDecodeBmp() {
-        val defs = listOf(
-            BenchDef("100x100", ImageFormat.Bmp, 100u, 100u),
-            BenchDef("200x200", ImageFormat.Bmp, 200u, 200u),
-        )
+        val defs =
+            listOf(
+                BenchDef("100x100", ImageFormat.Bmp, 100u, 100u),
+                BenchDef("200x200", ImageFormat.Bmp, 200u, 200u),
+            )
 
         for (def in defs) {
             val raw = ByteArray((def.width * def.height * 3u).toInt()) { (it % 256).toByte() }

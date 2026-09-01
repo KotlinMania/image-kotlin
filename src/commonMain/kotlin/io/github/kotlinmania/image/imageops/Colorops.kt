@@ -48,23 +48,24 @@ public fun <I : GenericImageView<*>> grayscaleWithType(
     for (y in 0u until height) {
         for (x in 0u until width) {
             val p = image.getPixel(x, y)
-            val luma = when (p) {
-                is Luma<*> -> (p.l as? UByte) ?: ((p.l as? Number)?.toLong()?.coerceIn(0, 255)?.toUByte() ?: 0u.toUByte())
-                is LumaA<*> -> (p.l as? UByte) ?: ((p.l as? Number)?.toLong()?.coerceIn(0, 255)?.toUByte() ?: 0u.toUByte())
-                is Rgb<*> -> {
-                    val r = (p.r as? Number)?.toDouble()?.coerceIn(0.0, 255.0) ?: 0.0
-                    val g = (p.g as? Number)?.toDouble()?.coerceIn(0.0, 255.0) ?: 0.0
-                    val b = (p.b as? Number)?.toDouble()?.coerceIn(0.0, 255.0) ?: 0.0
-                    (0.299 * r + 0.587 * g + 0.114 * b).coerceIn(0.0, 255.0).toInt().toUByte()
+            val luma =
+                when (p) {
+                    is Luma<*> -> (p.l as? UByte) ?: ((p.l as? Number)?.toLong()?.coerceIn(0, 255)?.toUByte() ?: 0u.toUByte())
+                    is LumaA<*> -> (p.l as? UByte) ?: ((p.l as? Number)?.toLong()?.coerceIn(0, 255)?.toUByte() ?: 0u.toUByte())
+                    is Rgb<*> -> {
+                        val r = (p.r as? Number)?.toDouble()?.coerceIn(0.0, 255.0) ?: 0.0
+                        val g = (p.g as? Number)?.toDouble()?.coerceIn(0.0, 255.0) ?: 0.0
+                        val b = (p.b as? Number)?.toDouble()?.coerceIn(0.0, 255.0) ?: 0.0
+                        (0.299 * r + 0.587 * g + 0.114 * b).coerceIn(0.0, 255.0).toInt().toUByte()
+                    }
+                    is Rgba<*> -> {
+                        val r = (p.r as? Number)?.toDouble()?.coerceIn(0.0, 255.0) ?: 0.0
+                        val g = (p.g as? Number)?.toDouble()?.coerceIn(0.0, 255.0) ?: 0.0
+                        val b = (p.b as? Number)?.toDouble()?.coerceIn(0.0, 255.0) ?: 0.0
+                        (0.299 * r + 0.587 * g + 0.114 * b).coerceIn(0.0, 255.0).toInt().toUByte()
+                    }
+                    else -> 0u.toUByte()
                 }
-                is Rgba<*> -> {
-                    val r = (p.r as? Number)?.toDouble()?.coerceIn(0.0, 255.0) ?: 0.0
-                    val g = (p.g as? Number)?.toDouble()?.coerceIn(0.0, 255.0) ?: 0.0
-                    val b = (p.b as? Number)?.toDouble()?.coerceIn(0.0, 255.0) ?: 0.0
-                    (0.299 * r + 0.587 * g + 0.114 * b).coerceIn(0.0, 255.0).toInt().toUByte()
-                }
-                else -> 0u.toUByte()
-            }
             out.putPixel(x, y, Luma(luma))
         }
     }
@@ -82,33 +83,34 @@ public fun <I : GenericImageView<*>> grayscaleWithTypeAlpha(
     for (y in 0u until height) {
         for (x in 0u until width) {
             val p = image.getPixel(x, y)
-            val (luma, alpha) = when (p) {
-                is Luma<*> -> {
-                    val l = (p.l as? UByte) ?: ((p.l as? Number)?.toLong()?.coerceIn(0, 255)?.toUByte() ?: 0u.toUByte())
-                    Pair(l, 255u.toUByte())
+            val (luma, alpha) =
+                when (p) {
+                    is Luma<*> -> {
+                        val l = (p.l as? UByte) ?: ((p.l as? Number)?.toLong()?.coerceIn(0, 255)?.toUByte() ?: 0u.toUByte())
+                        Pair(l, 255u.toUByte())
+                    }
+                    is LumaA<*> -> {
+                        val l = (p.l as? UByte) ?: ((p.l as? Number)?.toLong()?.coerceIn(0, 255)?.toUByte() ?: 0u.toUByte())
+                        val a = (p.a as? UByte) ?: ((p.a as? Number)?.toLong()?.coerceIn(0, 255)?.toUByte() ?: 255u.toUByte())
+                        Pair(l, a)
+                    }
+                    is Rgb<*> -> {
+                        val r = (p.r as? Number)?.toDouble()?.coerceIn(0.0, 255.0) ?: 0.0
+                        val g = (p.g as? Number)?.toDouble()?.coerceIn(0.0, 255.0) ?: 0.0
+                        val b = (p.b as? Number)?.toDouble()?.coerceIn(0.0, 255.0) ?: 0.0
+                        val l = (0.299 * r + 0.587 * g + 0.114 * b).coerceIn(0.0, 255.0).toInt().toUByte()
+                        Pair(l, 255u.toUByte())
+                    }
+                    is Rgba<*> -> {
+                        val r = (p.r as? Number)?.toDouble()?.coerceIn(0.0, 255.0) ?: 0.0
+                        val g = (p.g as? Number)?.toDouble()?.coerceIn(0.0, 255.0) ?: 0.0
+                        val b = (p.b as? Number)?.toDouble()?.coerceIn(0.0, 255.0) ?: 0.0
+                        val l = (0.299 * r + 0.587 * g + 0.114 * b).coerceIn(0.0, 255.0).toInt().toUByte()
+                        val a = (p.a as? UByte) ?: ((p.a as? Number)?.toLong()?.coerceIn(0, 255)?.toUByte() ?: 255u.toUByte())
+                        Pair(l, a)
+                    }
+                    else -> Pair(0u.toUByte(), 255u.toUByte())
                 }
-                is LumaA<*> -> {
-                    val l = (p.l as? UByte) ?: ((p.l as? Number)?.toLong()?.coerceIn(0, 255)?.toUByte() ?: 0u.toUByte())
-                    val a = (p.a as? UByte) ?: ((p.a as? Number)?.toLong()?.coerceIn(0, 255)?.toUByte() ?: 255u.toUByte())
-                    Pair(l, a)
-                }
-                is Rgb<*> -> {
-                    val r = (p.r as? Number)?.toDouble()?.coerceIn(0.0, 255.0) ?: 0.0
-                    val g = (p.g as? Number)?.toDouble()?.coerceIn(0.0, 255.0) ?: 0.0
-                    val b = (p.b as? Number)?.toDouble()?.coerceIn(0.0, 255.0) ?: 0.0
-                    val l = (0.299 * r + 0.587 * g + 0.114 * b).coerceIn(0.0, 255.0).toInt().toUByte()
-                    Pair(l, 255u.toUByte())
-                }
-                is Rgba<*> -> {
-                    val r = (p.r as? Number)?.toDouble()?.coerceIn(0.0, 255.0) ?: 0.0
-                    val g = (p.g as? Number)?.toDouble()?.coerceIn(0.0, 255.0) ?: 0.0
-                    val b = (p.b as? Number)?.toDouble()?.coerceIn(0.0, 255.0) ?: 0.0
-                    val l = (0.299 * r + 0.587 * g + 0.114 * b).coerceIn(0.0, 255.0).toInt().toUByte()
-                    val a = (p.a as? UByte) ?: ((p.a as? Number)?.toLong()?.coerceIn(0, 255)?.toUByte() ?: 255u.toUByte())
-                    Pair(l, a)
-                }
-                else -> Pair(0u.toUByte(), 255u.toUByte())
-            }
             out.putPixel(x, y, LumaA(luma, alpha))
         }
     }
@@ -135,36 +137,47 @@ public fun <P> invert(image: GenericImage<P>) {
     for (y in 0u until height) {
         for (x in 0u until width) {
             val p = image.getPixel(x, y)
-            val inv: P = when (p) {
-                is Luma<*> -> {
-                    if (p.l is UByte) Luma((255 - (p.l as UByte).toInt()).toUByte()) as P
-                    else p
+            val inv: P =
+                when (p) {
+                    is Luma<*> -> {
+                        if (p.l is UByte) {
+                            Luma((255 - (p.l as UByte).toInt()).toUByte()) as P
+                        } else {
+                            p
+                        }
+                    }
+                    is LumaA<*> -> {
+                        if (p.l is UByte) {
+                            LumaA((255 - (p.l as UByte).toInt()).toUByte(), p.a) as P
+                        } else {
+                            p
+                        }
+                    }
+                    is Rgb<*> -> {
+                        if (p.r is UByte) {
+                            Rgb(
+                                (255 - (p.r as UByte).toInt()).toUByte(),
+                                (255 - (p.g as UByte).toInt()).toUByte(),
+                                (255 - (p.b as UByte).toInt()).toUByte(),
+                            ) as P
+                        } else {
+                            p
+                        }
+                    }
+                    is Rgba<*> -> {
+                        if (p.r is UByte) {
+                            Rgba(
+                                (255 - (p.r as UByte).toInt()).toUByte(),
+                                (255 - (p.g as UByte).toInt()).toUByte(),
+                                (255 - (p.b as UByte).toInt()).toUByte(),
+                                p.a,
+                            ) as P
+                        } else {
+                            p
+                        }
+                    }
+                    else -> p
                 }
-                is LumaA<*> -> {
-                    if (p.l is UByte) LumaA((255 - (p.l as UByte).toInt()).toUByte(), p.a) as P
-                    else p
-                }
-                is Rgb<*> -> {
-                    if (p.r is UByte) {
-                        Rgb(
-                            (255 - (p.r as UByte).toInt()).toUByte(),
-                            (255 - (p.g as UByte).toInt()).toUByte(),
-                            (255 - (p.b as UByte).toInt()).toUByte(),
-                        ) as P
-                    } else p
-                }
-                is Rgba<*> -> {
-                    if (p.r is UByte) {
-                        Rgba(
-                            (255 - (p.r as UByte).toInt()).toUByte(),
-                            (255 - (p.g as UByte).toInt()).toUByte(),
-                            (255 - (p.b as UByte).toInt()).toUByte(),
-                            p.a,
-                        ) as P
-                    } else p
-                }
-                else -> p
-            }
             image.putPixel(x, y, inv)
         }
     }
@@ -236,54 +249,63 @@ public fun <P> contrast(image: GenericImageView<P>, contrast: Float): ImageBuffe
     for (y in 0u until height) {
         for (x in 0u until width) {
             val p = image.getPixel(x, y)
-            val res: P = when (p) {
-                is Luma<*> -> {
-                    if (p.l is UByte) {
-                        val c = (p.l as UByte).toFloat()
-                        val d = ((c / 255.0f - 0.5f) * percent + 0.5f) * 255.0f
-                        Luma(d.coerceIn(0.0f, 255.0f).toInt().toUByte()) as P
-                    } else p
+            val res: P =
+                when (p) {
+                    is Luma<*> -> {
+                        if (p.l is UByte) {
+                            val c = (p.l as UByte).toFloat()
+                            val d = ((c / 255.0f - 0.5f) * percent + 0.5f) * 255.0f
+                            Luma(d.coerceIn(0.0f, 255.0f).toInt().toUByte()) as P
+                        } else {
+                            p
+                        }
+                    }
+                    is LumaA<*> -> {
+                        if (p.l is UByte) {
+                            val c = (p.l as UByte).toFloat()
+                            val d = ((c / 255.0f - 0.5f) * percent + 0.5f) * 255.0f
+                            LumaA(d.coerceIn(0.0f, 255.0f).toInt().toUByte(), p.a) as P
+                        } else {
+                            p
+                        }
+                    }
+                    is Rgb<*> -> {
+                        if (p.r is UByte) {
+                            val r = (p.r as UByte).toFloat()
+                            val g = (p.g as UByte).toFloat()
+                            val b = (p.b as UByte).toFloat()
+                            val dr = ((r / 255.0f - 0.5f) * percent + 0.5f) * 255.0f
+                            val dg = ((g / 255.0f - 0.5f) * percent + 0.5f) * 255.0f
+                            val db = ((b / 255.0f - 0.5f) * percent + 0.5f) * 255.0f
+                            Rgb(
+                                dr.coerceIn(0.0f, 255.0f).toInt().toUByte(),
+                                dg.coerceIn(0.0f, 255.0f).toInt().toUByte(),
+                                db.coerceIn(0.0f, 255.0f).toInt().toUByte(),
+                            ) as P
+                        } else {
+                            p
+                        }
+                    }
+                    is Rgba<*> -> {
+                        if (p.r is UByte) {
+                            val r = (p.r as UByte).toFloat()
+                            val g = (p.g as UByte).toFloat()
+                            val b = (p.b as UByte).toFloat()
+                            val dr = ((r / 255.0f - 0.5f) * percent + 0.5f) * 255.0f
+                            val dg = ((g / 255.0f - 0.5f) * percent + 0.5f) * 255.0f
+                            val db = ((b / 255.0f - 0.5f) * percent + 0.5f) * 255.0f
+                            Rgba(
+                                dr.coerceIn(0.0f, 255.0f).toInt().toUByte(),
+                                dg.coerceIn(0.0f, 255.0f).toInt().toUByte(),
+                                db.coerceIn(0.0f, 255.0f).toInt().toUByte(),
+                                p.a,
+                            ) as P
+                        } else {
+                            p
+                        }
+                    }
+                    else -> p
                 }
-                is LumaA<*> -> {
-                    if (p.l is UByte) {
-                        val c = (p.l as UByte).toFloat()
-                        val d = ((c / 255.0f - 0.5f) * percent + 0.5f) * 255.0f
-                        LumaA(d.coerceIn(0.0f, 255.0f).toInt().toUByte(), p.a) as P
-                    } else p
-                }
-                is Rgb<*> -> {
-                    if (p.r is UByte) {
-                        val r = (p.r as UByte).toFloat()
-                        val g = (p.g as UByte).toFloat()
-                        val b = (p.b as UByte).toFloat()
-                        val dr = ((r / 255.0f - 0.5f) * percent + 0.5f) * 255.0f
-                        val dg = ((g / 255.0f - 0.5f) * percent + 0.5f) * 255.0f
-                        val db = ((b / 255.0f - 0.5f) * percent + 0.5f) * 255.0f
-                        Rgb(
-                            dr.coerceIn(0.0f, 255.0f).toInt().toUByte(),
-                            dg.coerceIn(0.0f, 255.0f).toInt().toUByte(),
-                            db.coerceIn(0.0f, 255.0f).toInt().toUByte(),
-                        ) as P
-                    } else p
-                }
-                is Rgba<*> -> {
-                    if (p.r is UByte) {
-                        val r = (p.r as UByte).toFloat()
-                        val g = (p.g as UByte).toFloat()
-                        val b = (p.b as UByte).toFloat()
-                        val dr = ((r / 255.0f - 0.5f) * percent + 0.5f) * 255.0f
-                        val dg = ((g / 255.0f - 0.5f) * percent + 0.5f) * 255.0f
-                        val db = ((b / 255.0f - 0.5f) * percent + 0.5f) * 255.0f
-                        Rgba(
-                            dr.coerceIn(0.0f, 255.0f).toInt().toUByte(),
-                            dg.coerceIn(0.0f, 255.0f).toInt().toUByte(),
-                            db.coerceIn(0.0f, 255.0f).toInt().toUByte(),
-                            p.a,
-                        ) as P
-                    } else p
-                }
-                else -> p
-            }
             out.putPixel(x, y, res)
         }
     }
@@ -322,54 +344,63 @@ public fun <P> contrastInPlace(image: GenericImage<P>, contrast: Float) {
     for (y in 0u until height) {
         for (x in 0u until width) {
             val p = image.getPixel(x, y)
-            val res: P = when (p) {
-                is Luma<*> -> {
-                    if (p.l is UByte) {
-                        val c = (p.l as UByte).toFloat()
-                        val d = ((c / 255.0f - 0.5f) * percent + 0.5f) * 255.0f
-                        Luma(d.coerceIn(0.0f, 255.0f).toInt().toUByte()) as P
-                    } else p
+            val res: P =
+                when (p) {
+                    is Luma<*> -> {
+                        if (p.l is UByte) {
+                            val c = (p.l as UByte).toFloat()
+                            val d = ((c / 255.0f - 0.5f) * percent + 0.5f) * 255.0f
+                            Luma(d.coerceIn(0.0f, 255.0f).toInt().toUByte()) as P
+                        } else {
+                            p
+                        }
+                    }
+                    is LumaA<*> -> {
+                        if (p.l is UByte) {
+                            val c = (p.l as UByte).toFloat()
+                            val d = ((c / 255.0f - 0.5f) * percent + 0.5f) * 255.0f
+                            LumaA(d.coerceIn(0.0f, 255.0f).toInt().toUByte(), p.a) as P
+                        } else {
+                            p
+                        }
+                    }
+                    is Rgb<*> -> {
+                        if (p.r is UByte) {
+                            val r = (p.r as UByte).toFloat()
+                            val g = (p.g as UByte).toFloat()
+                            val b = (p.b as UByte).toFloat()
+                            val dr = ((r / 255.0f - 0.5f) * percent + 0.5f) * 255.0f
+                            val dg = ((g / 255.0f - 0.5f) * percent + 0.5f) * 255.0f
+                            val db = ((b / 255.0f - 0.5f) * percent + 0.5f) * 255.0f
+                            Rgb(
+                                dr.coerceIn(0.0f, 255.0f).toInt().toUByte(),
+                                dg.coerceIn(0.0f, 255.0f).toInt().toUByte(),
+                                db.coerceIn(0.0f, 255.0f).toInt().toUByte(),
+                            ) as P
+                        } else {
+                            p
+                        }
+                    }
+                    is Rgba<*> -> {
+                        if (p.r is UByte) {
+                            val r = (p.r as UByte).toFloat()
+                            val g = (p.g as UByte).toFloat()
+                            val b = (p.b as UByte).toFloat()
+                            val dr = ((r / 255.0f - 0.5f) * percent + 0.5f) * 255.0f
+                            val dg = ((g / 255.0f - 0.5f) * percent + 0.5f) * 255.0f
+                            val db = ((b / 255.0f - 0.5f) * percent + 0.5f) * 255.0f
+                            Rgba(
+                                dr.coerceIn(0.0f, 255.0f).toInt().toUByte(),
+                                dg.coerceIn(0.0f, 255.0f).toInt().toUByte(),
+                                db.coerceIn(0.0f, 255.0f).toInt().toUByte(),
+                                p.a,
+                            ) as P
+                        } else {
+                            p
+                        }
+                    }
+                    else -> p
                 }
-                is LumaA<*> -> {
-                    if (p.l is UByte) {
-                        val c = (p.l as UByte).toFloat()
-                        val d = ((c / 255.0f - 0.5f) * percent + 0.5f) * 255.0f
-                        LumaA(d.coerceIn(0.0f, 255.0f).toInt().toUByte(), p.a) as P
-                    } else p
-                }
-                is Rgb<*> -> {
-                    if (p.r is UByte) {
-                        val r = (p.r as UByte).toFloat()
-                        val g = (p.g as UByte).toFloat()
-                        val b = (p.b as UByte).toFloat()
-                        val dr = ((r / 255.0f - 0.5f) * percent + 0.5f) * 255.0f
-                        val dg = ((g / 255.0f - 0.5f) * percent + 0.5f) * 255.0f
-                        val db = ((b / 255.0f - 0.5f) * percent + 0.5f) * 255.0f
-                        Rgb(
-                            dr.coerceIn(0.0f, 255.0f).toInt().toUByte(),
-                            dg.coerceIn(0.0f, 255.0f).toInt().toUByte(),
-                            db.coerceIn(0.0f, 255.0f).toInt().toUByte(),
-                        ) as P
-                    } else p
-                }
-                is Rgba<*> -> {
-                    if (p.r is UByte) {
-                        val r = (p.r as UByte).toFloat()
-                        val g = (p.g as UByte).toFloat()
-                        val b = (p.b as UByte).toFloat()
-                        val dr = ((r / 255.0f - 0.5f) * percent + 0.5f) * 255.0f
-                        val dg = ((g / 255.0f - 0.5f) * percent + 0.5f) * 255.0f
-                        val db = ((b / 255.0f - 0.5f) * percent + 0.5f) * 255.0f
-                        Rgba(
-                            dr.coerceIn(0.0f, 255.0f).toInt().toUByte(),
-                            dg.coerceIn(0.0f, 255.0f).toInt().toUByte(),
-                            db.coerceIn(0.0f, 255.0f).toInt().toUByte(),
-                            p.a,
-                        ) as P
-                    } else p
-                }
-                else -> p
-            }
             image.putPixel(x, y, res)
         }
     }
@@ -401,46 +432,55 @@ public fun <P> brighten(image: GenericImageView<P>, value: Int): ImageBuffer<P, 
     for (y in 0u until height) {
         for (x in 0u until width) {
             val p = image.getPixel(x, y)
-            val res: P = when (p) {
-                is Luma<*> -> {
-                    if (p.l is UByte) {
-                        val c = (p.l as UByte).toInt()
-                        Luma((c + value).coerceIn(0, 255).toUByte()) as P
-                    } else p
+            val res: P =
+                when (p) {
+                    is Luma<*> -> {
+                        if (p.l is UByte) {
+                            val c = (p.l as UByte).toInt()
+                            Luma((c + value).coerceIn(0, 255).toUByte()) as P
+                        } else {
+                            p
+                        }
+                    }
+                    is LumaA<*> -> {
+                        if (p.l is UByte) {
+                            val c = (p.l as UByte).toInt()
+                            LumaA((c + value).coerceIn(0, 255).toUByte(), p.a) as P
+                        } else {
+                            p
+                        }
+                    }
+                    is Rgb<*> -> {
+                        if (p.r is UByte) {
+                            val r = (p.r as UByte).toInt()
+                            val g = (p.g as UByte).toInt()
+                            val b = (p.b as UByte).toInt()
+                            Rgb(
+                                (r + value).coerceIn(0, 255).toUByte(),
+                                (g + value).coerceIn(0, 255).toUByte(),
+                                (b + value).coerceIn(0, 255).toUByte(),
+                            ) as P
+                        } else {
+                            p
+                        }
+                    }
+                    is Rgba<*> -> {
+                        if (p.r is UByte) {
+                            val r = (p.r as UByte).toInt()
+                            val g = (p.g as UByte).toInt()
+                            val b = (p.b as UByte).toInt()
+                            Rgba(
+                                (r + value).coerceIn(0, 255).toUByte(),
+                                (g + value).coerceIn(0, 255).toUByte(),
+                                (b + value).coerceIn(0, 255).toUByte(),
+                                p.a,
+                            ) as P
+                        } else {
+                            p
+                        }
+                    }
+                    else -> p
                 }
-                is LumaA<*> -> {
-                    if (p.l is UByte) {
-                        val c = (p.l as UByte).toInt()
-                        LumaA((c + value).coerceIn(0, 255).toUByte(), p.a) as P
-                    } else p
-                }
-                is Rgb<*> -> {
-                    if (p.r is UByte) {
-                        val r = (p.r as UByte).toInt()
-                        val g = (p.g as UByte).toInt()
-                        val b = (p.b as UByte).toInt()
-                        Rgb(
-                            (r + value).coerceIn(0, 255).toUByte(),
-                            (g + value).coerceIn(0, 255).toUByte(),
-                            (b + value).coerceIn(0, 255).toUByte(),
-                        ) as P
-                    } else p
-                }
-                is Rgba<*> -> {
-                    if (p.r is UByte) {
-                        val r = (p.r as UByte).toInt()
-                        val g = (p.g as UByte).toInt()
-                        val b = (p.b as UByte).toInt()
-                        Rgba(
-                            (r + value).coerceIn(0, 255).toUByte(),
-                            (g + value).coerceIn(0, 255).toUByte(),
-                            (b + value).coerceIn(0, 255).toUByte(),
-                            p.a,
-                        ) as P
-                    } else p
-                }
-                else -> p
-            }
             out.putPixel(x, y, res)
         }
     }
@@ -474,46 +514,55 @@ public fun <P> brightenInPlace(image: GenericImage<P>, value: Int) {
     for (y in 0u until height) {
         for (x in 0u until width) {
             val p = image.getPixel(x, y)
-            val res: P = when (p) {
-                is Luma<*> -> {
-                    if (p.l is UByte) {
-                        val c = (p.l as UByte).toInt()
-                        Luma((c + value).coerceIn(0, 255).toUByte()) as P
-                    } else p
+            val res: P =
+                when (p) {
+                    is Luma<*> -> {
+                        if (p.l is UByte) {
+                            val c = (p.l as UByte).toInt()
+                            Luma((c + value).coerceIn(0, 255).toUByte()) as P
+                        } else {
+                            p
+                        }
+                    }
+                    is LumaA<*> -> {
+                        if (p.l is UByte) {
+                            val c = (p.l as UByte).toInt()
+                            LumaA((c + value).coerceIn(0, 255).toUByte(), p.a) as P
+                        } else {
+                            p
+                        }
+                    }
+                    is Rgb<*> -> {
+                        if (p.r is UByte) {
+                            val r = (p.r as UByte).toInt()
+                            val g = (p.g as UByte).toInt()
+                            val b = (p.b as UByte).toInt()
+                            Rgb(
+                                (r + value).coerceIn(0, 255).toUByte(),
+                                (g + value).coerceIn(0, 255).toUByte(),
+                                (b + value).coerceIn(0, 255).toUByte(),
+                            ) as P
+                        } else {
+                            p
+                        }
+                    }
+                    is Rgba<*> -> {
+                        if (p.r is UByte) {
+                            val r = (p.r as UByte).toInt()
+                            val g = (p.g as UByte).toInt()
+                            val b = (p.b as UByte).toInt()
+                            Rgba(
+                                (r + value).coerceIn(0, 255).toUByte(),
+                                (g + value).coerceIn(0, 255).toUByte(),
+                                (b + value).coerceIn(0, 255).toUByte(),
+                                p.a,
+                            ) as P
+                        } else {
+                            p
+                        }
+                    }
+                    else -> p
                 }
-                is LumaA<*> -> {
-                    if (p.l is UByte) {
-                        val c = (p.l as UByte).toInt()
-                        LumaA((c + value).coerceIn(0, 255).toUByte(), p.a) as P
-                    } else p
-                }
-                is Rgb<*> -> {
-                    if (p.r is UByte) {
-                        val r = (p.r as UByte).toInt()
-                        val g = (p.g as UByte).toInt()
-                        val b = (p.b as UByte).toInt()
-                        Rgb(
-                            (r + value).coerceIn(0, 255).toUByte(),
-                            (g + value).coerceIn(0, 255).toUByte(),
-                            (b + value).coerceIn(0, 255).toUByte(),
-                        ) as P
-                    } else p
-                }
-                is Rgba<*> -> {
-                    if (p.r is UByte) {
-                        val r = (p.r as UByte).toInt()
-                        val g = (p.g as UByte).toInt()
-                        val b = (p.b as UByte).toInt()
-                        Rgba(
-                            (r + value).coerceIn(0, 255).toUByte(),
-                            (g + value).coerceIn(0, 255).toUByte(),
-                            (b + value).coerceIn(0, 255).toUByte(),
-                            p.a,
-                        ) as P
-                    } else p
-                }
-                else -> p
-            }
             image.putPixel(x, y, res)
         }
     }
@@ -560,31 +609,36 @@ public fun <P> huerotate(image: GenericImageView<P>, degrees: Int): ImageBuffer<
     for (y in 0u until height) {
         for (x in 0u until width) {
             val p = image.getPixel(x, y)
-            val res: P = when (p) {
-                is Rgb<*> -> {
-                    if (p.r is UByte) {
-                        val r = (p.r as UByte).toDouble()
-                        val g = (p.g as UByte).toDouble()
-                        val b = (p.b as UByte).toDouble()
-                        val nr = (m0 * r + m1 * g + m2 * b).coerceIn(0.0, 255.0).toInt().toUByte()
-                        val ng = (m3 * r + m4 * g + m5 * b).coerceIn(0.0, 255.0).toInt().toUByte()
-                        val nb = (m6 * r + m7 * g + m8 * b).coerceIn(0.0, 255.0).toInt().toUByte()
-                        Rgb(nr, ng, nb) as P
-                    } else p
+            val res: P =
+                when (p) {
+                    is Rgb<*> -> {
+                        if (p.r is UByte) {
+                            val r = (p.r as UByte).toDouble()
+                            val g = (p.g as UByte).toDouble()
+                            val b = (p.b as UByte).toDouble()
+                            val nr = (m0 * r + m1 * g + m2 * b).coerceIn(0.0, 255.0).toInt().toUByte()
+                            val ng = (m3 * r + m4 * g + m5 * b).coerceIn(0.0, 255.0).toInt().toUByte()
+                            val nb = (m6 * r + m7 * g + m8 * b).coerceIn(0.0, 255.0).toInt().toUByte()
+                            Rgb(nr, ng, nb) as P
+                        } else {
+                            p
+                        }
+                    }
+                    is Rgba<*> -> {
+                        if (p.r is UByte) {
+                            val r = (p.r as UByte).toDouble()
+                            val g = (p.g as UByte).toDouble()
+                            val b = (p.b as UByte).toDouble()
+                            val nr = (m0 * r + m1 * g + m2 * b).coerceIn(0.0, 255.0).toInt().toUByte()
+                            val ng = (m3 * r + m4 * g + m5 * b).coerceIn(0.0, 255.0).toInt().toUByte()
+                            val nb = (m6 * r + m7 * g + m8 * b).coerceIn(0.0, 255.0).toInt().toUByte()
+                            Rgba(nr, ng, nb, p.a) as P
+                        } else {
+                            p
+                        }
+                    }
+                    else -> p
                 }
-                is Rgba<*> -> {
-                    if (p.r is UByte) {
-                        val r = (p.r as UByte).toDouble()
-                        val g = (p.g as UByte).toDouble()
-                        val b = (p.b as UByte).toDouble()
-                        val nr = (m0 * r + m1 * g + m2 * b).coerceIn(0.0, 255.0).toInt().toUByte()
-                        val ng = (m3 * r + m4 * g + m5 * b).coerceIn(0.0, 255.0).toInt().toUByte()
-                        val nb = (m6 * r + m7 * g + m8 * b).coerceIn(0.0, 255.0).toInt().toUByte()
-                        Rgba(nr, ng, nb, p.a) as P
-                    } else p
-                }
-                else -> p
-            }
             out.putPixel(x, y, res)
         }
     }
@@ -659,31 +713,36 @@ public fun <P> huerotateInPlace(image: GenericImage<P>, degrees: Int) {
     for (y in 0u until height) {
         for (x in 0u until width) {
             val p = image.getPixel(x, y)
-            val res: P = when (p) {
-                is Rgb<*> -> {
-                    if (p.r is UByte) {
-                        val r = (p.r as UByte).toDouble()
-                        val g = (p.g as UByte).toDouble()
-                        val b = (p.b as UByte).toDouble()
-                        val nr = (m0 * r + m1 * g + m2 * b).coerceIn(0.0, 255.0).toInt().toUByte()
-                        val ng = (m3 * r + m4 * g + m5 * b).coerceIn(0.0, 255.0).toInt().toUByte()
-                        val nb = (m6 * r + m7 * g + m8 * b).coerceIn(0.0, 255.0).toInt().toUByte()
-                        Rgb(nr, ng, nb) as P
-                    } else p
+            val res: P =
+                when (p) {
+                    is Rgb<*> -> {
+                        if (p.r is UByte) {
+                            val r = (p.r as UByte).toDouble()
+                            val g = (p.g as UByte).toDouble()
+                            val b = (p.b as UByte).toDouble()
+                            val nr = (m0 * r + m1 * g + m2 * b).coerceIn(0.0, 255.0).toInt().toUByte()
+                            val ng = (m3 * r + m4 * g + m5 * b).coerceIn(0.0, 255.0).toInt().toUByte()
+                            val nb = (m6 * r + m7 * g + m8 * b).coerceIn(0.0, 255.0).toInt().toUByte()
+                            Rgb(nr, ng, nb) as P
+                        } else {
+                            p
+                        }
+                    }
+                    is Rgba<*> -> {
+                        if (p.r is UByte) {
+                            val r = (p.r as UByte).toDouble()
+                            val g = (p.g as UByte).toDouble()
+                            val b = (p.b as UByte).toDouble()
+                            val nr = (m0 * r + m1 * g + m2 * b).coerceIn(0.0, 255.0).toInt().toUByte()
+                            val ng = (m3 * r + m4 * g + m5 * b).coerceIn(0.0, 255.0).toInt().toUByte()
+                            val nb = (m6 * r + m7 * g + m8 * b).coerceIn(0.0, 255.0).toInt().toUByte()
+                            Rgba(nr, ng, nb, p.a) as P
+                        } else {
+                            p
+                        }
+                    }
+                    else -> p
                 }
-                is Rgba<*> -> {
-                    if (p.r is UByte) {
-                        val r = (p.r as UByte).toDouble()
-                        val g = (p.g as UByte).toDouble()
-                        val b = (p.b as UByte).toDouble()
-                        val nr = (m0 * r + m1 * g + m2 * b).coerceIn(0.0, 255.0).toInt().toUByte()
-                        val ng = (m3 * r + m4 * g + m5 * b).coerceIn(0.0, 255.0).toInt().toUByte()
-                        val nb = (m6 * r + m7 * g + m8 * b).coerceIn(0.0, 255.0).toInt().toUByte()
-                        Rgba(nr, ng, nb, p.a) as P
-                    } else p
-                }
-                else -> p
-            }
             image.putPixel(x, y, res)
         }
     }
