@@ -81,6 +81,11 @@ class JpegDecoderTest {
     }
 
     @Test
+    fun testExifOrientation() {
+        testExifOrientationDefault()
+    }
+
+    @Test
     fun testExifOrientationDefault() {
         val width = 8u
         val height = 8u

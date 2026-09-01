@@ -18,6 +18,11 @@ import kotlin.math.pow
 import kotlin.math.truncate
 
 /**
+ * Pixel item type for HDR encoding sequences.
+ */
+public typealias Item = Rgbe8Pixel
+
+/**
  * Radiance HDR encoder.
  */
 public class HdrEncoder internal constructor(
