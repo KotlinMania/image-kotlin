@@ -47,12 +47,19 @@ public class Filter(
 /**
  * Float wrapper rounding to nearest integer values.
  */
-internal class FloatNearest(public val value: Float) {
+internal class FloatNearest(
+    public val value: Float,
+) {
     fun toI8(): Byte = round(value).toInt().toByte()
+
     fun toI16(): Short = round(value).toInt().toShort()
+
     fun toI64(): Long = round(value).toLong()
+
     fun toU8(): UByte = round(value).toInt().toUByte()
+
     fun toU16(): UShort = round(value).toInt().toUShort()
+
     fun toU64(): ULong = round(value).toLong().toULong()
 }
 
@@ -252,11 +259,12 @@ public fun <P> resize(
         val srcY = (y.toDouble() / nheight.toDouble()).toFloat()
         for (x in 0u until nwidth) {
             val srcX = (x.toDouble() / nwidth.toDouble()).toFloat()
-            val pixel = if (filter == FilterType.Nearest) {
-                sampleNearest(image, srcX, srcY)
-            } else {
-                sampleBilinear(image, srcX, srcY)
-            }
+            val pixel =
+                if (filter == FilterType.Nearest) {
+                    sampleNearest(image, srcX, srcY)
+                } else {
+                    sampleBilinear(image, srcX, srcY)
+                }
             if (pixel != null) {
                 out.putPixel(x, y, pixel)
             }
@@ -281,7 +289,6 @@ public fun thumbnail(
     val dstH = max(1, (srcH * ratio).toInt())
     return resize(image, srcW, srcH, dstW, dstH, channels, FilterType.Triangle)
 }
-
 
 /**
  * Samples a pixel at normalized coordinates ([u], [v]) with bilinear interpolation.
@@ -881,60 +888,61 @@ public fun <P> filter3x3(
     for (y in 1u until height - 1u) {
         for (x in 1u until width - 1u) {
             val center = image.getPixel(x, y)
-            val p: P = when (center) {
-                is Luma<*> -> {
-                    var sum = 0.0f
-                    for (k in 0 until 9) {
-                        val px = image.getPixel((x.toInt() + tapsX[k]).toUInt(), (y.toInt() + tapsY[k]).toUInt()) as Luma<*>
-                        val c = (px.l as? Number)?.toFloat() ?: 0.0f
-                        sum += c * kernel[k]
+            val p: P =
+                when (center) {
+                    is Luma<*> -> {
+                        var sum = 0.0f
+                        for (k in 0 until 9) {
+                            val px = image.getPixel((x.toInt() + tapsX[k]).toUInt(), (y.toInt() + tapsY[k]).toUInt()) as Luma<*>
+                            val c = (px.l as? Number)?.toFloat() ?: 0.0f
+                            sum += c * kernel[k]
+                        }
+                        Luma((sum * inverseSum).coerceIn(0.0f, 255.0f).toInt().toUByte()) as P
                     }
-                    Luma((sum * inverseSum).coerceIn(0.0f, 255.0f).toInt().toUByte()) as P
-                }
-                is LumaA<*> -> {
-                    var sumL = 0.0f
-                    for (k in 0 until 9) {
-                        val px = image.getPixel((x.toInt() + tapsX[k]).toUInt(), (y.toInt() + tapsY[k]).toUInt()) as LumaA<*>
-                        val c = (px.l as? Number)?.toFloat() ?: 0.0f
-                        sumL += c * kernel[k]
+                    is LumaA<*> -> {
+                        var sumL = 0.0f
+                        for (k in 0 until 9) {
+                            val px = image.getPixel((x.toInt() + tapsX[k]).toUInt(), (y.toInt() + tapsY[k]).toUInt()) as LumaA<*>
+                            val c = (px.l as? Number)?.toFloat() ?: 0.0f
+                            sumL += c * kernel[k]
+                        }
+                        LumaA((sumL * inverseSum).coerceIn(0.0f, 255.0f).toInt().toUByte(), center.a) as P
                     }
-                    LumaA((sumL * inverseSum).coerceIn(0.0f, 255.0f).toInt().toUByte(), center.a) as P
-                }
-                is Rgb<*> -> {
-                    var sumR = 0.0f
-                    var sumG = 0.0f
-                    var sumB = 0.0f
-                    for (k in 0 until 9) {
-                        val px = image.getPixel((x.toInt() + tapsX[k]).toUInt(), (y.toInt() + tapsY[k]).toUInt()) as Rgb<*>
-                        sumR += ((px.r as? Number)?.toFloat() ?: 0.0f) * kernel[k]
-                        sumG += ((px.g as? Number)?.toFloat() ?: 0.0f) * kernel[k]
-                        sumB += ((px.b as? Number)?.toFloat() ?: 0.0f) * kernel[k]
+                    is Rgb<*> -> {
+                        var sumR = 0.0f
+                        var sumG = 0.0f
+                        var sumB = 0.0f
+                        for (k in 0 until 9) {
+                            val px = image.getPixel((x.toInt() + tapsX[k]).toUInt(), (y.toInt() + tapsY[k]).toUInt()) as Rgb<*>
+                            sumR += ((px.r as? Number)?.toFloat() ?: 0.0f) * kernel[k]
+                            sumG += ((px.g as? Number)?.toFloat() ?: 0.0f) * kernel[k]
+                            sumB += ((px.b as? Number)?.toFloat() ?: 0.0f) * kernel[k]
+                        }
+                        Rgb(
+                            (sumR * inverseSum).coerceIn(0.0f, 255.0f).toInt().toUByte(),
+                            (sumG * inverseSum).coerceIn(0.0f, 255.0f).toInt().toUByte(),
+                            (sumB * inverseSum).coerceIn(0.0f, 255.0f).toInt().toUByte(),
+                        ) as P
                     }
-                    Rgb(
-                        (sumR * inverseSum).coerceIn(0.0f, 255.0f).toInt().toUByte(),
-                        (sumG * inverseSum).coerceIn(0.0f, 255.0f).toInt().toUByte(),
-                        (sumB * inverseSum).coerceIn(0.0f, 255.0f).toInt().toUByte(),
-                    ) as P
-                }
-                is Rgba<*> -> {
-                    var sumR = 0.0f
-                    var sumG = 0.0f
-                    var sumB = 0.0f
-                    for (k in 0 until 9) {
-                        val px = image.getPixel((x.toInt() + tapsX[k]).toUInt(), (y.toInt() + tapsY[k]).toUInt()) as Rgba<*>
-                        sumR += ((px.r as? Number)?.toFloat() ?: 0.0f) * kernel[k]
-                        sumG += ((px.g as? Number)?.toFloat() ?: 0.0f) * kernel[k]
-                        sumB += ((px.b as? Number)?.toFloat() ?: 0.0f) * kernel[k]
+                    is Rgba<*> -> {
+                        var sumR = 0.0f
+                        var sumG = 0.0f
+                        var sumB = 0.0f
+                        for (k in 0 until 9) {
+                            val px = image.getPixel((x.toInt() + tapsX[k]).toUInt(), (y.toInt() + tapsY[k]).toUInt()) as Rgba<*>
+                            sumR += ((px.r as? Number)?.toFloat() ?: 0.0f) * kernel[k]
+                            sumG += ((px.g as? Number)?.toFloat() ?: 0.0f) * kernel[k]
+                            sumB += ((px.b as? Number)?.toFloat() ?: 0.0f) * kernel[k]
+                        }
+                        Rgba(
+                            (sumR * inverseSum).coerceIn(0.0f, 255.0f).toInt().toUByte(),
+                            (sumG * inverseSum).coerceIn(0.0f, 255.0f).toInt().toUByte(),
+                            (sumB * inverseSum).coerceIn(0.0f, 255.0f).toInt().toUByte(),
+                            center.a,
+                        ) as P
                     }
-                    Rgba(
-                        (sumR * inverseSum).coerceIn(0.0f, 255.0f).toInt().toUByte(),
-                        (sumG * inverseSum).coerceIn(0.0f, 255.0f).toInt().toUByte(),
-                        (sumB * inverseSum).coerceIn(0.0f, 255.0f).toInt().toUByte(),
-                        center.a,
-                    ) as P
+                    else -> center
                 }
-                else -> center
-            }
             out.putPixel(x, y, p)
         }
     }
@@ -961,44 +969,49 @@ public fun <P> blurAdvanced(
 ): ImageBuffer<P, ByteArray> {
     val (width, height) = image.dimensions()
     if (width == 0u || height == 0u) return image.bufferWithDimensions(0u, 0u)
-    val channels = when (image.getPixel(0u, 0u)) {
-        is Luma<*> -> 1
-        is LumaA<*> -> 2
-        is Rgb<*> -> 3
-        is Rgba<*> -> 4
-        else -> 1
-    }
-    val raw = if (image is ImageBuffer<*, *>) {
-        image.asRaw().copyOf()
-    } else null
-    val buf = raw ?: run {
-        val b = ByteArray(width.toInt() * height.toInt() * channels)
-        for (y in 0u until height) {
-            for (x in 0u until width) {
-                val p = image.getPixel(x, y)
-                val idx = (y.toInt() * width.toInt() + x.toInt()) * channels
-                when (p) {
-                    is Luma<*> -> b[idx] = ((p.l as? Number)?.toInt() ?: 0).toByte()
-                    is LumaA<*> -> {
-                        b[idx] = ((p.l as? Number)?.toInt() ?: 0).toByte()
-                        b[idx + 1] = ((p.a as? Number)?.toInt() ?: 0).toByte()
-                    }
-                    is Rgb<*> -> {
-                        b[idx] = ((p.r as? Number)?.toInt() ?: 0).toByte()
-                        b[idx + 1] = ((p.g as? Number)?.toInt() ?: 0).toByte()
-                        b[idx + 2] = ((p.b as? Number)?.toInt() ?: 0).toByte()
-                    }
-                    is Rgba<*> -> {
-                        b[idx] = ((p.r as? Number)?.toInt() ?: 0).toByte()
-                        b[idx + 1] = ((p.g as? Number)?.toInt() ?: 0).toByte()
-                        b[idx + 2] = ((p.b as? Number)?.toInt() ?: 0).toByte()
-                        b[idx + 3] = ((p.a as? Number)?.toInt() ?: 0).toByte()
+    val channels =
+        when (image.getPixel(0u, 0u)) {
+            is Luma<*> -> 1
+            is LumaA<*> -> 2
+            is Rgb<*> -> 3
+            is Rgba<*> -> 4
+            else -> 1
+        }
+    val raw =
+        if (image is ImageBuffer<*, *>) {
+            image.asRaw().copyOf()
+        } else {
+            null
+        }
+    val buf =
+        raw ?: run {
+            val b = ByteArray(width.toInt() * height.toInt() * channels)
+            for (y in 0u until height) {
+                for (x in 0u until width) {
+                    val p = image.getPixel(x, y)
+                    val idx = (y.toInt() * width.toInt() + x.toInt()) * channels
+                    when (p) {
+                        is Luma<*> -> b[idx] = ((p.l as? Number)?.toInt() ?: 0).toByte()
+                        is LumaA<*> -> {
+                            b[idx] = ((p.l as? Number)?.toInt() ?: 0).toByte()
+                            b[idx + 1] = ((p.a as? Number)?.toInt() ?: 0).toByte()
+                        }
+                        is Rgb<*> -> {
+                            b[idx] = ((p.r as? Number)?.toInt() ?: 0).toByte()
+                            b[idx + 1] = ((p.g as? Number)?.toInt() ?: 0).toByte()
+                            b[idx + 2] = ((p.b as? Number)?.toInt() ?: 0).toByte()
+                        }
+                        is Rgba<*> -> {
+                            b[idx] = ((p.r as? Number)?.toInt() ?: 0).toByte()
+                            b[idx + 1] = ((p.g as? Number)?.toInt() ?: 0).toByte()
+                            b[idx + 2] = ((p.b as? Number)?.toInt() ?: 0).toByte()
+                            b[idx + 3] = ((p.a as? Number)?.toInt() ?: 0).toByte()
+                        }
                     }
                 }
             }
+            b
         }
-        b
-    }
     val blurred = blurAdvanced(buf, width.toInt(), height.toInt(), channels, params)
     @Suppress("UNCHECKED_CAST")
     return when (channels) {
@@ -1054,57 +1067,58 @@ public fun <P> unsharpen(
         for (x in 0u until width) {
             val ic = image.getPixel(x, y)
             val id = blurred.getPixel(x, y)
+
             @Suppress("UNCHECKED_CAST")
-            val p: P = when (ic) {
-                is Luma<*> -> {
-                    val l1 = (ic.l as? Number)?.toInt() ?: 0
-                    val l2 = ((id as Luma<*>).l as? Number)?.toInt() ?: 0
-                    val diff = l1 - l2
-                    val e = if (abs(diff) > threshold) (l1 + diff).coerceIn(0, 255) else l1
-                    Luma(e.toUByte()) as P
+            val p: P =
+                when (ic) {
+                    is Luma<*> -> {
+                        val l1 = (ic.l as? Number)?.toInt() ?: 0
+                        val l2 = ((id as Luma<*>).l as? Number)?.toInt() ?: 0
+                        val diff = l1 - l2
+                        val e = if (abs(diff) > threshold) (l1 + diff).coerceIn(0, 255) else l1
+                        Luma(e.toUByte()) as P
+                    }
+                    is LumaA<*> -> {
+                        val l1 = (ic.l as? Number)?.toInt() ?: 0
+                        val l2 = ((id as LumaA<*>).l as? Number)?.toInt() ?: 0
+                        val diff = l1 - l2
+                        val e = if (abs(diff) > threshold) (l1 + diff).coerceIn(0, 255) else l1
+                        LumaA(e.toUByte(), ic.a) as P
+                    }
+                    is Rgb<*> -> {
+                        val r1 = (ic.r as? Number)?.toInt() ?: 0
+                        val g1 = (ic.g as? Number)?.toInt() ?: 0
+                        val b1 = (ic.b as? Number)?.toInt() ?: 0
+                        val r2 = ((id as Rgb<*>).r as? Number)?.toInt() ?: 0
+                        val g2 = (id.g as? Number)?.toInt() ?: 0
+                        val b2 = (id.b as? Number)?.toInt() ?: 0
+                        val diffR = r1 - r2
+                        val diffG = g1 - g2
+                        val diffB = b1 - b2
+                        val er = if (abs(diffR) > threshold) (r1 + diffR).coerceIn(0, 255) else r1
+                        val eg = if (abs(diffG) > threshold) (g1 + diffG).coerceIn(0, 255) else g1
+                        val eb = if (abs(diffB) > threshold) (b1 + diffB).coerceIn(0, 255) else b1
+                        Rgb(er.toUByte(), eg.toUByte(), eb.toUByte()) as P
+                    }
+                    is Rgba<*> -> {
+                        val r1 = (ic.r as? Number)?.toInt() ?: 0
+                        val g1 = (ic.g as? Number)?.toInt() ?: 0
+                        val b1 = (ic.b as? Number)?.toInt() ?: 0
+                        val r2 = ((id as Rgba<*>).r as? Number)?.toInt() ?: 0
+                        val g2 = (id.g as? Number)?.toInt() ?: 0
+                        val b2 = (id.b as? Number)?.toInt() ?: 0
+                        val diffR = r1 - r2
+                        val diffG = g1 - g2
+                        val diffB = b1 - b2
+                        val er = if (abs(diffR) > threshold) (r1 + diffR).coerceIn(0, 255) else r1
+                        val eg = if (abs(diffG) > threshold) (g1 + diffG).coerceIn(0, 255) else g1
+                        val eb = if (abs(diffB) > threshold) (b1 + diffB).coerceIn(0, 255) else b1
+                        Rgba(er.toUByte(), eg.toUByte(), eb.toUByte(), ic.a) as P
+                    }
+                    else -> ic
                 }
-                is LumaA<*> -> {
-                    val l1 = (ic.l as? Number)?.toInt() ?: 0
-                    val l2 = ((id as LumaA<*>).l as? Number)?.toInt() ?: 0
-                    val diff = l1 - l2
-                    val e = if (abs(diff) > threshold) (l1 + diff).coerceIn(0, 255) else l1
-                    LumaA(e.toUByte(), ic.a) as P
-                }
-                is Rgb<*> -> {
-                    val r1 = (ic.r as? Number)?.toInt() ?: 0
-                    val g1 = (ic.g as? Number)?.toInt() ?: 0
-                    val b1 = (ic.b as? Number)?.toInt() ?: 0
-                    val r2 = ((id as Rgb<*>).r as? Number)?.toInt() ?: 0
-                    val g2 = (id.g as? Number)?.toInt() ?: 0
-                    val b2 = (id.b as? Number)?.toInt() ?: 0
-                    val diffR = r1 - r2
-                    val diffG = g1 - g2
-                    val diffB = b1 - b2
-                    val er = if (abs(diffR) > threshold) (r1 + diffR).coerceIn(0, 255) else r1
-                    val eg = if (abs(diffG) > threshold) (g1 + diffG).coerceIn(0, 255) else g1
-                    val eb = if (abs(diffB) > threshold) (b1 + diffB).coerceIn(0, 255) else b1
-                    Rgb(er.toUByte(), eg.toUByte(), eb.toUByte()) as P
-                }
-                is Rgba<*> -> {
-                    val r1 = (ic.r as? Number)?.toInt() ?: 0
-                    val g1 = (ic.g as? Number)?.toInt() ?: 0
-                    val b1 = (ic.b as? Number)?.toInt() ?: 0
-                    val r2 = ((id as Rgba<*>).r as? Number)?.toInt() ?: 0
-                    val g2 = (id.g as? Number)?.toInt() ?: 0
-                    val b2 = (id.b as? Number)?.toInt() ?: 0
-                    val diffR = r1 - r2
-                    val diffG = g1 - g2
-                    val diffB = b1 - b2
-                    val er = if (abs(diffR) > threshold) (r1 + diffR).coerceIn(0, 255) else r1
-                    val eg = if (abs(diffG) > threshold) (g1 + diffG).coerceIn(0, 255) else g1
-                    val eb = if (abs(diffB) > threshold) (b1 + diffB).coerceIn(0, 255) else b1
-                    Rgba(er.toUByte(), eg.toUByte(), eb.toUByte(), ic.a) as P
-                }
-                else -> ic
-            }
             out.putPixel(x, y, p)
         }
     }
     return out
 }
-
