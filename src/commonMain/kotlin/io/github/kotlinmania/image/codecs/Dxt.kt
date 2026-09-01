@@ -120,6 +120,12 @@ public class DxtDecoder internal constructor(
             val heightBlocks = height / 4u
             return DxtDecoder(reader, widthBlocks, heightBlocks, variant, 0u)
         }
+        public fun new(
+            reader: IoRead,
+            width: UInt,
+            height: UInt,
+            variant: DxtVariant,
+        ): DxtDecoder = create(reader, width, height, variant)
     }
 
     public fun scanlineBytes(): ULong =
@@ -165,7 +171,13 @@ public class DxtDecoder internal constructor(
             offset = end
         }
     }
+
+    override fun readImageBoxed(buf: ByteArray) {
+        readImage(buf)
+    }
 }
+
+internal typealias Rgb = ByteArray
 
 /**
  * Decodes a 5-bit R, 6-bit G, 5-bit B 16-bit packed color value into 8-bit RGB.

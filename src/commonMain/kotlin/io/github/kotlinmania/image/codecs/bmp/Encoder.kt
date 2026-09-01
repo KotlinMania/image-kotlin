@@ -267,6 +267,12 @@ public class BmpEncoder(
     ) {
         encode(buf, width, height, colorType)
     }
+
+    override fun makeCompatibleImg(
+        sealed: io.github.kotlinmania.image.io.MethodSealedToImage,
+        input: io.github.kotlinmania.image.images.DynamicImage,
+    ): io.github.kotlinmania.image.images.DynamicImage? =
+        io.github.kotlinmania.image.io.dynimageConversion8bit(input)
 }
 
 private data class WrittenPixelInfo(

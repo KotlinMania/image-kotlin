@@ -58,6 +58,18 @@ public interface ImageEncoder {
 }
 
 /**
+ * Writes all the bytes in an image to the encoder with standard [ColorType].
+ */
+public fun ImageEncoder.writeImage(
+    buf: ByteArray,
+    width: UInt,
+    height: UInt,
+    colorType: ColorType,
+) {
+    writeImage(buf, width, height, ExtendedColorType.from(colorType))
+}
+
+/**
  * Boxed variant of the image encoder interface.
  */
 public interface ImageEncoderBoxed : ImageEncoder {

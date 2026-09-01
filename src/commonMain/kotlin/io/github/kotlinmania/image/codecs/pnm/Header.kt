@@ -257,6 +257,8 @@ public class PnmHeader(
 internal class TupltypeWriter(
     private val tupltype: ArbitraryTuplType?,
 ) {
+    fun fmt(): String = toString()
+
     override fun toString(): String =
         if (tupltype != null) "TUPLTYPE ${tupltype.name()}\n" else ""
 }
