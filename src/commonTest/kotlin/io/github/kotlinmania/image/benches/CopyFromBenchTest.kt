@@ -1,4 +1,4 @@
-// port-lint: tests copy_from.rs
+// port-lint: tests benches/copy_from.rs
 package io.github.kotlinmania.image.benches
 
 import io.github.kotlinmania.image.Rgba
