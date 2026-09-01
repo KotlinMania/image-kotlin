@@ -116,6 +116,14 @@ public class FarbfeldDecoder internal constructor(
         reader.readExact(buf)
     }
 
+    override fun readImageBoxed(buf: ByteArray) {
+        readImage(buf)
+    }
+
+    public companion object {
+        public fun new(reader: IoRead): FarbfeldDecoder = FarbfeldDecoder(reader)
+    }
+
     override fun readRect(
         x: UInt,
         y: UInt,
@@ -146,6 +154,10 @@ public class FarbfeldEncoder internal constructor(
     private val writer: IoWrite,
 ) : ImageEncoder {
     internal constructor(writeBuffer: BufferIoWrite) : this(writeBuffer as IoWrite)
+
+    public companion object {
+        public fun new(writer: IoWrite): FarbfeldEncoder = FarbfeldEncoder(writer)
+    }
 
     /**
      * Encodes the image data (native/big-endian) that has dimensions width and height.

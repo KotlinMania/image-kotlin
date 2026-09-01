@@ -17,6 +17,13 @@ import io.github.kotlinmania.image.io.writeAll
 public sealed class EncoderError(
     message: String,
 ) : Exception(message) {
+    public fun fmt(): String = message ?: ""
+
+    public companion object {
+        public fun from(e: EncoderError): ImageError =
+            ImageError.Encoding(EncodingError(ImageFormatHint.Exact(ImageFormat.Tga), e))
+    }
+
     public data class WidthInvalid(
         val width: UInt,
     ) : EncoderError("Invalid TGA width: $width")
@@ -46,6 +53,17 @@ public class TgaEncoder internal constructor(
     private var useRle: Boolean = true,
 ) : ImageEncoder {
     internal constructor(writeBuffer: BufferIoWrite) : this(writeBuffer as IoWrite)
+
+    public companion object {
+        public fun new(writer: IoWrite): TgaEncoder = TgaEncoder(writer)
+        public fun from(writer: IoWrite): TgaEncoder = TgaEncoder(writer)
+    }
+
+    override fun makeCompatibleImg(
+        sealed: io.github.kotlinmania.image.io.MethodSealedToImage,
+        input: io.github.kotlinmania.image.images.DynamicImage,
+    ): io.github.kotlinmania.image.images.DynamicImage? =
+        io.github.kotlinmania.image.io.dynimageConversion8bit(input)
 
     /**
      * Disables run-length encoding.
