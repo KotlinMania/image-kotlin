@@ -15,6 +15,7 @@ class ErrorTest {
                 UnsupportedErrorKind.Color(ExtendedColorType.Cmyk8),
             )
         assertTrue(err1.toString().contains("Cmyk8"))
+        assertEquals(UnsupportedErrorKind.Color(ExtendedColorType.Cmyk8), err1.kind)
 
         val err2 = UnsupportedError.fromFormatHint(ImageFormatHint.Unknown)
         assertEquals("The image format could not be determined", err2.toString())
