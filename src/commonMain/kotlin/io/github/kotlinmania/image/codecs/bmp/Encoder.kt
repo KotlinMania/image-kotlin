@@ -272,7 +272,8 @@ public class BmpEncoder(
         sealed: io.github.kotlinmania.image.io.MethodSealedToImage,
         input: io.github.kotlinmania.image.images.DynamicImage,
     ): io.github.kotlinmania.image.images.DynamicImage? =
-        io.github.kotlinmania.image.io.dynimageConversion8bit(input)
+        io.github.kotlinmania.image.io
+            .dynimageConversion8bit(input)
 }
 
 private data class WrittenPixelInfo(

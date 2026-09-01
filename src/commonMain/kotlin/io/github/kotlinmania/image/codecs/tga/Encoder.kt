@@ -56,6 +56,7 @@ public class TgaEncoder internal constructor(
 
     public companion object {
         public fun new(writer: IoWrite): TgaEncoder = TgaEncoder(writer)
+
         public fun from(writer: IoWrite): TgaEncoder = TgaEncoder(writer)
     }
 
@@ -63,7 +64,8 @@ public class TgaEncoder internal constructor(
         sealed: io.github.kotlinmania.image.io.MethodSealedToImage,
         input: io.github.kotlinmania.image.images.DynamicImage,
     ): io.github.kotlinmania.image.images.DynamicImage? =
-        io.github.kotlinmania.image.io.dynimageConversion8bit(input)
+        io.github.kotlinmania.image.io
+            .dynimageConversion8bit(input)
 
     /**
      * Disables run-length encoding.
