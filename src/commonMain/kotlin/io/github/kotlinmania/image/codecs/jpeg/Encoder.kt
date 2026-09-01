@@ -840,6 +840,11 @@ public class PixelDensity(
          */
         public fun defaultDensity(): PixelDensity =
             PixelDensity(1u.toUShort(), 1u.toUShort(), PixelDensityUnit.PixelAspectRatio)
+
+        /**
+         * Default pixel density instance.
+         */
+        public fun default(): PixelDensity = defaultDensity()
     }
 
     override fun equals(other: Any?): Boolean {
@@ -861,7 +866,12 @@ public class PixelDensity(
 /**
  * Errors that can occur when encoding a JPEG image.
  */
-public sealed class EncoderError {
+public sealed class EncoderError : Exception() {
+    /**
+     * Formats the encoder error.
+     */
+    public abstract fun fmt(): String
+
     /**
      * JPEG does not support this image size.
      */
@@ -869,8 +879,27 @@ public sealed class EncoderError {
         public val width: UInt,
         public val height: UInt,
     ) : EncoderError() {
-        override fun toString(): String =
+        /**
+         * Formats the invalid size error.
+         */
+        override fun fmt(): String =
             "Invalid image size ($width x $height) to encode as JPEG: width and height must be >= 1 and <= 65535"
+
+        override val message: String get() = fmt()
+        override fun toString(): String = fmt()
+    }
+
+    /**
+     * Converts this encoder error to a generic [ImageError].
+     */
+    public fun toImageError(): ImageError =
+        ImageError.Encoding(EncodingError.new(ImageFormatHint.Exact(ImageFormat.Jpeg), this))
+
+    public companion object {
+        /**
+         * Converts an [EncoderError] to [ImageError].
+         */
+        public fun from(e: EncoderError): ImageError = e.toImageError()
     }
 }
 

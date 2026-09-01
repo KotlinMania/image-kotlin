@@ -14,6 +14,16 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 /**
+ * Associated subpixel type for generic image color operations.
+ */
+public typealias Subpixel = UByte
+
+/**
+ * Associated color type for color map operations.
+ */
+public typealias Color = Any
+
+/**
  * Convert the supplied image to grayscale. Alpha channel is discarded.
  */
 public fun <I : GenericImageView<*>> grayscale(

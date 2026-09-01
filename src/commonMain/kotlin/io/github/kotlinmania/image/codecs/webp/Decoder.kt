@@ -231,6 +231,10 @@ public class WebPDecoder(
         /** Create a new [WebPDecoder] from the input [bytes]. */
         public fun new(bytes: ByteArray): WebPDecoder = WebPDecoder(bytes)
 
+        /** Converts a WebP decoding exception into an [ImageError]. */
+        public fun fromWebpDecode(e: Throwable): ImageError =
+            ImageError.Decoding(DecodingError(ImageFormatHint.Exact(ImageFormat.WebP), e))
+
         private fun readAllBytes(r: IoRead): ByteArray {
             val buf = ByteArray(4096)
             val result = mutableListOf<Byte>()
@@ -252,6 +256,8 @@ public class WebPDecoder(
 public class FramesInner(
     private val decoder: WebPDecoder,
 ) : Iterator<io.github.kotlinmania.image.Frame> {
+    public typealias Item = io.github.kotlinmania.image.Frame
+
     private var current: UInt = 0u
 
     override fun hasNext(): Boolean = false
