@@ -132,4 +132,3 @@ class AffineTest {
         assertPixelsEq(imageBuf, expectedBuf)
     }
 }
-

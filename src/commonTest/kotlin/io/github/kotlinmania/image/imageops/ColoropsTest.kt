@@ -103,4 +103,3 @@ class ColoropsTest {
         assertEquals(img[3], rot0[3])
     }
 }
-

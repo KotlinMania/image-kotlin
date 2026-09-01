@@ -1,15 +1,15 @@
 // port-lint: source images/buffer.rs
 package io.github.kotlinmania.image.images
 
-import io.github.kotlinmania.image.Luma
-import io.github.kotlinmania.image.LumaA
-import io.github.kotlinmania.image.Rgb
-import io.github.kotlinmania.image.Rgba
 import io.github.kotlinmania.image.ImageError
 import io.github.kotlinmania.image.ImageFormatHint
 import io.github.kotlinmania.image.LayoutWithColor
+import io.github.kotlinmania.image.Luma
+import io.github.kotlinmania.image.LumaA
 import io.github.kotlinmania.image.ParameterError
 import io.github.kotlinmania.image.ParameterErrorKind
+import io.github.kotlinmania.image.Rgb
+import io.github.kotlinmania.image.Rgba
 import io.github.kotlinmania.image.UnsupportedError
 import io.github.kotlinmania.image.UnsupportedErrorKind
 import io.github.kotlinmania.image.blendUByte
@@ -99,8 +99,8 @@ public class ImageBuffer<P, Container>(
         if (fw != tw || fh != th) {
             throw ImageError.Parameter(
                 ParameterError.fromKind(
-                    ParameterErrorKind.DimensionMismatch
-                )
+                    ParameterErrorKind.DimensionMismatch,
+                ),
             )
         }
         val fromCicp = from.colorSpace()
@@ -1113,17 +1113,17 @@ public class ConvertColorOptions(
             tr.checkApplicable(fromColor, intoColor).getOrThrow()
             return tr
         }
-        val created = CicpTransform.new(fromColor, intoColor)
-            ?: throw ImageError.Unsupported(
-                UnsupportedError.fromFormatAndKind(
-                    ImageFormatHint.Unknown,
-                    UnsupportedErrorKind.ColorspaceCicp(
-                        if (fromColor.qualifyStability()) intoColor else fromColor
-                    )
+        val created =
+            CicpTransform.new(fromColor, intoColor)
+                ?: throw ImageError.Unsupported(
+                    UnsupportedError.fromFormatAndKind(
+                        ImageFormatHint.Unknown,
+                        UnsupportedErrorKind.ColorspaceCicp(
+                            if (fromColor.qualifyStability()) intoColor else fromColor,
+                        ),
+                    ),
                 )
-            )
         transform = created
         return created
     }
 }
-
