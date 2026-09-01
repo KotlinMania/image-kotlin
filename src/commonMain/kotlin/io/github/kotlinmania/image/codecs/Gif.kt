@@ -478,4 +478,3 @@ internal class FrameInfo(
     val height: UInt,
     val delay: Delay,
 )
-

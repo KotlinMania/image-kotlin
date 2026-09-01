@@ -110,7 +110,35 @@ class JpegEncoderTest {
         val buf = buildHuffmanSegment(DCCLASS, LUMADESTINATION, STD_LUMA_DC_CODE_LENGTHS, STD_LUMA_DC_VALUES)
         val expected =
             byteArrayOf(
-                0, 0, 1, 5, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
+                0,
+                0,
+                1,
+                5,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
             )
         assertTrue(expected.contentEquals(buf))
     }
@@ -140,7 +168,9 @@ class JpegEncoderTest {
                 io.github.kotlinmania.image.ColorType.Rgba32F,
             )
         for (color in allColors) {
-            val image = io.github.kotlinmania.image.images.DynamicImage.new(1u, 1u, color)
+            val image =
+                io.github.kotlinmania.image.images.DynamicImage
+                    .new(1u, 1u, color)
             val out = BufferIoWrite()
             image.writeTo(out, io.github.kotlinmania.image.io.ImageFormat.Jpeg)
             assertTrue(out.toByteArray().isNotEmpty())
@@ -149,7 +179,9 @@ class JpegEncoderTest {
 
     @Test
     fun subImageEncoderRegression1412() {
-        val image = io.github.kotlinmania.image.images.DynamicImage.newRgb8(128u, 72u)
+        val image =
+            io.github.kotlinmania.image.images.DynamicImage
+                .newRgb8(128u, 72u)
         val out = BufferIoWrite()
         val encoder = JpegEncoder.new(out)
         encoder.encodeImage(image)

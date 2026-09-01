@@ -262,8 +262,5 @@ public class FramesInner(
 
     override fun hasNext(): Boolean = false
 
-    override fun next(): io.github.kotlinmania.image.Frame {
-        throw NoSuchElementException("No more frames")
-    }
+    override fun next(): io.github.kotlinmania.image.Frame = throw NoSuchElementException("No more frames")
 }
-

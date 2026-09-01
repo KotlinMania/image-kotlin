@@ -467,4 +467,3 @@ internal class CheckedHeader(
 )
 
 internal class SampleWriter
-
