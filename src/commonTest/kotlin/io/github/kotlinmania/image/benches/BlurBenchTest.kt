@@ -1,4 +1,4 @@
-// port-lint: tests blur.rs
+// port-lint: tests benches/blur.rs
 package io.github.kotlinmania.image.benches
 
 import io.github.kotlinmania.image.Rgb
