@@ -27,7 +27,9 @@ private fun IoRead.readU32Le(): UInt {
 /**
  * Errors that can occur during decoding and parsing a DDS image.
  */
-public sealed class DecoderError(message: String) : Exception(message) {
+public sealed class DecoderError(
+    message: String,
+) : Exception(message) {
     public fun fmt(): String = message ?: ""
 
     public fun toImageError(): ImageError =
@@ -37,13 +39,34 @@ public sealed class DecoderError(message: String) : Exception(message) {
         public fun from(e: DecoderError): ImageError = e.toImageError()
     }
 
-    public data class PixelFormatSizeInvalid(val size: UInt) : DecoderError("Invalid DDS PixelFormat size: $size")
-    public data class HeaderSizeInvalid(val size: UInt) : DecoderError("Invalid DDS header size: $size")
-    public data class HeaderFlagsInvalid(val flags: UInt) : DecoderError("Invalid DDS header flags: 0x${flags.toString(16)}")
-    public data class DxgiFormatInvalid(val format: UInt) : DecoderError("Invalid DDS DXGI format: $format")
-    public data class ResourceDimensionInvalid(val dimension: UInt) : DecoderError("Invalid DDS resource dimension: $dimension")
-    public data class Dx10FlagsInvalid(val flags: UInt) : DecoderError("Invalid DDS DX10 header flags: 0x${flags.toString(16)}")
-    public data class Dx10ArraySizeInvalid(val size: UInt) : DecoderError("Invalid DDS DX10 array size: $size")
+    public data class PixelFormatSizeInvalid(
+        val size: UInt,
+    ) : DecoderError("Invalid DDS PixelFormat size: $size")
+
+    public data class HeaderSizeInvalid(
+        val size: UInt,
+    ) : DecoderError("Invalid DDS header size: $size")
+
+    public data class HeaderFlagsInvalid(
+        val flags: UInt,
+    ) : DecoderError("Invalid DDS header flags: 0x${flags.toString(16)}")
+
+    public data class DxgiFormatInvalid(
+        val format: UInt,
+    ) : DecoderError("Invalid DDS DXGI format: $format")
+
+    public data class ResourceDimensionInvalid(
+        val dimension: UInt,
+    ) : DecoderError("Invalid DDS resource dimension: $dimension")
+
+    public data class Dx10FlagsInvalid(
+        val flags: UInt,
+    ) : DecoderError("Invalid DDS DX10 header flags: 0x${flags.toString(16)}")
+
+    public data class Dx10ArraySizeInvalid(
+        val size: UInt,
+    ) : DecoderError("Invalid DDS DX10 array size: $size")
+
     public object DdsSignatureInvalid : DecoderError("DDS signature not found")
 }
 

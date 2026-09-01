@@ -886,6 +886,7 @@ public sealed class EncoderError : Exception() {
             "Invalid image size ($width x $height) to encode as JPEG: width and height must be >= 1 and <= 65535"
 
         override val message: String get() = fmt()
+
         override fun toString(): String = fmt()
     }
 
