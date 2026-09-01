@@ -120,6 +120,7 @@ public class DxtDecoder internal constructor(
             val heightBlocks = height / 4u
             return DxtDecoder(reader, widthBlocks, heightBlocks, variant, 0u)
         }
+
         public fun new(
             reader: IoRead,
             width: UInt,
