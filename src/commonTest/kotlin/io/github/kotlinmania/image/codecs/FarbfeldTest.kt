@@ -136,16 +136,21 @@ class FarbfeldTest {
             0x18,
         )
 
-    private fun assertReadRect(x: UInt, y: UInt, width: UInt, height: UInt, expWide: UShortArray) {
-        val outBuf = ByteArray(64)
-        val decoder = FarbfeldDecoder(rectangleIn)
-        decoder.readRect(x, y, width, height, outBuf, width.toInt() * 8)
+    private fun degeneratePixels(expWide: UShortArray): ByteArray {
         val exp = ByteArray(expWide.size * 2)
         for (i in expWide.indices) {
             val v = expWide[i].toInt()
             exp[i * 2] = (v ushr 8).toByte()
             exp[i * 2 + 1] = v.toByte()
         }
+        return exp
+    }
+
+    private fun readRect(x: UInt, y: UInt, width: UInt, height: UInt, expWide: UShortArray) {
+        val outBuf = ByteArray(64)
+        val decoder = FarbfeldDecoder(rectangleIn)
+        decoder.readRect(x, y, width, height, outBuf, width.toInt() * 8)
+        val exp = degeneratePixels(expWide)
         for (i in exp.indices) {
             assertEquals(exp[i], outBuf[i])
         }
@@ -180,7 +185,7 @@ class FarbfeldTest {
     @Test
     fun readRect1x2() {
         val exp = ushortArrayOf(0xF30Du, 0xF20Eu, 0xF10Fu, 0xF010u, 0xEB15u, 0xEA16u, 0xE917u, 0xE818u)
-        assertReadRect(1u, 1u, 1u, 2u, exp)
+        readRect(1u, 1u, 1u, 2u, exp)
     }
 
     @Test
@@ -204,13 +209,13 @@ class FarbfeldTest {
                 0xF10Fu,
                 0xF010u,
             )
-        assertReadRect(0u, 0u, 2u, 2u, exp)
+        readRect(0u, 0u, 2u, 2u, exp)
     }
 
     @Test
     fun readRect2x1() {
         val exp = ushortArrayOf(0xEF11u, 0xEE12u, 0xED13u, 0xEC14u, 0xEB15u, 0xEA16u, 0xE917u, 0xE818u)
-        assertReadRect(0u, 2u, 2u, 1u, exp)
+        readRect(0u, 2u, 2u, 1u, exp)
     }
 
     @Test
@@ -242,7 +247,7 @@ class FarbfeldTest {
                 0xE917u,
                 0xE818u,
             )
-        assertReadRect(0u, 0u, 2u, 3u, exp)
+        readRect(0u, 0u, 2u, 3u, exp)
     }
 
     @Test
@@ -253,12 +258,7 @@ class FarbfeldTest {
         val decoder = FarbfeldDecoder(input.copyOfRange(31, input.size))
         val outBuf = ByteArray(64)
         decoder.readRect(0u, 2u, 1u, 1u, outBuf, 8)
-        val exp = ByteArray(expWide.size * 2)
-        for (i in expWide.indices) {
-            val v = expWide[i].toInt()
-            exp[i * 2] = (v ushr 8).toByte()
-            exp[i * 2 + 1] = v.toByte()
-        }
+        val exp = degeneratePixels(expWide)
         for (i in exp.indices) {
             assertEquals(exp[i], outBuf[i])
         }
