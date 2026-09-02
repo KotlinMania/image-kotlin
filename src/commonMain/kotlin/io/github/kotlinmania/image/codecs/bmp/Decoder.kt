@@ -23,6 +23,281 @@ private const val BITMAPV3HEADER_SIZE: UInt = 56u
 private const val BITMAPV4HEADER_SIZE: UInt = 108u
 private const val BITMAPV5HEADER_SIZE: UInt = 124u
 
+private const val RLE_ESCAPE: Int = 0
+private const val RLE_ESCAPE_EOL: Int = 0
+private const val RLE_ESCAPE_EOF: Int = 1
+private const val RLE_ESCAPE_DELTA: Int = 2
+
+private const val MAX_WIDTH_HEIGHT: Int = 0xFFFF
+
+public enum class ImageType {
+    Palette,
+    RGB16,
+    RGB24,
+    RGB32,
+    RGBA32,
+    RLE8,
+    RLE4,
+    Bitfields16,
+    Bitfields32,
+}
+
+public enum class BMPHeaderType {
+    Core,
+    Info,
+    V2,
+    V3,
+    V4,
+    V5,
+}
+
+public enum class FormatFullBytes {
+    RGB24,
+    RGB32,
+    RGBA32,
+    Format888,
+}
+
+public sealed class Chunker {
+    public class FromTop(public val chunks: List<ByteArray>) : Chunker()
+    public class FromBottom(public val chunks: List<ByteArray>) : Chunker()
+}
+
+public enum class ChannelWidthError {
+    Rgb,
+    Rle8,
+    Rle4,
+    Bitfields;
+
+    public fun fmt(): String =
+        when (this) {
+            Rgb -> "RGB"
+            Rle8 -> "RLE8"
+            Rle4 -> "RLE4"
+            Bitfields -> "bitfields"
+        }
+
+    override fun toString(): String = fmt()
+}
+
+public sealed class DecoderError(message: String) : Exception(message) {
+    public data object CorruptRleData : DecoderError("Corrupt RLE data")
+    public data object BitfieldMaskNonContiguous : DecoderError("Non-contiguous bitfield mask")
+    public data object BitfieldMaskInvalid : DecoderError("Invalid bitfield mask")
+    public data class BitfieldMaskMissing(public val bb: UInt) : DecoderError("Missing $bb-bit bitfield mask")
+    public data class BitfieldMasksMissing(public val bb: UInt) : DecoderError("Missing $bb-bit bitfield masks")
+    public data object BmpSignatureInvalid : DecoderError("BMP signature not found")
+    public data object MoreThanOnePlane : DecoderError("More than one plane")
+    public data class InvalidChannelWidth(public val tp: ChannelWidthError, public val n: UShort) :
+        DecoderError("Invalid channel bit count for $tp: $n")
+    public data class NegativeWidth(public val w: Int) : DecoderError("Negative width ($w)")
+    public data class ImageTooLarge(public val w: Int, public val h: Int) :
+        DecoderError("Image too large (one of ($w, $h) > soft limit of $MAX_WIDTH_HEIGHT)")
+    public data object InvalidHeight : DecoderError("Invalid height")
+    public data class ImageTypeInvalidForTopDown(public val tp: UInt) :
+        DecoderError("Invalid image type $tp for top-down image.")
+    public data class ImageTypeUnknown(public val tp: UInt) :
+        DecoderError("Unknown image compression type $tp")
+    public data class HeaderTooSmall(public val s: UInt) :
+        DecoderError("Bitmap header too small ($s bytes)")
+    public data class PaletteSizeExceeded(public val colorsUsed: UInt, public val bitCount: UShort) :
+        DecoderError("Palette size $colorsUsed exceeds maximum size for BMP with bit count of $bitCount")
+
+    public fun fmt(): String = message ?: ""
+
+    public fun toImageError(): ImageError =
+        ImageError.Decoding(DecodingError(ImageFormatHint.Exact(ImageFormat.Bmp), this))
+
+    public companion object {
+        public fun from(error: DecoderError): ImageError = error.toImageError()
+    }
+}
+
+public sealed interface RLEInsn {
+    public data object EndOfFile : RLEInsn
+    public data object EndOfRow : RLEInsn
+    public data class Delta(public val xdelta: UByte, public val ydelta: UByte) : RLEInsn
+    public data class Absolute(public val length: UByte, public val buffer: ByteArray) : RLEInsn {
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (other !is Absolute) return false
+            return length == other.length && buffer.contentEquals(other.buffer)
+        }
+        override fun hashCode(): Int = 31 * length.hashCode() + buffer.contentHashCode()
+    }
+    public data class PixelRun(public val nPixels: UByte, public val paletteIndex: UByte) : RLEInsn
+}
+
+public fun checkForOverflow(width: Int, length: Int, channels: Int) {
+    if (numBytes(width, length, channels) == null) {
+        throw ImageError.Unsupported(
+            UnsupportedError.fromFormatAndKind(
+                ImageFormatHint.Exact(ImageFormat.Bmp),
+                UnsupportedErrorKind.GenericFeature(
+                    "Image dimensions (${width}x$length w/$channels channels) are too large",
+                ),
+            ),
+        )
+    }
+}
+
+public fun numBytes(width: Int, length: Int, channels: Int): Long? {
+    if (width <= 0 || length <= 0 || channels <= 0) {
+        return null
+    }
+    val row = width.toLong() * channels.toLong()
+    val total = row * length.toLong()
+    return if (total > Int.MAX_VALUE.toLong()) null else total
+}
+
+public fun withRows(
+    buffer: ByteArray,
+    width: Int,
+    height: Int,
+    channels: Int,
+    topDown: Boolean,
+    func: (row: ByteArray) -> Unit,
+) {
+    val rowWidth = channels * width
+    val fullImageSize = rowWidth * height
+    require(buffer.size == fullImageSize) { "Buffer size ${buffer.size} does not match expected $fullImageSize" }
+
+    if (!topDown) {
+        for (rowIndex in (height - 1) downTo 0) {
+            val offset = rowIndex * rowWidth
+            val row = buffer.copyOfRange(offset, offset + rowWidth)
+            func(row)
+            row.copyInto(buffer, destinationOffset = offset)
+        }
+    } else {
+        for (rowIndex in 0 until height) {
+            val offset = rowIndex * rowWidth
+            val row = buffer.copyOfRange(offset, offset + rowWidth)
+            func(row)
+            row.copyInto(buffer, destinationOffset = offset)
+        }
+    }
+}
+
+public fun set8bitPixelRun(
+    pixelBuffer: ByteArray,
+    pixelOffset: Int,
+    palette: ByteArray,
+    indices: ByteArray,
+    indicesOffset: Int,
+    nPixels: Int,
+): Int {
+    var outPos = pixelOffset
+    val count = minOf(nPixels, indices.size - indicesOffset)
+    for (i in 0 until count) {
+        val idx = indices[indicesOffset + i].toInt() and 0xFF
+        val palOffset = idx * 3
+        if (palOffset + 2 < palette.size && outPos + 2 < pixelBuffer.size) {
+            pixelBuffer[outPos] = palette[palOffset]
+            pixelBuffer[outPos + 1] = palette[palOffset + 1]
+            pixelBuffer[outPos + 2] = palette[palOffset + 2]
+        }
+        outPos += 3
+    }
+    return count
+}
+
+public fun set4bitPixelRun(
+    pixelBuffer: ByteArray,
+    pixelOffset: Int,
+    palette: ByteArray,
+    indices: ByteArray,
+    indicesOffset: Int,
+    nPixels: Int,
+): Int {
+    var outPos = pixelOffset
+    var remaining = nPixels
+    for (i in indicesOffset until indices.size) {
+        if (remaining == 0) break
+        val idx = indices[i].toInt() and 0xFF
+        val hi = (idx ushr 4) and 0x0F
+        val palOffset0 = hi * 3
+        if (palOffset0 + 2 < palette.size && outPos + 2 < pixelBuffer.size) {
+            pixelBuffer[outPos] = palette[palOffset0]
+            pixelBuffer[outPos + 1] = palette[palOffset0 + 1]
+            pixelBuffer[outPos + 2] = palette[palOffset0 + 2]
+        }
+        outPos += 3
+        remaining--
+
+        if (remaining == 0) break
+        val lo = idx and 0x0F
+        val palOffset1 = lo * 3
+        if (palOffset1 + 2 < palette.size && outPos + 2 < pixelBuffer.size) {
+            pixelBuffer[outPos] = palette[palOffset1]
+            pixelBuffer[outPos + 1] = palette[palOffset1 + 1]
+            pixelBuffer[outPos + 2] = palette[palOffset1 + 2]
+        }
+        outPos += 3
+        remaining--
+    }
+    return nPixels - remaining
+}
+
+public fun set2bitPixelRun(
+    pixelBuffer: ByteArray,
+    pixelOffset: Int,
+    palette: ByteArray,
+    indices: ByteArray,
+    indicesOffset: Int,
+    nPixels: Int,
+): Int {
+    var outPos = pixelOffset
+    var remaining = nPixels
+    for (i in indicesOffset until indices.size) {
+        if (remaining == 0) break
+        val idx = indices[i].toInt() and 0xFF
+        val shifts = intArrayOf(6, 4, 2, 0)
+        for (s in shifts) {
+            if (remaining == 0) break
+            val colorIdx = (idx ushr s) and 0x03
+            val palOffset = colorIdx * 3
+            if (palOffset + 2 < palette.size && outPos + 2 < pixelBuffer.size) {
+                pixelBuffer[outPos] = palette[palOffset]
+                pixelBuffer[outPos + 1] = palette[palOffset + 1]
+                pixelBuffer[outPos + 2] = palette[palOffset + 2]
+            }
+            outPos += 3
+            remaining--
+        }
+    }
+    return nPixels - remaining
+}
+
+public fun set1bitPixelRun(
+    pixelBuffer: ByteArray,
+    pixelOffset: Int,
+    palette: ByteArray,
+    indices: ByteArray,
+    indicesOffset: Int,
+    nPixels: Int,
+): Int {
+    var outPos = pixelOffset
+    var remaining = nPixels
+    for (i in indicesOffset until indices.size) {
+        if (remaining == 0) break
+        val idx = indices[i].toInt() and 0xFF
+        for (bit in 7 downTo 0) {
+            if (remaining == 0) break
+            val colorIdx = (idx ushr bit) and 0x01
+            val palOffset = colorIdx * 3
+            if (palOffset + 2 < palette.size && outPos + 2 < pixelBuffer.size) {
+                pixelBuffer[outPos] = palette[palOffset]
+                pixelBuffer[outPos + 1] = palette[palOffset + 1]
+                pixelBuffer[outPos + 2] = palette[palOffset + 2]
+            }
+            outPos += 3
+            remaining--
+        }
+    }
+    return nPixels - remaining
+}
+
 private val LOOKUP_TABLE_3_BIT_TO_8_BIT: IntArray = intArrayOf(0, 36, 73, 109, 146, 182, 219, 255)
 private val LOOKUP_TABLE_4_BIT_TO_8_BIT: IntArray =
     intArrayOf(0, 17, 34, 51, 68, 85, 102, 119, 136, 153, 170, 187, 204, 221, 238, 255)
@@ -129,28 +404,11 @@ private val LOOKUP_TABLE_6_BIT_TO_8_BIT: IntArray =
         255,
     )
 
-private const val RLE_ESCAPE: Int = 0
-private const val RLE_ESCAPE_EOL: Int = 0
-private const val RLE_ESCAPE_EOF: Int = 1
-private const val RLE_ESCAPE_DELTA: Int = 2
-
-private enum class ImageType {
-    Palette,
-    RGB16,
-    RGB24,
-    RGB32,
-    RGBA32,
-    RLE8,
-    RLE4,
-    Bitfields16,
-    Bitfields32,
-}
-
-internal data class Bitfield(
-    val shift: Int,
-    val len: Int,
+public data class Bitfield(
+    public val shift: Int,
+    public val len: Int,
 ) {
-    fun read(data: UInt): Int {
+    public fun read(data: UInt): Int {
         val d = (data.toLong() ushr shift).toInt()
         return when (len) {
             1 -> (d and 0b1) * 0xFF
@@ -165,8 +423,8 @@ internal data class Bitfield(
         }
     }
 
-    companion object {
-        fun fromMask(mask: Long, maxLen: Int = 32): Bitfield {
+    public companion object {
+        public fun fromMask(mask: Long, maxLen: Int = 32): Bitfield {
             if (mask == 0L) return Bitfield(0, 0)
             val umask = mask.toUInt()
             var shift = umask.countTrailingZeroBits()
@@ -186,14 +444,14 @@ internal data class Bitfield(
     }
 }
 
-internal data class Bitfields(
-    val r: Bitfield,
-    val g: Bitfield,
-    val b: Bitfield,
-    val a: Bitfield,
+public data class Bitfields(
+    public val r: Bitfield,
+    public val g: Bitfield,
+    public val b: Bitfield,
+    public val a: Bitfield,
 ) {
-    companion object {
-        fun fromMask(
+    public companion object {
+        public fun fromMask(
             rMask: Long,
             gMask: Long,
             bMask: Long,
@@ -799,6 +1057,82 @@ public class BmpDecoder(
 
     public fun getIndexedColor(): Boolean = indexedColor
 
+    public fun reader(): IoRead = reader
+
+    public fun numChannels(): Int =
+        if (indexedColor) 1 else if (isIco || (bitfields?.a?.len ?: 0) > 0 || imageType == ImageType.RGBA32) 4 else 3
+
+    public fun getPaletteSize(): Int = if (palette != null) palette.size / 3 else 0
+
+    public fun bytesPerColor(): Int = 4
+
+    public fun readFileHeader() {
+        // File header is parsed upon construction
+    }
+
+    public fun readBitmapCoreHeader() {
+        // DIB core header is parsed upon construction
+    }
+
+    public fun readBitmapInfoHeader() {
+        // DIB info header is parsed upon construction
+    }
+
+    public fun readBitmasks() {
+        // Bitmasks are parsed upon construction
+    }
+
+    public fun readMetadata() {
+        // Metadata is parsed upon construction
+    }
+
+    public fun readPalette() {
+        // Palette is parsed upon construction
+    }
+
+    public fun readPalettizedPixelData(buf: ByteArray) {
+        val w = width.toInt()
+        val h = height.toInt()
+        val outChannels = if (colorType() == ColorType.Rgba8) 4 else 3
+        decodePalette(buf, w, h, outChannels)
+    }
+
+    public fun read16BitPixelData(buf: ByteArray, bitfields: Bitfields? = null) {
+        val w = width.toInt()
+        val h = height.toInt()
+        val outChannels = if (colorType() == ColorType.Rgba8) 4 else 3
+        decodeBitfields16(buf, w, h, outChannels)
+    }
+
+    public fun read32BitPixelData(buf: ByteArray) {
+        val w = width.toInt()
+        val h = height.toInt()
+        val outChannels = if (colorType() == ColorType.Rgba8) 4 else 3
+        decodeBitfields32(buf, w, h, outChannels)
+    }
+
+    public fun readFullBytePixelData(buf: ByteArray, format: FormatFullBytes) {
+        val w = width.toInt()
+        val h = height.toInt()
+        when (format) {
+            FormatFullBytes.RGB24 -> decodeRgb24(buf, w, h, 3)
+            FormatFullBytes.RGB32 -> decodeBitfields32(buf, w, h, 3)
+            FormatFullBytes.RGBA32 -> decodeBitfields32(buf, w, h, 4)
+            FormatFullBytes.Format888 -> decodeBitfields32(buf, w, h, 3)
+        }
+    }
+
+    public fun readRleData(buf: ByteArray, imageType: ImageType) {
+        val w = width.toInt()
+        val h = height.toInt()
+        val outChannels = if (colorType() == ColorType.Rgba8) 4 else 3
+        when (imageType) {
+            ImageType.RLE8 -> decodeRle8(buf, w, h, outChannels)
+            ImageType.RLE4 -> decodeRle4(buf, w, h, outChannels)
+            else -> readImage(buf)
+        }
+    }
+
     public fun getPalette(): ByteArray? = palette
 
     public fun readMetadataInIcoFormat() {
@@ -806,6 +1140,10 @@ public class BmpDecoder(
     }
 
     public fun readImageData(buf: ByteArray) {
+        readImage(buf)
+    }
+
+    override fun readImageBoxed(buf: ByteArray) {
         readImage(buf)
     }
 
@@ -847,11 +1185,15 @@ public class BmpDecoder(
         if (bf.len == 0) 0 else bf.read(px.toUInt())
 
     public companion object {
+        public fun from(reader: IoRead): BmpDecoder = new(reader)
+
         public fun new(reader: IoRead): BmpDecoder = BmpDecoder(reader, isIco = false, noFileHeader = false)
 
         public fun newWithoutFileHeader(reader: IoRead): BmpDecoder = BmpDecoder(reader, isIco = false, noFileHeader = true)
 
         public fun newWithIcoFormat(reader: IoRead): BmpDecoder = BmpDecoder(reader, isIco = true, noFileHeader = false)
+
+        public fun newDecoder(reader: IoRead): BmpDecoder = BmpDecoder(reader, isIco = false, noFileHeader = false)
     }
 }
 
