@@ -145,6 +145,11 @@ public data class UnsupportedError(
     public val kind: UnsupportedErrorKind,
 ) {
     /**
+     * Returns the corresponding [UnsupportedErrorKind] of the error.
+     */
+    public fun kind(): UnsupportedErrorKind = kind
+
+    /**
      * Returns the image format associated with this error.
      */
     public fun formatHint(): ImageFormatHint = format
@@ -352,6 +357,11 @@ public data class ParameterError(
     public val underlying: Throwable? = null,
 ) {
     /**
+     * Returns the corresponding [ParameterErrorKind] of the error.
+     */
+    public fun kind(): ParameterErrorKind = kind
+
+    /**
      * Returns the underlying source exception if available.
      */
     public fun source(): Throwable? = underlying
@@ -427,6 +437,11 @@ public sealed interface ParameterErrorKind {
 public data class LimitError(
     public val kind: LimitErrorKind,
 ) {
+    /**
+     * Returns the corresponding [LimitErrorKind] of the error.
+     */
+    public fun kind(): LimitErrorKind = kind
+
     /**
      * Returns the underlying source exception if available.
      */
