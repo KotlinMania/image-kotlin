@@ -10,6 +10,13 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 class JpegEncoderTest {
+    private fun decode(encoded: ByteArray): ByteArray {
+        val decoder = JpegDecoder(encoded)
+        val decoded = ByteArray(decoder.totalBytes().toInt())
+        decoder.readImage(decoded)
+        return decoded
+    }
+
     @Test
     fun roundtripSanityCheck() {
         val img = byteArrayOf(255.toByte(), 0, 0)
@@ -24,6 +31,12 @@ class JpegEncoderTest {
         assertEquals(0xD8.toByte(), encoded[1])
         assertEquals(0xFF.toByte(), encoded[encoded.size - 2])
         assertEquals(0xD9.toByte(), encoded[encoded.size - 1])
+
+        val decoded = decode(encoded)
+        assertEquals(3, decoded.size)
+        assertTrue((decoded[0].toInt() and 0xFF) > 0x80)
+        assertTrue((decoded[1].toInt() and 0xFF) < 0x80)
+        assertTrue((decoded[2].toInt() and 0xFF) < 0x80)
     }
 
     @Test
@@ -39,6 +52,13 @@ class JpegEncoderTest {
         assertEquals(0xD8.toByte(), encoded[1])
         assertEquals(0xFF.toByte(), encoded[encoded.size - 2])
         assertEquals(0xD9.toByte(), encoded[encoded.size - 1])
+
+        val decoded = decode(encoded)
+        assertEquals(4, decoded.size)
+        assertTrue((decoded[0].toInt() and 0xFF) > 0x80)
+        assertTrue((decoded[1].toInt() and 0xFF) < 0x80)
+        assertTrue((decoded[2].toInt() and 0xFF) < 0x80)
+        assertTrue((decoded[3].toInt() and 0xFF) > 0x80)
     }
 
     @Test

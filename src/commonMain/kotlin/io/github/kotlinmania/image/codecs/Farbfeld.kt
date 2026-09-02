@@ -10,10 +10,16 @@ import io.github.kotlinmania.image.UnsupportedError
 import io.github.kotlinmania.image.UnsupportedErrorKind
 import io.github.kotlinmania.image.io.BufferIoRead
 import io.github.kotlinmania.image.io.BufferIoWrite
+import io.github.kotlinmania.image.io.ImageDecoderRect
 import io.github.kotlinmania.image.io.ImageEncoder
 import io.github.kotlinmania.image.io.ImageFormat
+import io.github.kotlinmania.image.io.IoErrorKind
+import io.github.kotlinmania.image.io.IoException
 import io.github.kotlinmania.image.io.IoRead
+import io.github.kotlinmania.image.io.IoSeek
 import io.github.kotlinmania.image.io.IoWrite
+import io.github.kotlinmania.image.io.SeekFrom
+import io.github.kotlinmania.image.io.loadRect
 import io.github.kotlinmania.image.io.readExact
 import io.github.kotlinmania.image.io.writeAll
 import io.github.kotlinmania.image.utils.checkDimensionOverflow
@@ -31,80 +37,209 @@ private val FARBFELD_MAGIC =
     )
 
 /**
- * Farbfeld image decoder.
+ * Reads a 32-bit big-endian unsigned dimension from the given reader.
  */
-public class FarbfeldDecoder internal constructor(
-    private val reader: IoRead,
-) : io.github.kotlinmania.image.io.ImageDecoderRect {
-    private val width: UInt
-    private val height: UInt
+public fun readDimm(from: IoRead): UInt {
+    val buf = ByteArray(4)
+    from.readExact(buf)
+    return (
+        ((buf[0].toLong() and 0xFF) shl 24) or
+            ((buf[1].toLong() and 0xFF) shl 16) or
+            ((buf[2].toLong() and 0xFF) shl 8) or
+            (buf[3].toLong() and 0xFF)
+    ).toUInt()
+}
 
-    public constructor(bytes: ByteArray) : this(BufferIoRead(bytes))
+/**
+ * Consumes a single 16-bit big-endian channel and writes it in native endian order.
+ */
+public fun consumeChannel(from: IoRead, to: ByteArray, toOffset: Int = 0) {
+    val ibuf = ByteArray(2)
+    from.readExact(ibuf)
+    val v = ((ibuf[0].toInt() and 0xFF) shl 8) or (ibuf[1].toInt() and 0xFF)
+    to[toOffset] = (v ushr 8).toByte()
+    to[toOffset + 1] = v.toByte()
+}
 
-    init {
-        val magic = ByteArray(8)
-        try {
-            reader.readExact(magic)
-        } catch (e: Exception) {
-            throw ImageError.Decoding(
-                DecodingError(
-                    ImageFormatHint.Exact(ImageFormat.Farbfeld),
-                    "Failed to read farbfeld magic: ${e.message}",
-                ),
-            )
+/**
+ * Reads 2 bytes, stores the second in cachedByte, and returns the first.
+ */
+public fun cacheByte(from: IoRead, cachedByteOut: (Byte?) -> Unit): Byte {
+    val obuf = ByteArray(2)
+    consumeChannel(from, obuf)
+    cachedByteOut(obuf[1])
+    return obuf[0]
+}
+
+/**
+ * Parses seek offset relative to current position.
+ */
+public fun parseOffset(
+    originalOffset: ULong,
+    endOffset: ULong,
+    pos: SeekFrom,
+): Long? =
+    when (pos) {
+        is SeekFrom.Start -> {
+            val target = pos.offset
+            if (target < 0) null else target - originalOffset.toLong()
         }
-
-        if (!magic.contentEquals(FARBFELD_MAGIC)) {
-            throw ImageError.Decoding(
-                DecodingError(
-                    ImageFormatHint.Exact(ImageFormat.Farbfeld),
-                    "Invalid magic",
-                ),
-            )
+        is SeekFrom.End -> {
+            val endSigned = endOffset.toLong()
+            if (pos.offset < -endSigned) {
+                null
+            } else {
+                (endOffset - originalOffset).toLong() + pos.offset
+            }
         }
-
-        val dimBuf = ByteArray(8)
-        try {
-            reader.readExact(dimBuf)
-        } catch (e: Exception) {
-            throw ImageError.Decoding(
-                DecodingError(
-                    ImageFormatHint.Exact(ImageFormat.Farbfeld),
-                    "Failed to read farbfeld dimensions: ${e.message}",
-                ),
-            )
+        is SeekFrom.Current -> {
+            val origSigned = originalOffset.toLong()
+            if (pos.offset < -origSigned) {
+                null
+            } else {
+                pos.offset
+            }
         }
-
-        val w =
-            (
-                (dimBuf[0].toLong() and 0xFF shl 24) or
-                    (dimBuf[1].toLong() and 0xFF shl 16) or
-                    (dimBuf[2].toLong() and 0xFF shl 8) or
-                    (dimBuf[3].toLong() and 0xFF)
-            ).toUInt()
-
-        val h =
-            (
-                (dimBuf[4].toLong() and 0xFF shl 24) or
-                    (dimBuf[5].toLong() and 0xFF shl 16) or
-                    (dimBuf[6].toLong() and 0xFF shl 8) or
-                    (dimBuf[7].toLong() and 0xFF)
-            ).toUInt()
-
-        if (checkDimensionOverflow(w, h, 8u)) {
-            throw ImageError.Unsupported(
-                UnsupportedError(
-                    ImageFormatHint.Exact(ImageFormat.Farbfeld),
-                    UnsupportedErrorKind.GenericFeature("Image dimensions (${w}x$h) are too large"),
-                ),
-            )
-        }
-
-        width = w
-        height = h
     }
 
-    override fun dimensions(): Pair<UInt, UInt> = Pair(width, height)
+/**
+ * farbfeld Reader.
+ */
+public class FarbfeldReader(
+    public val width: UInt,
+    public val height: UInt,
+    public val inner: IoRead,
+    private var currentOffset: ULong = 0uL,
+    private var cachedByte: Byte? = null,
+) : IoRead, IoSeek {
+    public fun currentOffset(): ULong = currentOffset
+
+    public fun cachedByte(): Byte? = cachedByte
+
+    override fun read(buffer: ByteArray, offset: Int, count: Int): Int {
+        if (count <= 0) return 0
+        var bytesWritten = 0
+        var curOffset = offset
+        var remaining = count
+
+        val cached = cachedByte
+        if (cached != null) {
+            buffer[curOffset] = cached
+            cachedByte = null
+            curOffset += 1
+            remaining -= 1
+            bytesWritten += 1
+            currentOffset += 1uL
+        }
+
+        if (remaining == 1) {
+            val b = cacheByte(inner) { cachedByte = it }
+            buffer[curOffset] = b
+            bytesWritten += 1
+            currentOffset += 1uL
+        } else {
+            val pairs = remaining / 2
+            for (i in 0 until pairs) {
+                consumeChannel(inner, buffer, curOffset)
+                curOffset += 2
+                bytesWritten += 2
+                currentOffset += 2uL
+            }
+            if (remaining % 2 == 1) {
+                val b = cacheByte(inner) { cachedByte = it }
+                buffer[curOffset] = b
+                bytesWritten += 1
+                currentOffset += 1uL
+            }
+        }
+
+        return bytesWritten
+    }
+
+    override fun seek(pos: SeekFrom): Long {
+        val seekable = inner as? IoSeek ?: throw IoException(IoErrorKind.Other, "Inner reader does not support seek")
+        val originalOffset = this.currentOffset
+        val endOffset = width.toULong() * height.toULong() * 8uL
+        val offsetFromCurrent = parseOffset(originalOffset, endOffset, pos)
+            ?: throw IoException(IoErrorKind.InvalidInput, "invalid seek to a negative or overflowing position")
+
+        seekable.seek(SeekFrom.Current(offsetFromCurrent))
+        this.currentOffset = if (offsetFromCurrent < 0) {
+            originalOffset - (-offsetFromCurrent).toULong()
+        } else {
+            originalOffset + offsetFromCurrent.toULong()
+        }
+
+        if (this.currentOffset < endOffset && (this.currentOffset % 2uL) == 1uL) {
+            val curr = seekable.seek(SeekFrom.Current(-1L))
+            cacheByte(inner) { cachedByte = it }
+            seekable.seek(SeekFrom.Start(curr))
+        } else {
+            this.cachedByte = null
+        }
+
+        return originalOffset.toLong()
+    }
+
+    public companion object {
+        public fun new(bufferedRead: IoRead): FarbfeldReader {
+            val magic = ByteArray(8)
+            try {
+                bufferedRead.readExact(magic)
+            } catch (e: Exception) {
+                throw ImageError.Decoding(
+                    DecodingError(
+                        ImageFormatHint.Exact(ImageFormat.Farbfeld),
+                        "Failed to read farbfeld magic: ${e.message}",
+                    ),
+                )
+            }
+            if (!magic.contentEquals(FARBFELD_MAGIC)) {
+                throw ImageError.Decoding(
+                    DecodingError(
+                        ImageFormatHint.Exact(ImageFormat.Farbfeld),
+                        "Invalid magic",
+                    ),
+                )
+            }
+
+            val width = try {
+                readDimm(bufferedRead)
+            } catch (e: Exception) {
+                throw ImageError.Decoding(DecodingError(ImageFormatHint.Exact(ImageFormat.Farbfeld), e))
+            }
+            val height = try {
+                readDimm(bufferedRead)
+            } catch (e: Exception) {
+                throw ImageError.Decoding(DecodingError(ImageFormatHint.Exact(ImageFormat.Farbfeld), e))
+            }
+
+            if (checkDimensionOverflow(width, height, 8u)) {
+                throw ImageError.Unsupported(
+                    UnsupportedError(
+                        ImageFormatHint.Exact(ImageFormat.Farbfeld),
+                        UnsupportedErrorKind.GenericFeature("Image dimensions (${width}x$height) are too large"),
+                    ),
+                )
+            }
+
+            return FarbfeldReader(width, height, bufferedRead)
+        }
+    }
+}
+
+/**
+ * farbfeld decoder.
+ */
+public class FarbfeldDecoder(
+    private val reader: FarbfeldReader,
+) : ImageDecoderRect {
+    public constructor(bufferedRead: IoRead) : this(FarbfeldReader.new(bufferedRead))
+    public constructor(bytes: ByteArray) : this(BufferIoRead(bytes))
+
+    public fun reader(): FarbfeldReader = reader
+
+    override fun dimensions(): Pair<UInt, UInt> = Pair(reader.width, reader.height)
 
     override fun colorType(): ColorType = ColorType.Rgba16
 
@@ -120,10 +255,6 @@ public class FarbfeldDecoder internal constructor(
         readImage(buf)
     }
 
-    public companion object {
-        public fun new(reader: IoRead): FarbfeldDecoder = FarbfeldDecoder(reader)
-    }
-
     override fun readRect(
         x: UInt,
         y: UInt,
@@ -136,28 +267,42 @@ public class FarbfeldDecoder internal constructor(
         require(buf.size >= totalBytes) {
             "output buffer too short: expected $totalBytes, provided ${buf.size}"
         }
-        val fullData = ByteArray((this.width.toLong() * this.height.toLong() * 8L).toInt())
-        readImage(fullData)
-        val fullRowPitch = this.width.toInt() * 8
-        for (r in 0 until height.toInt()) {
-            val srcRow = (y.toInt() + r) * fullRowPitch + (x.toInt() * 8)
-            val dstRow = r * rowPitch
-            fullData.copyInto(buf, destinationOffset = dstRow, startIndex = srcRow, endIndex = srcRow + width.toInt() * 8)
+        val start = (reader.inner as? IoSeek)?.streamPosition() ?: 0L
+        loadRect(
+            x = x,
+            y = y,
+            width = width,
+            height = height,
+            buf = buf,
+            rowPitch = rowPitch,
+            decoder = this,
+            scanlineBytes = 2,
+            seekScanline = { dec, scanline ->
+                val fDec = dec as FarbfeldDecoder
+                (fDec.reader as IoSeek).seek(SeekFrom.Start((scanline * 2uL).toLong()))
+            },
+            readScanline = { dec, dest ->
+                val fDec = dec as FarbfeldDecoder
+                fDec.reader.readExact(dest)
+            },
+        )
+        if (reader.inner is IoSeek) {
+            reader.seek(SeekFrom.Start(start))
         }
+    }
+
+    public companion object {
+        public fun new(bufferedRead: IoRead): FarbfeldDecoder = FarbfeldDecoder(bufferedRead)
     }
 }
 
 /**
- * Farbfeld image encoder.
+ * farbfeld encoder.
  */
-public class FarbfeldEncoder internal constructor(
+public class FarbfeldEncoder(
     private val writer: IoWrite,
 ) : ImageEncoder {
-    internal constructor(writeBuffer: BufferIoWrite) : this(writeBuffer as IoWrite)
-
-    public companion object {
-        public fun new(writer: IoWrite): FarbfeldEncoder = FarbfeldEncoder(writer)
-    }
+    public constructor(writeBuffer: BufferIoWrite) : this(writeBuffer as IoWrite)
 
     /**
      * Encodes the image data (native/big-endian) that has dimensions width and height.
@@ -167,7 +312,10 @@ public class FarbfeldEncoder internal constructor(
         require(data.size.toLong() == expectedLen) {
             "Invalid buffer length: expected $expectedLen got ${data.size} for ${width}x$height image"
         }
+        encodeImpl(data, width, height)
+    }
 
+    public fun encodeImpl(data: ByteArray, width: UInt, height: UInt) {
         writer.writeAll(FARBFELD_MAGIC)
 
         val header = ByteArray(8)
@@ -184,7 +332,12 @@ public class FarbfeldEncoder internal constructor(
         header[7] = h.toByte()
 
         writer.writeAll(header)
-        writer.writeAll(data)
+
+        for (i in 0 until data.size step 2) {
+            val v = ((data[i].toInt() and 0xFF) shl 8) or (data[i + 1].toInt() and 0xFF)
+            val channel = byteArrayOf((v ushr 8).toByte(), v.toByte())
+            writer.writeAll(channel)
+        }
     }
 
     override fun writeImage(
@@ -203,30 +356,8 @@ public class FarbfeldEncoder internal constructor(
         }
         encode(buf, width, height)
     }
-}
 
-/**
- * Farbfeld reader.
- */
-public class FarbfeldReader(
-    public val width: UInt,
-    public val height: UInt,
-    private val inner: IoRead,
-) {
     public companion object {
-        public fun new(reader: IoRead): FarbfeldReader {
-            val magic = ByteArray(8)
-            reader.readExact(magic)
-            if (!magic.contentEquals(FARBFELD_MAGIC)) {
-                throw ImageError.Decoding(DecodingError(ImageFormatHint.Exact(ImageFormat.Farbfeld), "Invalid farbfeld magic"))
-            }
-            val wBuf = ByteArray(4)
-            reader.readExact(wBuf)
-            val hBuf = ByteArray(4)
-            reader.readExact(hBuf)
-            val w = ((wBuf[0].toInt() and 0xFF) shl 24) or ((wBuf[1].toInt() and 0xFF) shl 16) or ((wBuf[2].toInt() and 0xFF) shl 8) or (wBuf[3].toInt() and 0xFF)
-            val h = ((hBuf[0].toInt() and 0xFF) shl 24) or ((hBuf[1].toInt() and 0xFF) shl 16) or ((hBuf[2].toInt() and 0xFF) shl 8) or (hBuf[3].toInt() and 0xFF)
-            return FarbfeldReader(w.toUInt(), h.toUInt(), reader)
-        }
+        public fun new(writer: IoWrite): FarbfeldEncoder = FarbfeldEncoder(writer)
     }
 }
