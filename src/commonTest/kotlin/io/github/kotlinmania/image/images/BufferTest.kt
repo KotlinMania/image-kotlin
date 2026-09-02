@@ -18,39 +18,39 @@ import kotlin.test.assertTrue
 
 class BufferTest {
     @Test
-    fun testSliceBuffer() {
+    fun sliceBuffer() {
         val data = ByteArray(9)
         val buf = ImageBuffer.createGray(3u, 3u, data)!!
         assertContentEquals(data, buf.asRaw())
     }
 
     @Test
-    fun testLumaU8ZeroTest() {
+    fun lumaU8ZeroTest() {
         val buffer = ImageBuffer.createGray(2u, 2u)
         assertTrue(buffer.asRaw().all { it == 0.toByte() })
     }
 
     @Test
-    fun testRgbU8ZeroTest() {
+    fun rgbU8ZeroTest() {
         val buffer = ImageBuffer.createRgb(2u, 2u)
         assertTrue(buffer.asRaw().all { it == 0.toByte() })
     }
 
     @Test
-    fun testRgbAU8ZeroTest() {
+    fun rgbAU8ZeroTest() {
         val buffer = ImageBuffer.createRgba(2u, 2u)
         assertTrue(buffer.asRaw().all { it == 0.toByte() })
     }
 
     @Test
-    fun testGetPixel() {
+    fun getPixel() {
         val a = ImageBuffer.createRgb(10u, 10u)
         a.asRaw()[3 * 10] = 255.toByte()
         assertEquals(255u.toUByte(), a.getPixel(0u, 1u).r)
     }
 
     @Test
-    fun testGetPixelChecked() {
+    fun getPixelChecked() {
         val a = ImageBuffer.createRgb(10u, 10u)
         a.putPixel(0u, 1u, Rgb(255u.toUByte(), 0u.toUByte(), 0u.toUByte()))
 
@@ -68,14 +68,14 @@ class BufferTest {
     }
 
     @Test
-    fun testMutIter() {
+    fun mutIter() {
         val a = ImageBuffer.createRgb(10u, 10u)
         a.putPixel(0u, 0u, Rgb(42u.toUByte(), 0u.toUByte(), 0u.toUByte()))
         assertEquals(42.toByte(), a.asRaw()[0])
     }
 
     @Test
-    fun testZeroWidthZeroHeight() {
+    fun zeroWidthZeroHeight() {
         val image = ImageBuffer.createRgb(0u, 0u)
         assertEquals(0, image.rowsMut().size)
         assertEquals(0, image.pixelsMut().size)
@@ -84,7 +84,7 @@ class BufferTest {
     }
 
     @Test
-    fun testZeroWidthNonzeroHeight() {
+    fun zeroWidthNonzeroHeight() {
         val image = ImageBuffer.createRgb(0u, 2u)
         assertEquals(0, image.rowsMut().size)
         assertEquals(0, image.pixelsMut().size)
@@ -93,7 +93,7 @@ class BufferTest {
     }
 
     @Test
-    fun testNonzeroWidthZeroHeight() {
+    fun nonzeroWidthZeroHeight() {
         val image = ImageBuffer.createRgb(2u, 0u)
         assertEquals(0, image.rowsMut().size)
         assertEquals(0, image.pixelsMut().size)
@@ -102,7 +102,7 @@ class BufferTest {
     }
 
     @Test
-    fun testPixelsOnLargeBuffer() {
+    fun pixelsOnLargeBuffer() {
         val image = ImageBuffer.createRgb(1u, 1u, ByteArray(6))!!
         assertEquals(1, image.pixels().asSequence().count())
         assertEquals(1, image.enumeratePixels().size)
@@ -113,7 +113,7 @@ class BufferTest {
     }
 
     @Test
-    fun testDefault() {
+    fun default() {
         val image = ImageBuffer.createRgb(0u, 0u)
         assertEquals(Pair(0u, 0u), image.dimensions())
     }
@@ -252,5 +252,47 @@ class BufferTest {
         assertFailsWith<ImageError.Parameter> {
             target.copyFromColorSpace(source, options)
         }
+    }
+
+    @Test
+    fun exactSizeIterSizeHint() {
+        val n = 10u
+        val image = ImageBuffer.createRgb(n, n, ByteArray((n * n * 3u).toInt()))!!
+        val pixels = image.pixels().asSequence().toList()
+        assertEquals((n * n).toInt(), pixels.size)
+    }
+
+    @Test
+    fun conversion() {
+        val a = ImageBuffer.createRgb(100u, 100u) { _, _ -> Rgb(255u.toUByte(), 23u.toUByte(), 42u.toUByte()) }
+        assertTrue(a.asRaw()[0] != 0.toByte())
+        val b = a.toColorSpace(Cicp.SRGB)
+        assertTrue(b.asRaw()[0] != 0.toByte())
+    }
+
+    @Test
+    fun imageAccessRowByRow() {
+        val a = ImageBuffer.createRgb(100u, 100u) { _, _ -> Rgb(255u.toUByte(), 23u.toUByte(), 42u.toUByte()) }
+        var sum = 0
+        for (y in 0u until 100u) {
+            for (x in 0u until 100u) {
+                val p = a.getPixel(x, y)
+                sum += p.r.toInt() + p.g.toInt() + p.b.toInt()
+            }
+        }
+        assertEquals(100 * 100 * (255 + 23 + 42), sum)
+    }
+
+    @Test
+    fun imageAccessColByCol() {
+        val a = ImageBuffer.createRgb(100u, 100u) { _, _ -> Rgb(255u.toUByte(), 23u.toUByte(), 42u.toUByte()) }
+        var sum = 0
+        for (x in 0u until 100u) {
+            for (y in 0u until 100u) {
+                val p = a.getPixel(x, y)
+                sum += p.r.toInt() + p.g.toInt() + p.b.toInt()
+            }
+        }
+        assertEquals(100 * 100 * (255 + 23 + 42), sum)
     }
 }

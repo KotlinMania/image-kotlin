@@ -59,4 +59,20 @@ class BufferParTest {
             image2.parPixels().toList(),
         )
     }
+
+    private fun pixelFunc(): Rgb<UByte> = Rgb(123u.toUByte(), 45u.toUByte(), 67u.toUByte())
+
+    @Test
+    fun creation() {
+        val s = 16u
+        val img = ImageBuffer.createRgb(s, s) { _, _ -> pixelFunc() }
+        assertEquals((s * s * 3u).toInt(), img.asRaw().size)
+    }
+
+    @Test
+    fun creationPar() {
+        val s = 16u
+        val img = ImageBuffer.createRgb(s, s) { _, _ -> pixelFunc() }
+        assertEquals((s * s * 3u).toInt(), img.asRaw().size)
+    }
 }
