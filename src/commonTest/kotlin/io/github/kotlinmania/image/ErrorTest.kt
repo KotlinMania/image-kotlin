@@ -15,12 +15,12 @@ class ErrorTest {
                 UnsupportedErrorKind.Color(ExtendedColorType.Cmyk8),
             )
         assertTrue(err1.toString().contains("Cmyk8"))
-        assertEquals(UnsupportedErrorKind.Color(ExtendedColorType.Cmyk8), err1.kind)
+        assertEquals(UnsupportedErrorKind.Color(ExtendedColorType.Cmyk8), err1.kind())
 
         val err2 = UnsupportedError.fromFormatHint(ImageFormatHint.Unknown)
         assertEquals("The image format could not be determined", err2.toString())
         assertEquals(ImageFormatHint.Unknown, err2.formatHint())
-        assertTrue(err2.kind is UnsupportedErrorKind.Format)
+        assertTrue(err2.kind() is UnsupportedErrorKind.Format)
 
         val err3 =
             UnsupportedError.fromFormatAndKind(
@@ -28,7 +28,7 @@ class ErrorTest {
                 UnsupportedErrorKind.GenericFeature("animation"),
             )
         assertEquals("The decoder does not support the format feature animation", err3.toString())
-        assertEquals(UnsupportedErrorKind.GenericFeature("animation"), err3.kind)
+        assertEquals(UnsupportedErrorKind.GenericFeature("animation"), err3.kind())
     }
 
     @Test
@@ -51,14 +51,14 @@ class ErrorTest {
     fun testParameterErrorFormatting() {
         val err = ParameterError.fromKind(ParameterErrorKind.DimensionMismatch)
         assertEquals("The Image's dimensions are either too small or too large", err.toString())
-        assertEquals(ParameterErrorKind.DimensionMismatch, err.kind)
+        assertEquals(ParameterErrorKind.DimensionMismatch, err.kind())
     }
 
     @Test
     fun testLimitErrorFormatting() {
         val err = LimitError.fromKind(LimitErrorKind.InsufficientMemory)
         assertEquals("Memory limit exceeded", err.toString())
-        assertEquals(LimitErrorKind.InsufficientMemory, err.kind)
+        assertEquals(LimitErrorKind.InsufficientMemory, err.kind())
     }
 
     @Test
