@@ -68,9 +68,7 @@ public class SubImage<P> internal constructor(
     /**
      * The offsets of this subimage relative to the underlying image.
      */
-    public fun offsets(): Pair<UInt, UInt> {
-        return Pair(inner.xoffset, inner.yoffset)
-    }
+    public fun offsets(): Pair<UInt, UInt> = Pair(inner.xoffset, inner.yoffset)
 
     /**
      * Convert this subimage to an [ImageBuffer].
@@ -105,9 +103,7 @@ public class SubImage<P> internal constructor(
     /**
      * Get a reference to the underlying image.
      */
-    public fun inner(): GenericImageView<P> {
-        return inner.image
-    }
+    public fun inner(): GenericImageView<P> = inner.image
 
     /**
      * Create a mutable sub-view of the image.
@@ -125,38 +121,26 @@ public class SubImage<P> internal constructor(
     /**
      * Get a mutable reference to the underlying image.
      */
-    public fun innerMut(): GenericImage<P>? {
-        return inner.image as? GenericImage<P>
-    }
+    public fun innerMut(): GenericImage<P>? = inner.image as? GenericImage<P>
 
     /**
      * Dereferences to the underlying image view.
      */
-    public fun deref(): SubImageInner<GenericImageView<P>> {
-        return inner
-    }
+    public fun deref(): SubImageInner<GenericImageView<P>> = inner
 
     /**
      * Dereferences to the underlying mutable image.
      */
-    public fun derefMut(): SubImageInner<GenericImageView<P>> {
-        return inner
-    }
+    public fun derefMut(): SubImageInner<GenericImageView<P>> = inner
 
-    override fun dimensions(): Pair<UInt, UInt> {
-        return Pair(inner.xstride, inner.ystride)
-    }
+    override fun dimensions(): Pair<UInt, UInt> = Pair(inner.xstride, inner.ystride)
 
-    override fun getPixel(x: UInt, y: UInt): P {
-        return inner.image.getPixel(x + inner.xoffset, y + inner.yoffset)
-    }
+    override fun getPixel(x: UInt, y: UInt): P = inner.image.getPixel(x + inner.xoffset, y + inner.yoffset)
 
     /**
      * Create a buffer with the dimensions of this sub-image.
      */
-    override fun bufferWithDimensions(width: UInt, height: UInt): ImageBuffer<P, ByteArray> {
-        return inner.image.bufferWithDimensions(width, height)
-    }
+    override fun bufferWithDimensions(width: UInt, height: UInt): ImageBuffer<P, ByteArray> = inner.image.bufferWithDimensions(width, height)
 
     public fun getPixelMut(x: UInt, y: UInt): P {
         val img = inner.image as? GenericImage<P>
@@ -186,17 +170,17 @@ public class SubImage<P> internal constructor(
          * Construct a new subimage.
          * The coordinates set the position of the top left corner of the [SubImage].
          */
-        public fun <P> new(image: GenericImageView<P>, x: UInt, y: UInt, width: UInt, height: UInt): SubImage<P> {
-            return SubImage(
-                inner = SubImageInner(
-                    image = image,
-                    xoffset = x,
-                    yoffset = y,
-                    xstride = width,
-                    ystride = height,
-                ),
+        public fun <P> new(image: GenericImageView<P>, x: UInt, y: UInt, width: UInt, height: UInt): SubImage<P> =
+            SubImage(
+                inner =
+                    SubImageInner(
+                        image = image,
+                        xoffset = x,
+                        yoffset = y,
+                        xstride = width,
+                        ystride = height,
+                    ),
             )
-        }
     }
 }
 
