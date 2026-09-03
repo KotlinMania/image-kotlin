@@ -59,15 +59,21 @@ public enum class FormatFullBytes {
 }
 
 public sealed class Chunker {
-    public class FromTop(public val chunks: List<ByteArray>) : Chunker()
-    public class FromBottom(public val chunks: List<ByteArray>) : Chunker()
+    public class FromTop(
+        public val chunks: List<ByteArray>,
+    ) : Chunker()
+
+    public class FromBottom(
+        public val chunks: List<ByteArray>,
+    ) : Chunker()
 }
 
 public enum class ChannelWidthError {
     Rgb,
     Rle8,
     Rle4,
-    Bitfields;
+    Bitfields,
+    ;
 
     public fun fmt(): String =
         when (this) {
@@ -80,28 +86,59 @@ public enum class ChannelWidthError {
     override fun toString(): String = fmt()
 }
 
-public sealed class DecoderError(message: String) : Exception(message) {
+public sealed class DecoderError(
+    message: String,
+) : Exception(message) {
     public data object CorruptRleData : DecoderError("Corrupt RLE data")
+
     public data object BitfieldMaskNonContiguous : DecoderError("Non-contiguous bitfield mask")
+
     public data object BitfieldMaskInvalid : DecoderError("Invalid bitfield mask")
-    public data class BitfieldMaskMissing(public val bb: UInt) : DecoderError("Missing $bb-bit bitfield mask")
-    public data class BitfieldMasksMissing(public val bb: UInt) : DecoderError("Missing $bb-bit bitfield masks")
+
+    public data class BitfieldMaskMissing(
+        public val bb: UInt,
+    ) : DecoderError("Missing $bb-bit bitfield mask")
+
+    public data class BitfieldMasksMissing(
+        public val bb: UInt,
+    ) : DecoderError("Missing $bb-bit bitfield masks")
+
     public data object BmpSignatureInvalid : DecoderError("BMP signature not found")
+
     public data object MoreThanOnePlane : DecoderError("More than one plane")
-    public data class InvalidChannelWidth(public val tp: ChannelWidthError, public val n: UShort) :
-        DecoderError("Invalid channel bit count for $tp: $n")
-    public data class NegativeWidth(public val w: Int) : DecoderError("Negative width ($w)")
-    public data class ImageTooLarge(public val w: Int, public val h: Int) :
-        DecoderError("Image too large (one of ($w, $h) > soft limit of $MAX_WIDTH_HEIGHT)")
+
+    public data class InvalidChannelWidth(
+        public val tp: ChannelWidthError,
+        public val n: UShort,
+    ) : DecoderError("Invalid channel bit count for $tp: $n")
+
+    public data class NegativeWidth(
+        public val w: Int,
+    ) : DecoderError("Negative width ($w)")
+
+    public data class ImageTooLarge(
+        public val w: Int,
+        public val h: Int,
+    ) : DecoderError("Image too large (one of ($w, $h) > soft limit of $MAX_WIDTH_HEIGHT)")
+
     public data object InvalidHeight : DecoderError("Invalid height")
-    public data class ImageTypeInvalidForTopDown(public val tp: UInt) :
-        DecoderError("Invalid image type $tp for top-down image.")
-    public data class ImageTypeUnknown(public val tp: UInt) :
-        DecoderError("Unknown image compression type $tp")
-    public data class HeaderTooSmall(public val s: UInt) :
-        DecoderError("Bitmap header too small ($s bytes)")
-    public data class PaletteSizeExceeded(public val colorsUsed: UInt, public val bitCount: UShort) :
-        DecoderError("Palette size $colorsUsed exceeds maximum size for BMP with bit count of $bitCount")
+
+    public data class ImageTypeInvalidForTopDown(
+        public val tp: UInt,
+    ) : DecoderError("Invalid image type $tp for top-down image.")
+
+    public data class ImageTypeUnknown(
+        public val tp: UInt,
+    ) : DecoderError("Unknown image compression type $tp")
+
+    public data class HeaderTooSmall(
+        public val s: UInt,
+    ) : DecoderError("Bitmap header too small ($s bytes)")
+
+    public data class PaletteSizeExceeded(
+        public val colorsUsed: UInt,
+        public val bitCount: UShort,
+    ) : DecoderError("Palette size $colorsUsed exceeds maximum size for BMP with bit count of $bitCount")
 
     public fun fmt(): String = message ?: ""
 
@@ -115,17 +152,31 @@ public sealed class DecoderError(message: String) : Exception(message) {
 
 public sealed interface RLEInsn {
     public data object EndOfFile : RLEInsn
+
     public data object EndOfRow : RLEInsn
-    public data class Delta(public val xdelta: UByte, public val ydelta: UByte) : RLEInsn
-    public data class Absolute(public val length: UByte, public val buffer: ByteArray) : RLEInsn {
+
+    public data class Delta(
+        public val xdelta: UByte,
+        public val ydelta: UByte,
+    ) : RLEInsn
+
+    public data class Absolute(
+        public val length: UByte,
+        public val buffer: ByteArray,
+    ) : RLEInsn {
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
             if (other !is Absolute) return false
             return length == other.length && buffer.contentEquals(other.buffer)
         }
+
         override fun hashCode(): Int = 31 * length.hashCode() + buffer.contentHashCode()
     }
-    public data class PixelRun(public val nPixels: UByte, public val paletteIndex: UByte) : RLEInsn
+
+    public data class PixelRun(
+        public val nPixels: UByte,
+        public val paletteIndex: UByte,
+    ) : RLEInsn
 }
 
 public fun checkForOverflow(width: Int, length: Int, channels: Int) {
@@ -1060,7 +1111,13 @@ public class BmpDecoder(
     public fun reader(): IoRead = reader
 
     public fun numChannels(): Int =
-        if (indexedColor) 1 else if (isIco || (bitfields?.a?.len ?: 0) > 0 || imageType == ImageType.RGBA32) 4 else 3
+        if (indexedColor) {
+            1
+        } else if (isIco || (bitfields?.a?.len ?: 0) > 0 || imageType == ImageType.RGBA32) {
+            4
+        } else {
+            3
+        }
 
     public fun getPaletteSize(): Int = if (palette != null) palette.size / 3 else 0
 

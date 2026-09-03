@@ -111,7 +111,8 @@ public class FarbfeldReader(
     public val inner: IoRead,
     private var currentOffset: ULong = 0uL,
     private var cachedByte: Byte? = null,
-) : IoRead, IoSeek {
+) : IoRead,
+    IoSeek {
     public fun currentOffset(): ULong = currentOffset
 
     public fun cachedByte(): Byte? = cachedByte
@@ -160,15 +161,17 @@ public class FarbfeldReader(
         val seekable = inner as? IoSeek ?: throw IoException(IoErrorKind.Other, "Inner reader does not support seek")
         val originalOffset = this.currentOffset
         val endOffset = width.toULong() * height.toULong() * 8uL
-        val offsetFromCurrent = parseOffset(originalOffset, endOffset, pos)
-            ?: throw IoException(IoErrorKind.InvalidInput, "invalid seek to a negative or overflowing position")
+        val offsetFromCurrent =
+            parseOffset(originalOffset, endOffset, pos)
+                ?: throw IoException(IoErrorKind.InvalidInput, "invalid seek to a negative or overflowing position")
 
         seekable.seek(SeekFrom.Current(offsetFromCurrent))
-        this.currentOffset = if (offsetFromCurrent < 0) {
-            originalOffset - (-offsetFromCurrent).toULong()
-        } else {
-            originalOffset + offsetFromCurrent.toULong()
-        }
+        this.currentOffset =
+            if (offsetFromCurrent < 0) {
+                originalOffset - (-offsetFromCurrent).toULong()
+            } else {
+                originalOffset + offsetFromCurrent.toULong()
+            }
 
         if (this.currentOffset < endOffset && (this.currentOffset % 2uL) == 1uL) {
             val curr = seekable.seek(SeekFrom.Current(-1L))
@@ -203,16 +206,18 @@ public class FarbfeldReader(
                 )
             }
 
-            val width = try {
-                readDimm(bufferedRead)
-            } catch (e: Exception) {
-                throw ImageError.Decoding(DecodingError(ImageFormatHint.Exact(ImageFormat.Farbfeld), e))
-            }
-            val height = try {
-                readDimm(bufferedRead)
-            } catch (e: Exception) {
-                throw ImageError.Decoding(DecodingError(ImageFormatHint.Exact(ImageFormat.Farbfeld), e))
-            }
+            val width =
+                try {
+                    readDimm(bufferedRead)
+                } catch (e: Exception) {
+                    throw ImageError.Decoding(DecodingError(ImageFormatHint.Exact(ImageFormat.Farbfeld), e))
+                }
+            val height =
+                try {
+                    readDimm(bufferedRead)
+                } catch (e: Exception) {
+                    throw ImageError.Decoding(DecodingError(ImageFormatHint.Exact(ImageFormat.Farbfeld), e))
+                }
 
             if (checkDimensionOverflow(width, height, 8u)) {
                 throw ImageError.Unsupported(

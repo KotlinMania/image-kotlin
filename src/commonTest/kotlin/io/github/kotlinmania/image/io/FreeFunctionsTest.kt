@@ -7,6 +7,53 @@ import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 
+public class MockDecoder(
+    public var scanlineNumber: Long = 0,
+    public val scanlineBytes: Int = 5,
+) : ImageDecoder {
+    override fun dimensions(): Pair<UInt, UInt> = Pair(5u, 5u)
+
+    override fun colorType(): ColorType = ColorType.L8
+
+    override fun readImage(buf: ByteArray) {
+        for (i in buf.indices) {
+            buf[i] = (i % 256).toByte()
+        }
+    }
+
+    override fun readImageBoxed(buf: ByteArray) {
+        readImage(buf)
+    }
+
+    public fun seekScanline(n: ULong) {
+        scanlineNumber = n.toLong()
+    }
+
+    public fun readScanline(buf: ByteArray) {
+        val bytesRead = scanlineNumber * scanlineBytes
+        if (bytesRead >= 25) return
+        val len = minOf(scanlineBytes.toLong(), 25 - bytesRead).toInt()
+        val data = DATA
+        data.copyInto(buf, destinationOffset = 0, startIndex = bytesRead.toInt(), endIndex = bytesRead.toInt() + len)
+        scanlineNumber += 1
+    }
+}
+
+public val DATA: ByteArray = ByteArray(25) { it.toByte() }
+
+public fun seekScanline(d: ImageDecoder, n: ULong) {
+    (d as MockDecoder).scanlineNumber = n.toLong()
+}
+
+public fun readScanline(d: ImageDecoder, buf: ByteArray) {
+    val mock = d as MockDecoder
+    val bytesRead = mock.scanlineNumber * mock.scanlineBytes
+    if (bytesRead >= 25) return
+    val len = minOf(mock.scanlineBytes.toLong(), 25 - bytesRead).toInt()
+    DATA.copyInto(buf, destinationOffset = 0, startIndex = bytesRead.toInt(), endIndex = bytesRead.toInt() + len)
+    mock.scanlineNumber += 1
+}
+
 class FreeFunctionsTest {
     @Test
     fun testGuessFormat() {
@@ -18,55 +65,6 @@ class FreeFunctionsTest {
 
         val gifBytes = "GIF89a".encodeToByteArray()
         assertEquals(ImageFormat.Gif, guessFormat(gifBytes))
-    }
-
-    public class MockDecoder(
-        public var scanlineNumber: Long = 0,
-        public val scanlineBytes: Int = 5,
-    ) : ImageDecoder {
-        override fun dimensions(): Pair<UInt, UInt> = Pair(5u, 5u)
-
-        override fun colorType(): ColorType = ColorType.L8
-
-        override fun readImage(buf: ByteArray) {
-            for (i in buf.indices) {
-                buf[i] = (i % 256).toByte()
-            }
-        }
-
-        override fun readImageBoxed(buf: ByteArray) {
-            readImage(buf)
-        }
-
-        public fun seekScanline(n: ULong) {
-            scanlineNumber = n.toLong()
-        }
-
-        public fun readScanline(buf: ByteArray) {
-            val bytesRead = scanlineNumber * scanlineBytes
-            if (bytesRead >= 25) return
-            val len = minOf(scanlineBytes.toLong(), 25 - bytesRead).toInt()
-            val data = DATA
-            data.copyInto(buf, destinationOffset = 0, startIndex = bytesRead.toInt(), endIndex = bytesRead.toInt() + len)
-            scanlineNumber += 1
-        }
-    }
-
-    public companion object {
-        public val DATA: ByteArray = ByteArray(25) { it.toByte() }
-
-        public fun seekScanline(d: ImageDecoder, n: ULong) {
-            (d as MockDecoder).scanlineNumber = n.toLong()
-        }
-
-        public fun readScanline(d: ImageDecoder, buf: ByteArray) {
-            val mock = d as MockDecoder
-            val bytesRead = mock.scanlineNumber * mock.scanlineBytes
-            if (bytesRead >= 25) return
-            val len = minOf(mock.scanlineBytes.toLong(), 25 - bytesRead).toInt()
-            DATA.copyInto(buf, destinationOffset = 0, startIndex = bytesRead.toInt(), endIndex = bytesRead.toInt() + len)
-            mock.scanlineNumber += 1
-        }
     }
 
     @Test
