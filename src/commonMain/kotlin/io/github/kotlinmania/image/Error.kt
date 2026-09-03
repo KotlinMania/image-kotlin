@@ -140,9 +140,9 @@ public sealed class ImageError(
  *
  * See the variant [ImageError.Unsupported] for more documentation.
  */
-public data class UnsupportedError(
-    public val format: ImageFormatHint,
-    public val kind: UnsupportedErrorKind,
+public class UnsupportedError(
+    private val format: ImageFormatHint,
+    private val kind: UnsupportedErrorKind,
 ) {
     /**
      * Returns the corresponding [UnsupportedErrorKind] of the error.
@@ -181,6 +181,18 @@ public data class UnsupportedError(
         }
 
     override fun toString(): String = fmt()
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is UnsupportedError) return false
+        return format == other.format && kind == other.kind
+    }
+
+    override fun hashCode(): Int {
+        var result = format.hashCode()
+        result = 31 * result + kind.hashCode()
+        return result
+    }
 
     public companion object {
         /**
@@ -352,8 +364,8 @@ public data class EncodingError(
  * This is used as an opaque representation for the [ImageError.Parameter] variant. See its
  * documentation for more information.
  */
-public data class ParameterError(
-    public val kind: ParameterErrorKind,
+public class ParameterError(
+    private val kind: ParameterErrorKind,
     public val underlying: Throwable? = null,
 ) {
     /**
@@ -383,6 +395,18 @@ public data class ParameterError(
     }
 
     override fun toString(): String = fmt()
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is ParameterError) return false
+        return kind == other.kind && underlying == other.underlying
+    }
+
+    override fun hashCode(): Int {
+        var result = kind.hashCode()
+        result = 31 * result + (underlying?.hashCode() ?: 0)
+        return result
+    }
 
     public companion object {
         /** Construct a [ParameterError] directly from a corresponding kind. */
@@ -434,8 +458,8 @@ public sealed interface ParameterErrorKind {
  * This is used as an opaque representation for the [ImageError.Limits] variant. See its
  * documentation for more information.
  */
-public data class LimitError(
-    public val kind: LimitErrorKind,
+public class LimitError(
+    private val kind: LimitErrorKind,
 ) {
     /**
      * Returns the corresponding [LimitErrorKind] of the error.
@@ -458,6 +482,14 @@ public data class LimitError(
         }
 
     override fun toString(): String = fmt()
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is LimitError) return false
+        return kind == other.kind
+    }
+
+    override fun hashCode(): Int = kind.hashCode()
 
     public companion object {
         /** Construct a generic [LimitError] directly from a corresponding kind. */

@@ -9,87 +9,84 @@ package io.github.kotlinmania.image.images
  * - [GenericImageView.view] to create an immutable view,
  * - [SubImage.new] to instantiate the view directly.
  */
-public class SubImage<P>(
-    public val image: GenericImageView<P>,
-    private var xOffset: UInt,
-    private var yOffset: UInt,
-    private var width: UInt,
-    private var height: UInt,
+public class SubImage<P> internal constructor(
+    private val inner: SubImageInner<GenericImageView<P>>,
 ) : GenericImage<P> {
-    /**
-     * The offsets of this subimage relative to the underlying image.
-     */
-    public fun offsets(): Pair<UInt, UInt> = Pair(xOffset, yOffset)
+    public constructor(
+        image: GenericImageView<P>,
+        x: UInt,
+        y: UInt,
+        width: UInt,
+        height: UInt,
+    ) : this(
+        SubImageInner(
+            image = image,
+            xoffset = x,
+            yoffset = y,
+            xstride = width,
+            ystride = height,
+        ),
+    )
 
-    override fun dimensions(): Pair<UInt, UInt> = Pair(width, height)
+    public val image: GenericImageView<P>
+        get() = inner.image
+
+    public var xOffset: UInt
+        get() = inner.xoffset
+        set(value) {
+            inner.xoffset = value
+        }
+
+    public var yOffset: UInt
+        get() = inner.yoffset
+        set(value) {
+            inner.yoffset = value
+        }
+
+    public var width: UInt
+        get() = inner.xstride
+        set(value) {
+            inner.xstride = value
+        }
+
+    public var height: UInt
+        get() = inner.ystride
+        set(value) {
+            inner.ystride = value
+        }
 
     /**
      * Change the coordinates of this subimage.
      */
-    public fun changeBounds(x: UInt, y: UInt, newWidth: UInt, newHeight: UInt) {
-        require(x.toULong() + newWidth.toULong() <= image.width().toULong()) {
-            "SubImage bounds out of parent range"
-        }
-        require(y.toULong() + newHeight.toULong() <= image.height().toULong()) {
-            "SubImage bounds out of parent range"
-        }
-        xOffset = x
-        yOffset = y
-        width = newWidth
-        height = newHeight
-    }
-
-    override fun getPixel(x: UInt, y: UInt): P {
-        require(x < width && y < height) { "Coordinates ($x, $y) out of sub-image bounds ($width, $height)" }
-        return image.getPixel(xOffset + x, yOffset + y)
-    }
-
-    override fun putPixel(x: UInt, y: UInt, pixel: P) {
-        require(x < width && y < height) { "Coordinates ($x, $y) out of sub-image bounds ($width, $height)" }
-        val img = image as? GenericImage<P> ?: throw UnsupportedOperationException("Underlying image is immutable")
-        img.putPixel(xOffset + x, yOffset + y, pixel)
+    public fun changeBounds(x: UInt, y: UInt, width: UInt, height: UInt) {
+        inner.xoffset = x
+        inner.yoffset = y
+        inner.xstride = width
+        inner.ystride = height
     }
 
     /**
-     * Blend the pixel directly at the specified coordinate.
+     * The offsets of this subimage relative to the underlying image.
      */
-    override fun blendPixel(x: UInt, y: UInt, pixel: P) {
-        require(x < width && y < height) { "Coordinates ($x, $y) out of sub-image bounds ($width, $height)" }
-        val img = image as? GenericImage<P> ?: throw UnsupportedOperationException("Underlying image is immutable")
-        img.blendPixel(xOffset + x, yOffset + y, pixel)
+    public fun offsets(): Pair<UInt, UInt> {
+        return Pair(inner.xoffset, inner.yoffset)
     }
-
-    /**
-     * Get a reference to the underlying image.
-     */
-    public fun inner(): GenericImageView<P> = image
-
-    /**
-     * Get a mutable reference to the underlying image.
-     */
-    public fun innerMut(): GenericImage<P>? = image as? GenericImage<P>
-
-    /**
-     * Dereferences to the underlying image view.
-     */
-    public fun deref(): GenericImageView<P> = image
-
-    /**
-     * Dereferences to the underlying mutable image.
-     */
-    public fun derefMut(): GenericImage<P>? = image as? GenericImage<P>
 
     /**
      * Convert this subimage to an [ImageBuffer].
      */
     public fun toImage(): GenericImage<P> {
-        val target: GenericImage<P> = bufferWithDimensions(width, height)
-        for (y in 0u until height) {
-            for (x in 0u until width) {
-                target.putPixel(x, y, getPixel(x, y))
+        val borrowed = inner.image
+        val out: GenericImage<P> = borrowed.bufferWithDimensions(inner.xstride, inner.ystride)
+
+        for (y in 0u until inner.ystride) {
+            for (x in 0u until inner.xstride) {
+                val p = borrowed.getPixel(x + inner.xoffset, y + inner.yoffset)
+                out.putPixel(x, y, p)
             }
         }
-        return target
+
+        return out
     }
 
     /**
@@ -98,9 +95,18 @@ public class SubImage<P>(
      * The coordinates given are relative to the current view on the underlying image.
      */
     override fun view(x: UInt, y: UInt, width: UInt, height: UInt): SubImage<P> {
-        require(x.toULong() + width.toULong() <= this.width.toULong()) { "View width out of bounds" }
-        require(y.toULong() + height.toULong() <= this.height.toULong()) { "View height out of bounds" }
-        return SubImage(image, xOffset + x, yOffset + y, width, height)
+        check(x.toULong() + width.toULong() <= inner.xstride.toULong())
+        check(y.toULong() + height.toULong() <= inner.ystride.toULong())
+        val newX = inner.xoffset + x
+        val newY = inner.yoffset + y
+        return SubImage.new(inner.image, newX, newY, width, height)
+    }
+
+    /**
+     * Get a reference to the underlying image.
+     */
+    public fun inner(): GenericImageView<P> {
+        return inner.image
     }
 
     /**
@@ -109,39 +115,88 @@ public class SubImage<P>(
      * The coordinates given are relative to the current view on the underlying image.
      */
     override fun subImage(x: UInt, y: UInt, width: UInt, height: UInt): SubImage<P> {
-        require(x.toULong() + width.toULong() <= this.width.toULong()) { "SubImage width out of bounds" }
-        require(y.toULong() + height.toULong() <= this.height.toULong()) { "SubImage height out of bounds" }
-        return SubImage(image, xOffset + x, yOffset + y, width, height)
+        check(x.toULong() + width.toULong() <= inner.xstride.toULong())
+        check(y.toULong() + height.toULong() <= inner.ystride.toULong())
+        val newX = inner.xoffset + x
+        val newY = inner.yoffset + y
+        return SubImage.new(inner.image, newX, newY, width, height)
     }
 
-    public fun xOffset(): UInt = xOffset
+    /**
+     * Get a mutable reference to the underlying image.
+     */
+    public fun innerMut(): GenericImage<P>? {
+        return inner.image as? GenericImage<P>
+    }
 
-    public fun yOffset(): UInt = yOffset
+    /**
+     * Dereferences to the underlying image view.
+     */
+    public fun deref(): SubImageInner<GenericImageView<P>> {
+        return inner
+    }
 
-    public fun xStride(): UInt = width
+    /**
+     * Dereferences to the underlying mutable image.
+     */
+    public fun derefMut(): SubImageInner<GenericImageView<P>> {
+        return inner
+    }
 
-    public fun yStride(): UInt = height
+    override fun dimensions(): Pair<UInt, UInt> {
+        return Pair(inner.xstride, inner.ystride)
+    }
 
-    public fun getPixelMut(x: UInt, y: UInt): P = getPixel(x, y)
+    override fun getPixel(x: UInt, y: UInt): P {
+        return inner.image.getPixel(x + inner.xoffset, y + inner.yoffset)
+    }
 
     /**
      * Create a buffer with the dimensions of this sub-image.
      */
-    override fun bufferWithDimensions(width: UInt, height: UInt): ImageBuffer<P, ByteArray> =
-        image.bufferWithDimensions(width, height)
+    override fun bufferWithDimensions(width: UInt, height: UInt): ImageBuffer<P, ByteArray> {
+        return inner.image.bufferWithDimensions(width, height)
+    }
 
-    override fun bufferLike(): ImageBuffer<P, ByteArray> = bufferWithDimensions(width, height)
+    public fun getPixelMut(x: UInt, y: UInt): P {
+        val img = inner.image as? GenericImage<P>
+        return img?.getPixel(x + inner.xoffset, y + inner.yoffset) ?: inner.image.getPixel(x + inner.xoffset, y + inner.yoffset)
+    }
+
+    override fun putPixel(x: UInt, y: UInt, pixel: P) {
+        val img = inner.image as? GenericImage<P>
+        img?.putPixel(x + inner.xoffset, y + inner.yoffset, pixel)
+    }
+
+    /**
+     * Blend the pixel directly at the specified coordinate.
+     */
+    override fun blendPixel(x: UInt, y: UInt, pixel: P) {
+        val img = inner.image as? GenericImage<P>
+        img?.blendPixel(x + inner.xoffset, y + inner.yoffset, pixel)
+    }
+
+    override fun bufferLike(): ImageBuffer<P, ByteArray> = bufferWithDimensions(inner.xstride, inner.ystride)
 
     public fun colorSpace(): io.github.kotlinmania.image.metadata.Cicp =
-        (image as? ImageBuffer<*, *>)?.colorSpace() ?: io.github.kotlinmania.image.metadata.Cicp.SRGB
+        (inner.image as? ImageBuffer<*, *>)?.colorSpace() ?: io.github.kotlinmania.image.metadata.Cicp.SRGB
 
     public companion object {
         /**
          * Construct a new subimage.
          * The coordinates set the position of the top left corner of the [SubImage].
          */
-        public fun <P> new(image: GenericImageView<P>, x: UInt, y: UInt, width: UInt, height: UInt): SubImage<P> =
-            SubImage(image, x, y, width, height)
+        public fun <P> new(image: GenericImageView<P>, x: UInt, y: UInt, width: UInt, height: UInt): SubImage<P> {
+            return SubImage(
+                inner = SubImageInner(
+                    image = image,
+                    xoffset = x,
+                    yoffset = y,
+                    xstride = width,
+                    ystride = height,
+                ),
+            )
+        }
     }
 }
 
@@ -150,10 +205,10 @@ public class SubImage<P>(
  */
 public data class SubImageInner<I>(
     public val image: I,
-    public val xOffset: UInt,
-    public val yOffset: UInt,
-    public val xStride: UInt,
-    public val yStride: UInt,
+    public var xoffset: UInt,
+    public var yoffset: UInt,
+    public var xstride: UInt,
+    public var ystride: UInt,
 )
 
 public typealias DerefPixel<I> = Any?
