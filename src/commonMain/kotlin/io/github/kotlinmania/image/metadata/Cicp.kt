@@ -3,8 +3,12 @@ package io.github.kotlinmania.image.metadata
 
 import io.github.kotlinmania.image.ImageError
 import io.github.kotlinmania.image.LayoutWithColor
+import io.github.kotlinmania.image.Luma
+import io.github.kotlinmania.image.LumaA
 import io.github.kotlinmania.image.ParameterError
 import io.github.kotlinmania.image.ParameterErrorKind
+import io.github.kotlinmania.image.Rgb
+import io.github.kotlinmania.image.Rgba
 import io.github.kotlinmania.image.images.DynamicImage
 import io.github.kotlinmania.image.math.multiplyAccumulate
 import kotlin.math.pow
@@ -334,16 +338,16 @@ public data class CicpRgb(
     public fun derivedLuminance(): FloatArray? =
         when (primaries) {
             CicpColorPrimaries.SRgb -> floatArrayOf(0.2126f, 0.7152f, 0.0722f)
+            CicpColorPrimaries.RgbM -> floatArrayOf(0.2990f, 0.5864f, 0.1146f)
+            CicpColorPrimaries.RgbB -> floatArrayOf(0.2220f, 0.7067f, 0.0713f)
             CicpColorPrimaries.Bt601,
-            CicpColorPrimaries.RgbB,
-            -> floatArrayOf(0.2990f, 0.5870f, 0.1140f)
-            CicpColorPrimaries.RgbM -> floatArrayOf(0.2990f, 0.5870f, 0.1140f)
-            CicpColorPrimaries.Rgb240m -> floatArrayOf(0.2120f, 0.7010f, 0.0870f)
+            CicpColorPrimaries.Rgb240m,
+            -> floatArrayOf(0.2124f, 0.7011f, 0.0866f)
             CicpColorPrimaries.Rgb2020 -> floatArrayOf(0.2627f, 0.6780f, 0.0593f)
             CicpColorPrimaries.SmpteRp431 -> floatArrayOf(0.2095f, 0.7216f, 0.0689f)
             CicpColorPrimaries.SmpteRp432 -> floatArrayOf(0.2290f, 0.6917f, 0.0793f)
             CicpColorPrimaries.GenericFilm -> floatArrayOf(0.2536f, 0.6808f, 0.0656f)
-            CicpColorPrimaries.Industry22 -> floatArrayOf(0.2220f, 0.7067f, 0.0713f)
+            CicpColorPrimaries.Industry22 -> floatArrayOf(0.2318f, 0.6723f, 0.0960f)
             CicpColorPrimaries.Xyz -> floatArrayOf(0.0f, 1.0f, 0.0f)
             CicpColorPrimaries.Unspecified -> null
         }
@@ -516,14 +520,126 @@ public class CicpTransform internal constructor(
         f32.selectTransform(from, into)
 
     public fun transformDynamic(lhs: DynamicImage, rhs: DynamicImage) {
-        val inRgba = rhs.toRgba8()
+        val fromLayout = LayoutWithColor.from(rhs.color())
+        val intoLayout = LayoutWithColor.from(lhs.color())
+
         val minW = minOf(lhs.width(), rhs.width())
         val minH = minOf(lhs.height(), rhs.height())
+        val pixels = (minW * minH).toInt()
+
+        val transformFn = f32.selectTransform(fromLayout, intoLayout)
+
+        val inputList = ArrayList<Float>(pixels * fromLayout.channels)
         for (y in 0u until minH) {
             for (x in 0u until minW) {
-                lhs.putPixel(x, y, inRgba.getPixel(x, y))
+                when (rhs) {
+                    is DynamicImage.ImageLuma8 -> {
+                        val p = rhs.image.getPixel(x, y)
+                        inputList.add((p.l.toInt() and 0xFF).toFloat() / 255.0f)
+                    }
+                    is DynamicImage.ImageLumaA8 -> {
+                        val p = rhs.image.getPixel(x, y)
+                        inputList.add((p.l.toInt() and 0xFF).toFloat() / 255.0f)
+                        inputList.add((p.a.toInt() and 0xFF).toFloat() / 255.0f)
+                    }
+                    is DynamicImage.ImageRgb8 -> {
+                        val p = rhs.image.getPixel(x, y)
+                        inputList.add((p.r.toInt() and 0xFF).toFloat() / 255.0f)
+                        inputList.add((p.g.toInt() and 0xFF).toFloat() / 255.0f)
+                        inputList.add((p.b.toInt() and 0xFF).toFloat() / 255.0f)
+                    }
+                    is DynamicImage.ImageRgba8 -> {
+                        val p = rhs.image.getPixel(x, y)
+                        inputList.add((p.r.toInt() and 0xFF).toFloat() / 255.0f)
+                        inputList.add((p.g.toInt() and 0xFF).toFloat() / 255.0f)
+                        inputList.add((p.b.toInt() and 0xFF).toFloat() / 255.0f)
+                        inputList.add((p.a.toInt() and 0xFF).toFloat() / 255.0f)
+                    }
+                    is DynamicImage.ImageLuma16 -> {
+                        val p = rhs.image.getPixel(x, y)
+                        inputList.add((p.l.toInt() and 0xFFFF).toFloat() / 65535.0f)
+                    }
+                    is DynamicImage.ImageLumaA16 -> {
+                        val p = rhs.image.getPixel(x, y)
+                        inputList.add((p.l.toInt() and 0xFFFF).toFloat() / 65535.0f)
+                        inputList.add((p.a.toInt() and 0xFFFF).toFloat() / 65535.0f)
+                    }
+                    is DynamicImage.ImageRgb16 -> {
+                        val p = rhs.image.getPixel(x, y)
+                        inputList.add((p.r.toInt() and 0xFFFF).toFloat() / 65535.0f)
+                        inputList.add((p.g.toInt() and 0xFFFF).toFloat() / 65535.0f)
+                        inputList.add((p.b.toInt() and 0xFFFF).toFloat() / 65535.0f)
+                    }
+                    is DynamicImage.ImageRgba16 -> {
+                        val p = rhs.image.getPixel(x, y)
+                        inputList.add((p.r.toInt() and 0xFFFF).toFloat() / 65535.0f)
+                        inputList.add((p.g.toInt() and 0xFFFF).toFloat() / 65535.0f)
+                        inputList.add((p.b.toInt() and 0xFFFF).toFloat() / 65535.0f)
+                        inputList.add((p.a.toInt() and 0xFFFF).toFloat() / 65535.0f)
+                    }
+                    is DynamicImage.ImageRgb32F -> {
+                        val p = rhs.image.getPixel(x, y)
+                        inputList.add(p.r)
+                        inputList.add(p.g)
+                        inputList.add(p.b)
+                    }
+                    is DynamicImage.ImageRgba32F -> {
+                        val p = rhs.image.getPixel(x, y)
+                        inputList.add(p.r)
+                        inputList.add(p.g)
+                        inputList.add(p.b)
+                        inputList.add(p.a)
+                    }
+                }
             }
         }
+
+        val outputList = ArrayList<Float>(pixels * intoLayout.channels)
+        transformFn(inputList, outputList)
+
+        var idx = 0
+
+        fun clampUByte(v: Float): UByte = (v.coerceIn(0f, 1f) * 255.0f + 0.5f).toInt().coerceIn(0, 255).toUByte()
+
+        fun clampUShort(v: Float): UShort = (v.coerceIn(0f, 1f) * 65535.0f + 0.5f).toInt().coerceIn(0, 65535).toUShort()
+
+        for (y in 0u until minH) {
+            for (x in 0u until minW) {
+                when (lhs) {
+                    is DynamicImage.ImageLuma8 -> {
+                        lhs.image.putPixel(x, y, Luma(clampUByte(outputList[idx++])))
+                    }
+                    is DynamicImage.ImageLumaA8 -> {
+                        lhs.image.putPixel(x, y, LumaA(clampUByte(outputList[idx++]), clampUByte(outputList[idx++])))
+                    }
+                    is DynamicImage.ImageRgb8 -> {
+                        lhs.image.putPixel(x, y, Rgb(clampUByte(outputList[idx++]), clampUByte(outputList[idx++]), clampUByte(outputList[idx++])))
+                    }
+                    is DynamicImage.ImageRgba8 -> {
+                        lhs.image.putPixel(x, y, Rgba(clampUByte(outputList[idx++]), clampUByte(outputList[idx++]), clampUByte(outputList[idx++]), clampUByte(outputList[idx++])))
+                    }
+                    is DynamicImage.ImageLuma16 -> {
+                        lhs.image.putPixel(x, y, Luma(clampUShort(outputList[idx++])))
+                    }
+                    is DynamicImage.ImageLumaA16 -> {
+                        lhs.image.putPixel(x, y, LumaA(clampUShort(outputList[idx++]), clampUShort(outputList[idx++])))
+                    }
+                    is DynamicImage.ImageRgb16 -> {
+                        lhs.image.putPixel(x, y, Rgb(clampUShort(outputList[idx++]), clampUShort(outputList[idx++]), clampUShort(outputList[idx++])))
+                    }
+                    is DynamicImage.ImageRgba16 -> {
+                        lhs.image.putPixel(x, y, Rgba(clampUShort(outputList[idx++]), clampUShort(outputList[idx++]), clampUShort(outputList[idx++]), clampUShort(outputList[idx++])))
+                    }
+                    is DynamicImage.ImageRgb32F -> {
+                        lhs.image.putPixel(x, y, Rgb(outputList[idx++], outputList[idx++], outputList[idx++]))
+                    }
+                    is DynamicImage.ImageRgba32F -> {
+                        lhs.image.putPixel(x, y, Rgba(outputList[idx++], outputList[idx++], outputList[idx++], outputList[idx++]))
+                    }
+                }
+            }
+        }
+        lhs.setColorSpace(this.into)
     }
 
     public companion object {
