@@ -3,12 +3,18 @@ package io.github.kotlinmania.image.images
 
 import io.github.kotlinmania.image.ColorType
 import io.github.kotlinmania.image.ImageError
+import io.github.kotlinmania.image.Luma
+import io.github.kotlinmania.image.Rgb
 import io.github.kotlinmania.image.Rgba
 import io.github.kotlinmania.image.imageops.FilterType
+import io.github.kotlinmania.image.metadata.Cicp
+import io.github.kotlinmania.image.metadata.CicpColorPrimaries
+import io.github.kotlinmania.image.metadata.CicpTransform
 import io.github.kotlinmania.image.metadata.Orientation
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 
 class DynimageTests {
@@ -27,6 +33,14 @@ class DynimageTests {
         assertEquals(54u, pixel.g)
         assertEquals(54u, pixel.b)
         assertEquals(expectedAlpha, pixel.a)
+    }
+
+    private fun testGrayscaleAlphaDiscarded(img: DynamicImage) {
+        testGrayscale(img, true)
+    }
+
+    private fun testGrayscaleAlphaPreserved(img: DynamicImage) {
+        testGrayscale(img, false)
     }
 
     @Test
@@ -302,5 +316,368 @@ class DynimageTests {
         img.rotate180InPlace()
         val pRot = img.getPixel(0u, 0u)
         assertEquals(255u, pRot.r)
+    }
+
+    @Test
+    fun testDynamicImageDefaultImplementation() {
+        val defaultImg = DynamicImage.newLuma8(0u, 0u)
+        assertEquals(0u, defaultImg.width())
+        assertEquals(0u, defaultImg.height())
+    }
+
+    @Test
+    fun colorConversionSrgbP3() {
+        val source =
+            DynamicImage.ImageRgb8(
+                ImageBuffer.createRgb(128u, 128u) { _, _ -> Rgb(255u.toUByte(), 0u.toUByte(), 0u.toUByte()) },
+            )
+        val target =
+            DynamicImage.ImageRgba8(
+                ImageBuffer.createRgba(128u, 128u) { _, _ -> Rgba(0u.toUByte(), 0u.toUByte(), 0u.toUByte(), 0u.toUByte()) },
+            )
+
+        source.setRgbPrimaries(Cicp.SRGB.primaries)
+        source.setTransferFunction(Cicp.SRGB.transfer)
+        target.setRgbPrimaries(Cicp.DISPLAY_P3.primaries)
+        target.setTransferFunction(Cicp.DISPLAY_P3.transfer)
+
+        target.copyFromColorSpace(source, ConvertColorOptions())
+
+        val targetBuf = target.asRgba8()
+        assertNotNull(targetBuf)
+        assertEquals(Rgba(234u.toUByte(), 51u.toUByte(), 35u.toUByte(), 255u.toUByte()), targetBuf.getPixel(0u, 0u))
+    }
+
+    @Test
+    fun colorConversionPreservesSample() {
+        val sourceBuf = createRgb16(128u, 128u)
+        for (y in 0u until 128u) {
+            for (x in 0u until 128u) {
+                sourceBuf.putPixel(x, y, Rgb(UShort.MAX_VALUE, 0u.toUShort(), 0u.toUShort()))
+            }
+        }
+        val source = DynamicImage.ImageRgb16(sourceBuf)
+
+        val target =
+            DynamicImage.ImageRgba8(
+                ImageBuffer.createRgba(128u, 128u) { _, _ -> Rgba(0u.toUByte(), 0u.toUByte(), 0u.toUByte(), 0u.toUByte()) },
+            )
+
+        source.setRgbPrimaries(Cicp.SRGB.primaries)
+        source.setTransferFunction(Cicp.SRGB.transfer)
+        target.setRgbPrimaries(Cicp.DISPLAY_P3.primaries)
+        target.setTransferFunction(Cicp.DISPLAY_P3.transfer)
+
+        target.copyFromColorSpace(source, ConvertColorOptions())
+
+        val targetBuf = target.asRgba8()
+        assertNotNull(targetBuf)
+        assertEquals(Rgba(234u.toUByte(), 51u.toUByte(), 35u.toUByte(), 255u.toUByte()), targetBuf.getPixel(0u, 0u))
+    }
+
+    @Test
+    fun colorConversionPreservesSampleInFastpath() {
+        val sourceBuf = createRgb16(128u, 128u)
+        for (y in 0u until 128u) {
+            for (x in 0u until 128u) {
+                sourceBuf.putPixel(x, y, Rgb(UShort.MAX_VALUE, 0u.toUShort(), 0u.toUShort()))
+            }
+        }
+        val source = DynamicImage.ImageRgb16(sourceBuf)
+
+        val target =
+            DynamicImage.ImageRgba8(
+                ImageBuffer.createRgba(128u, 128u) { _, _ -> Rgba(0u.toUByte(), 0u.toUByte(), 0u.toUByte(), 0u.toUByte()) },
+            )
+
+        target.copyFromColorSpace(source, ConvertColorOptions())
+
+        val targetBuf = target.asRgba8()
+        assertNotNull(targetBuf)
+        assertEquals(Rgba(255u.toUByte(), 0u.toUByte(), 0u.toUByte(), 255u.toUByte()), targetBuf.getPixel(0u, 0u))
+    }
+
+    @Test
+    fun colorConversionRgbToLuma() {
+        val sourceBuf = createRgb16(128u, 128u)
+        for (y in 0u until 128u) {
+            for (x in 0u until 128u) {
+                sourceBuf.putPixel(x, y, Rgb(0u.toUShort(), UShort.MAX_VALUE, 0u.toUShort()))
+            }
+        }
+        val source = DynamicImage.ImageRgb16(sourceBuf)
+
+        val target =
+            DynamicImage.ImageLuma8(
+                ImageBuffer.createGray(128u, 128u) { _, _ -> Luma(0u.toUByte()) },
+            )
+
+        target.copyFromColorSpace(source, ConvertColorOptions())
+        assertNotNull(target.asLuma8())
+    }
+
+    @Test
+    fun copyColorSpaceCoverage() {
+        val types =
+            listOf(
+                ColorType.L8,
+                ColorType.La8,
+                ColorType.Rgb8,
+                ColorType.Rgba8,
+                ColorType.L16,
+                ColorType.La16,
+                ColorType.Rgb16,
+                ColorType.Rgba16,
+                ColorType.Rgb32F,
+                ColorType.Rgba32F,
+            )
+
+        val transform = CicpTransform.new(Cicp.SRGB, Cicp.DISPLAY_P3)
+        assertNotNull(transform)
+
+        for (from in types) {
+            for (to in types) {
+                val source = DynamicImage.new(16u, 16u, from)
+                val target = DynamicImage.new(16u, 16u, to)
+
+                source.setRgbPrimaries(Cicp.SRGB.primaries)
+                source.setTransferFunction(Cicp.SRGB.transfer)
+
+                target.setRgbPrimaries(Cicp.DISPLAY_P3.primaries)
+                target.setTransferFunction(Cicp.DISPLAY_P3.transfer)
+
+                target.copyFromColorSpace(
+                    source,
+                    ConvertColorOptions(transform = transform),
+                )
+            }
+        }
+    }
+
+    @Test
+    fun applyColorSpace() {
+        val buffer =
+            DynamicImage.ImageRgb8(
+                ImageBuffer.createRgb(128u, 128u) { _, _ -> Rgb(UByte.MAX_VALUE, 0u.toUByte(), 0u.toUByte()) },
+            )
+
+        buffer.setRgbPrimaries(Cicp.SRGB.primaries)
+        buffer.setTransferFunction(Cicp.SRGB.transfer)
+
+        buffer.applyColorSpace(Cicp.DISPLAY_P3, ConvertColorOptions())
+
+        val target = buffer.asRgb8()
+        assertNotNull(target)
+        assertEquals(Rgb(234u.toUByte(), 51u.toUByte(), 35u.toUByte()), target.getPixel(0u, 0u))
+    }
+
+    @Test
+    fun applyColorSpaceCoverage() {
+        val types =
+            listOf(
+                ColorType.L8,
+                ColorType.La8,
+                ColorType.Rgb8,
+                ColorType.Rgba8,
+                ColorType.L16,
+                ColorType.La16,
+                ColorType.Rgb16,
+                ColorType.Rgba16,
+                ColorType.Rgb32F,
+                ColorType.Rgba32F,
+            )
+
+        val transform = CicpTransform.new(Cicp.SRGB, Cicp.DISPLAY_P3)
+        assertNotNull(transform)
+
+        for (colorType in types) {
+            val buffer = DynamicImage.new(16u, 16u, colorType)
+
+            buffer.setRgbPrimaries(Cicp.SRGB.primaries)
+            buffer.setTransferFunction(Cicp.SRGB.transfer)
+
+            buffer.applyColorSpace(
+                Cicp.DISPLAY_P3,
+                ConvertColorOptions(transform = transform),
+            )
+        }
+    }
+
+    @Test
+    fun convertColorSpace() {
+        val sourceBuf = createRgb16(128u, 128u)
+        for (y in 0u until 128u) {
+            for (x in 0u until 128u) {
+                sourceBuf.putPixel(x, y, Rgb(UShort.MAX_VALUE, 0u.toUShort(), 0u.toUShort()))
+            }
+        }
+        val buffer = DynamicImage.ImageRgb16(sourceBuf)
+
+        buffer.setRgbPrimaries(Cicp.SRGB.primaries)
+        buffer.setTransferFunction(Cicp.SRGB.transfer)
+
+        val converted = buffer.convertColorSpace(Cicp.DISPLAY_P3, ColorType.Rgb8, ConvertColorOptions())
+
+        val target = converted.asRgb8()
+        assertNotNull(target)
+        assertEquals(Rgb(234u.toUByte(), 51u.toUByte(), 35u.toUByte()), target.getPixel(0u, 0u))
+    }
+
+    @Test
+    fun intoLumaIsColorSpaceAware() {
+        val sourceBuf = createRgb16(128u, 128u)
+        for (y in 0u until 128u) {
+            for (x in 0u until 128u) {
+                sourceBuf.putPixel(x, y, Rgb(UShort.MAX_VALUE, 0u.toUShort(), 0u.toUShort()))
+            }
+        }
+        val buffer = DynamicImage.ImageRgb16(sourceBuf)
+
+        buffer.setRgbPrimaries(Cicp.DISPLAY_P3.primaries)
+        buffer.setTransferFunction(Cicp.DISPLAY_P3.transfer)
+
+        val luma8 = buffer.clone().intoLuma8()
+        assertEquals(Luma(58u.toUByte()), luma8.getPixel(0u, 0u))
+        assertEquals(Cicp.DISPLAY_P3, luma8.colorSpace())
+
+        buffer.setRgbPrimaries(Cicp.SRGB.primaries)
+
+        val luma8Srgb = buffer.clone().intoLuma8()
+        assertEquals(Luma(54u.toUByte()), luma8Srgb.getPixel(0u, 0u))
+        assertNotEquals(Cicp.DISPLAY_P3, luma8Srgb.colorSpace())
+    }
+
+    @Test
+    fun fromLumaIsColorSpaceAware() {
+        val sourceBuf = createGray16(128u, 128u)
+        for (y in 0u until 128u) {
+            for (x in 0u until 128u) {
+                sourceBuf.putPixel(x, y, Luma(UShort.MAX_VALUE))
+            }
+        }
+        val buffer = DynamicImage.ImageLuma16(sourceBuf)
+
+        buffer.setRgbPrimaries(Cicp.DISPLAY_P3.primaries)
+        buffer.setTransferFunction(Cicp.DISPLAY_P3.transfer)
+
+        val rgb8 = buffer.clone().intoRgb8()
+        assertEquals(Rgb(UByte.MAX_VALUE, UByte.MAX_VALUE, UByte.MAX_VALUE), rgb8.getPixel(0u, 0u))
+        assertEquals(Cicp.DISPLAY_P3, rgb8.colorSpace())
+
+        buffer.setRgbPrimaries(Cicp.SRGB.primaries)
+
+        val rgb8Srgb = buffer.clone().intoRgb8()
+        assertEquals(Rgb(UByte.MAX_VALUE, UByte.MAX_VALUE, UByte.MAX_VALUE), rgb8Srgb.getPixel(0u, 0u))
+        assertNotEquals(Cicp.DISPLAY_P3, rgb8Srgb.colorSpace())
+    }
+
+    @Test
+    fun fromLumaForAllChromaticities() {
+        val chroma =
+            listOf(
+                CicpColorPrimaries.SRgb,
+                CicpColorPrimaries.RgbM,
+                CicpColorPrimaries.RgbB,
+                CicpColorPrimaries.Bt601,
+                CicpColorPrimaries.Rgb240m,
+                CicpColorPrimaries.GenericFilm,
+                CicpColorPrimaries.Rgb2020,
+                CicpColorPrimaries.Xyz,
+                CicpColorPrimaries.SmpteRp431,
+                CicpColorPrimaries.SmpteRp432,
+                CicpColorPrimaries.Industry22,
+                CicpColorPrimaries.Unspecified,
+            )
+
+        val sourceBuf = createGray16(128u, 128u)
+        for (y in 0u until 128u) {
+            for (x in 0u until 128u) {
+                sourceBuf.putPixel(x, y, Luma(UShort.MAX_VALUE))
+            }
+        }
+        val buffer = DynamicImage.ImageLuma16(sourceBuf)
+
+        for (c in chroma) {
+            buffer.setRgbPrimaries(c)
+            val rgb = buffer.toRgb8()
+            assertEquals(
+                Rgb(UByte.MAX_VALUE, UByte.MAX_VALUE, UByte.MAX_VALUE),
+                rgb.getPixel(0u, 0u),
+                "Failed for chroma: $c",
+            )
+        }
+    }
+
+    private data class ChromaCase(
+        val chroma: CicpColorPrimaries,
+        val r: UByte,
+        val g: UByte,
+        val b: UByte,
+        val expectedLuma: UByte,
+    )
+
+    @Test
+    fun fromRgbForAllChromaticities() {
+        val cases =
+            listOf(
+                ChromaCase(CicpColorPrimaries.SRgb, 54u, 182u, 18u, 143u),
+                ChromaCase(CicpColorPrimaries.RgbM, 76u, 150u, 29u, 114u),
+                ChromaCase(CicpColorPrimaries.RgbB, 57u, 180u, 18u, 141u),
+                ChromaCase(CicpColorPrimaries.Bt601, 54u, 179u, 22u, 139u),
+                ChromaCase(CicpColorPrimaries.Rgb240m, 54u, 179u, 22u, 139u),
+                ChromaCase(CicpColorPrimaries.GenericFilm, 65u, 173u, 17u, 135u),
+                ChromaCase(CicpColorPrimaries.Rgb2020, 67u, 173u, 15u, 136u),
+                ChromaCase(CicpColorPrimaries.Xyz, 0u, 255u, 0u, 255u),
+                ChromaCase(CicpColorPrimaries.SmpteRp431, 53u, 184u, 18u, 145u),
+                ChromaCase(CicpColorPrimaries.SmpteRp432, 58u, 176u, 20u, 137u),
+                ChromaCase(CicpColorPrimaries.Industry22, 59u, 171u, 24u, 131u),
+                ChromaCase(CicpColorPrimaries.Unspecified, 54u, 182u, 18u, 143u),
+            )
+
+        for (case in cases) {
+            val sourceBuf = ImageBuffer.createRgb(128u, 128u) { _, _ -> Rgb(case.r, case.g, case.b) }
+            val buffer = DynamicImage.ImageRgb8(sourceBuf)
+            buffer.setRgbPrimaries(case.chroma)
+
+            val buf = buffer.toLuma8()
+            assertEquals(Luma(case.expectedLuma), buf.getPixel(0u, 0u), "Failed for chroma: ${case.chroma}")
+        }
+    }
+
+    @Test
+    fun convertColorSpaceCoverage() {
+        val types =
+            listOf(
+                ColorType.L8,
+                ColorType.La8,
+                ColorType.Rgb8,
+                ColorType.Rgba8,
+                ColorType.L16,
+                ColorType.La16,
+                ColorType.Rgb16,
+                ColorType.Rgba16,
+                ColorType.Rgb32F,
+                ColorType.Rgba32F,
+            )
+
+        val transform = CicpTransform.new(Cicp.SRGB, Cicp.DISPLAY_P3)
+        assertNotNull(transform)
+
+        for (from in types) {
+            for (to in types) {
+                val buffer = DynamicImage.new(16u, 16u, from)
+
+                buffer.setRgbPrimaries(Cicp.SRGB.primaries)
+                buffer.setTransferFunction(Cicp.SRGB.transfer)
+
+                val converted =
+                    buffer.convertColorSpace(
+                        Cicp.DISPLAY_P3,
+                        to,
+                        ConvertColorOptions(transform = transform),
+                    )
+                assertEquals(to, converted.color())
+            }
+        }
     }
 }

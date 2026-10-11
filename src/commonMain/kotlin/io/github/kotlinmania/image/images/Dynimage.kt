@@ -237,7 +237,41 @@ public sealed class DynamicImage : GenericImage<Rgba<UByte>> {
     public fun toRgb8(): RgbImage =
         when (this) {
             is ImageRgb8 -> image.copy()
-            else -> ImageBuffer.createRgb(width(), height()) { x, y -> getPixel(x, y).toRgb() }
+            else -> {
+                val color = this.colorSpace().intoRgb()
+                val w = width()
+                val h = height()
+                val res = ImageBuffer.createRgb(w, h)
+                for (y in 0u until h) {
+                    for (x in 0u until w) {
+                        when (this) {
+                            is ImageLuma8 -> {
+                                val l = image.getPixel(x, y).l
+                                res.putPixel(x, y, Rgb(l, l, l))
+                            }
+                            is ImageLuma16 -> {
+                                val l = ((image.getPixel(x, y).l.toInt() and 0xFFFF) / 257).toUByte()
+                                res.putPixel(x, y, Rgb(l, l, l))
+                            }
+                            is ImageRgb16 -> {
+                                val p = image.getPixel(x, y)
+                                res.putPixel(
+                                    x,
+                                    y,
+                                    Rgb(
+                                        ((p.r.toInt() and 0xFFFF) / 257).toUByte(),
+                                        ((p.g.toInt() and 0xFFFF) / 257).toUByte(),
+                                        ((p.b.toInt() and 0xFFFF) / 257).toUByte(),
+                                    ),
+                                )
+                            }
+                            else -> res.putPixel(x, y, getPixel(x, y).toRgb())
+                        }
+                    }
+                }
+                res.color = color
+                res
+            }
         }
 
     public fun toRgba8(): RgbaImage =
@@ -249,7 +283,61 @@ public sealed class DynamicImage : GenericImage<Rgba<UByte>> {
     public fun toLuma8(): GrayImage =
         when (this) {
             is ImageLuma8 -> image.copy()
-            else -> ImageBuffer.createGray(width(), height()) { x, y -> getPixel(x, y).toLuma() }
+            else -> {
+                val color = this.colorSpace().intoRgb()
+                val coefs = color.derivedLuminance() ?: floatArrayOf(0.2126f, 0.7152f, 0.0722f)
+                val w = width()
+                val h = height()
+                val res = ImageBuffer.createGray(w, h)
+                for (y in 0u until h) {
+                    for (x in 0u until w) {
+                        val (r, g, b) =
+                            when (this) {
+                                is ImageRgb8 -> {
+                                    val p = image.getPixel(x, y)
+                                    Triple((p.r.toInt() and 0xFF).toFloat() / 255f, (p.g.toInt() and 0xFF).toFloat() / 255f, (p.b.toInt() and 0xFF).toFloat() / 255f)
+                                }
+                                is ImageRgba8 -> {
+                                    val p = image.getPixel(x, y)
+                                    Triple((p.r.toInt() and 0xFF).toFloat() / 255f, (p.g.toInt() and 0xFF).toFloat() / 255f, (p.b.toInt() and 0xFF).toFloat() / 255f)
+                                }
+                                is ImageRgb16 -> {
+                                    val p = image.getPixel(x, y)
+                                    Triple((p.r.toInt() and 0xFFFF).toFloat() / 65535f, (p.g.toInt() and 0xFFFF).toFloat() / 65535f, (p.b.toInt() and 0xFFFF).toFloat() / 65535f)
+                                }
+                                is ImageRgba16 -> {
+                                    val p = image.getPixel(x, y)
+                                    Triple((p.r.toInt() and 0xFFFF).toFloat() / 65535f, (p.g.toInt() and 0xFFFF).toFloat() / 65535f, (p.b.toInt() and 0xFFFF).toFloat() / 65535f)
+                                }
+                                is ImageLuma16 -> {
+                                    val l = (image.getPixel(x, y).l.toInt() and 0xFFFF).toFloat() / 65535f
+                                    Triple(l, l, l)
+                                }
+                                is ImageLumaA16 -> {
+                                    val l = (image.getPixel(x, y).l.toInt() and 0xFFFF).toFloat() / 65535f
+                                    Triple(l, l, l)
+                                }
+                                is ImageLumaA8 -> {
+                                    val l = (image.getPixel(x, y).l.toInt() and 0xFF).toFloat() / 255f
+                                    Triple(l, l, l)
+                                }
+                                is ImageRgb32F -> {
+                                    val p = image.getPixel(x, y)
+                                    Triple(p.r, p.g, p.b)
+                                }
+                                is ImageRgba32F -> {
+                                    val p = image.getPixel(x, y)
+                                    Triple(p.r, p.g, p.b)
+                                }
+                            }
+                        val lumaVal = r * coefs[0] + g * coefs[1] + b * coefs[2]
+                        val l = (lumaVal.coerceIn(0f, 1f) * 255.0f + 0.5f).toInt().coerceIn(0, 255).toUByte()
+                        res.putPixel(x, y, Luma(l))
+                    }
+                }
+                res.color = color
+                res
+            }
         }
 
     public fun toLumaAlpha8(): GrayAlphaImage =
@@ -501,55 +589,6 @@ public sealed class DynamicImage : GenericImage<Rgba<UByte>> {
         other: DynamicImage,
         options: ConvertColorOptions = ConvertColorOptions(),
     ) {
-        if (this is ImageRgb8 && other is ImageRgb8) {
-            image.copyFromColorSpace(other.image, options)
-            return
-        }
-        if (this is ImageRgb8 && other is ImageRgba8) {
-            image.copyFromColorSpace(other.image, options)
-            return
-        }
-        if (this is ImageRgba8 && other is ImageRgb8) {
-            image.copyFromColorSpace(other.image, options)
-            return
-        }
-        if (this is ImageRgba8 && other is ImageRgba8) {
-            image.copyFromColorSpace(other.image, options)
-            return
-        }
-        if (this is ImageRgb16 && other is ImageRgb16) {
-            image.copyFromColorSpace(other.image, options)
-            return
-        }
-        if (this is ImageRgb16 && other is ImageRgba16) {
-            image.copyFromColorSpace(other.image, options)
-            return
-        }
-        if (this is ImageRgba16 && other is ImageRgb16) {
-            image.copyFromColorSpace(other.image, options)
-            return
-        }
-        if (this is ImageRgba16 && other is ImageRgba16) {
-            image.copyFromColorSpace(other.image, options)
-            return
-        }
-        if (this is ImageRgb32F && other is ImageRgb32F) {
-            image.copyFromColorSpace(other.image, options)
-            return
-        }
-        if (this is ImageRgb32F && other is ImageRgba32F) {
-            image.copyFromColorSpace(other.image, options)
-            return
-        }
-        if (this is ImageRgba32F && other is ImageRgb32F) {
-            image.copyFromColorSpace(other.image, options)
-            return
-        }
-        if (this is ImageRgba32F && other is ImageRgba32F) {
-            image.copyFromColorSpace(other.image, options)
-            return
-        }
-
         val cicp = options.asTransform(other.colorSpace(), this.colorSpace())
         cicp.transformDynamic(this, other)
     }
@@ -561,10 +600,23 @@ public sealed class DynamicImage : GenericImage<Rgba<UByte>> {
         if (this.colorSpace() == cicp) {
             return this
         }
-        val target = this.clone()
+        val target = DynamicImage.new(this.width(), this.height(), this.color())
         target.setColorSpace(cicp)
         target.copyFromColorSpace(this, options)
-        return target
+        when (this) {
+            is ImageLuma8 -> (target as? ImageLuma8)?.image?.data?.copyInto(this.image.data)
+            is ImageLumaA8 -> (target as? ImageLumaA8)?.image?.data?.copyInto(this.image.data)
+            is ImageRgb8 -> (target as? ImageRgb8)?.image?.data?.copyInto(this.image.data)
+            is ImageRgba8 -> (target as? ImageRgba8)?.image?.data?.copyInto(this.image.data)
+            is ImageLuma16 -> (target as? ImageLuma16)?.image?.data?.copyInto(this.image.data)
+            is ImageLumaA16 -> (target as? ImageLumaA16)?.image?.data?.copyInto(this.image.data)
+            is ImageRgb16 -> (target as? ImageRgb16)?.image?.data?.copyInto(this.image.data)
+            is ImageRgba16 -> (target as? ImageRgba16)?.image?.data?.copyInto(this.image.data)
+            is ImageRgb32F -> (target as? ImageRgb32F)?.image?.data?.copyInto(this.image.data)
+            is ImageRgba32F -> (target as? ImageRgba32F)?.image?.data?.copyInto(this.image.data)
+        }
+        this.setColorSpace(cicp)
+        return this
     }
 
     public fun convertColorSpace(
