@@ -1117,7 +1117,7 @@ public class JpegEncoder(
     public fun encodeImage(image: DynamicImage) {
         val w = image.width()
         val h = image.height()
-        when (val color = image.color()) {
+        when (image.color()) {
             ColorType.L8 -> encode(image.asBytes(), w, h, ExtendedColorType.L8)
             ColorType.Rgb8 -> encode(image.asBytes(), w, h, ExtendedColorType.Rgb8)
             ColorType.Rgba8 -> encode(image.asBytes(), w, h, ExtendedColorType.Rgba8)

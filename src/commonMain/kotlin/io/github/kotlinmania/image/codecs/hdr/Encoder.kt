@@ -132,7 +132,7 @@ public class HdrEncoder internal constructor(
             val rleBuf = ArrayList<Byte>(width)
 
             var pixelIndex = 0
-            for (scanlineIndex in 0 until height) {
+            repeat(height) {
                 for (x in 0 until width) {
                     val pixel = flattenedRgbePixels[pixelIndex++]
                     bufr[x] = pixel.r.toByte()

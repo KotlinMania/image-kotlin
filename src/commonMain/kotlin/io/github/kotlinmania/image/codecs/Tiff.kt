@@ -32,7 +32,7 @@ public class TiffDecoder internal constructor(
     private var originalColorType: ExtendedColorType = ExtendedColorType.Rgba8
     private var limits: Limits = Limits.noLimits()
     private var isLittleEndian: Boolean = true
-    private var rawData: ByteArray = ByteArray(0)
+    private val rawData: ByteArray = ByteArray(0)
 
     public constructor(bytes: ByteArray) : this(BufferIoRead(bytes))
 

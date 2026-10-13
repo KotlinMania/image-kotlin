@@ -19,13 +19,13 @@ import io.github.kotlinmania.image.io.readExact
 public class AvifDecoder internal constructor(
     private val reader: IoRead,
 ) : ImageDecoder {
-    private var width: UInt = 1u
-    private var height: UInt = 1u
-    private var colorType: ColorType = ColorType.Rgba8
-    private var originalColorType: ExtendedColorType = ExtendedColorType.Rgba8
+    private val width: UInt = 1u
+    private val height: UInt = 1u
+    private val colorType: ColorType = ColorType.Rgba8
+    private val originalColorType: ExtendedColorType = ExtendedColorType.Rgba8
     private var limits: Limits = Limits.noLimits()
-    private var iccProfileData: ByteArray? = null
-    private var rawData: ByteArray = ByteArray(0)
+    private val iccProfileData: ByteArray? = null
+    private val rawData: ByteArray = ByteArray(0)
 
     public constructor(bytes: ByteArray) : this(BufferIoRead(bytes))
 

@@ -45,62 +45,62 @@ class DynimageTests {
 
     @Test
     fun testGrayscaleLuma8() {
-        testGrayscale(DynamicImage.newLuma8(1u, 1u), alphaDiscarded = true)
-        testGrayscale(DynamicImage.new(1u, 1u, ColorType.L8), alphaDiscarded = true)
+        testGrayscaleAlphaDiscarded(DynamicImage.newLuma8(1u, 1u))
+        testGrayscaleAlphaDiscarded(DynamicImage.new(1u, 1u, ColorType.L8))
     }
 
     @Test
     fun testGrayscaleLumaA8() {
-        testGrayscale(DynamicImage.newLumaA8(1u, 1u), alphaDiscarded = false)
-        testGrayscale(DynamicImage.new(1u, 1u, ColorType.La8), alphaDiscarded = false)
+        testGrayscaleAlphaPreserved(DynamicImage.newLumaA8(1u, 1u))
+        testGrayscaleAlphaPreserved(DynamicImage.new(1u, 1u, ColorType.La8))
     }
 
     @Test
     fun testGrayscaleRgb8() {
-        testGrayscale(DynamicImage.newRgb8(1u, 1u), alphaDiscarded = true)
-        testGrayscale(DynamicImage.new(1u, 1u, ColorType.Rgb8), alphaDiscarded = true)
+        testGrayscaleAlphaDiscarded(DynamicImage.newRgb8(1u, 1u))
+        testGrayscaleAlphaDiscarded(DynamicImage.new(1u, 1u, ColorType.Rgb8))
     }
 
     @Test
     fun testGrayscaleRgba8() {
-        testGrayscale(DynamicImage.newRgba8(1u, 1u), alphaDiscarded = false)
-        testGrayscale(DynamicImage.new(1u, 1u, ColorType.Rgba8), alphaDiscarded = false)
+        testGrayscaleAlphaPreserved(DynamicImage.newRgba8(1u, 1u))
+        testGrayscaleAlphaPreserved(DynamicImage.new(1u, 1u, ColorType.Rgba8))
     }
 
     @Test
     fun testGrayscaleLuma16() {
-        testGrayscale(DynamicImage.newLuma16(1u, 1u), alphaDiscarded = true)
-        testGrayscale(DynamicImage.new(1u, 1u, ColorType.L16), alphaDiscarded = true)
+        testGrayscaleAlphaDiscarded(DynamicImage.newLuma16(1u, 1u))
+        testGrayscaleAlphaDiscarded(DynamicImage.new(1u, 1u, ColorType.L16))
     }
 
     @Test
     fun testGrayscaleLumaA16() {
-        testGrayscale(DynamicImage.newLumaA16(1u, 1u), alphaDiscarded = false)
-        testGrayscale(DynamicImage.new(1u, 1u, ColorType.La16), alphaDiscarded = false)
+        testGrayscaleAlphaPreserved(DynamicImage.newLumaA16(1u, 1u))
+        testGrayscaleAlphaPreserved(DynamicImage.new(1u, 1u, ColorType.La16))
     }
 
     @Test
     fun testGrayscaleRgb16() {
-        testGrayscale(DynamicImage.newRgb16(1u, 1u), alphaDiscarded = true)
-        testGrayscale(DynamicImage.new(1u, 1u, ColorType.Rgb16), alphaDiscarded = true)
+        testGrayscaleAlphaDiscarded(DynamicImage.newRgb16(1u, 1u))
+        testGrayscaleAlphaDiscarded(DynamicImage.new(1u, 1u, ColorType.Rgb16))
     }
 
     @Test
     fun testGrayscaleRgba16() {
-        testGrayscale(DynamicImage.newRgba16(1u, 1u), alphaDiscarded = false)
-        testGrayscale(DynamicImage.new(1u, 1u, ColorType.Rgba16), alphaDiscarded = false)
+        testGrayscaleAlphaPreserved(DynamicImage.newRgba16(1u, 1u))
+        testGrayscaleAlphaPreserved(DynamicImage.new(1u, 1u, ColorType.Rgba16))
     }
 
     @Test
     fun testGrayscaleRgb32F() {
-        testGrayscale(DynamicImage.newRgb32F(1u, 1u), alphaDiscarded = true)
-        testGrayscale(DynamicImage.new(1u, 1u, ColorType.Rgb32F), alphaDiscarded = true)
+        testGrayscaleAlphaDiscarded(DynamicImage.newRgb32F(1u, 1u))
+        testGrayscaleAlphaDiscarded(DynamicImage.new(1u, 1u, ColorType.Rgb32F))
     }
 
     @Test
     fun testGrayscaleRgba32F() {
-        testGrayscale(DynamicImage.newRgba32F(1u, 1u), alphaDiscarded = false)
-        testGrayscale(DynamicImage.new(1u, 1u, ColorType.Rgba32F), alphaDiscarded = false)
+        testGrayscaleAlphaPreserved(DynamicImage.newRgba32F(1u, 1u))
+        testGrayscaleAlphaPreserved(DynamicImage.new(1u, 1u, ColorType.Rgba32F))
     }
 
     @Test

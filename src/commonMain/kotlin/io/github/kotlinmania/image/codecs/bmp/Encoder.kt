@@ -136,7 +136,7 @@ public class BmpEncoder(
             writer.writeU32Le(0xFF000000L) // alpha mask
             writer.writeU32Le(0x73524742L) // colorspace - sRGB
 
-            for (i in 0 until 12) {
+            repeat(12) {
                 writer.writeU32Le(0L)
             }
         }
@@ -250,12 +250,6 @@ public class BmpEncoder(
             if (pad.isNotEmpty()) {
                 writer.writeAll(pad)
             }
-        }
-    }
-
-    private fun writeRowPad(rowPadSize: UInt) {
-        if (rowPadSize > 0u) {
-            writer.writeAll(ByteArray(rowPadSize.toInt()))
         }
     }
 

@@ -81,8 +81,8 @@ class JpegEncoderTest {
                 0,
                 0,
             )
-        val encoder = JpegEncoder(BufferIoWrite())
-        encoder.setPixelDensity(density)
+        val buffer = buildJfifHeader(density)
+        assertTrue(expected.contentEquals(buffer))
     }
 
     @Test

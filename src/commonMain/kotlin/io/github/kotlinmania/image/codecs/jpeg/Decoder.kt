@@ -172,7 +172,7 @@ public class JpegDecoder(
 
                         components.clear()
                         var compOffset = payloadStart + 6
-                        for (i in 0 until numComp) {
+                        repeat(numComp) {
                             if (compOffset + 3 <= payloadStart + payloadLen) {
                                 val cId = input[compOffset].toInt() and 0xFF
                                 val sampling = input[compOffset + 1].toInt() and 0xFF
@@ -263,15 +263,15 @@ public class JpegDecoder(
                     if (payloadLen >= 2) {
                         val numScanComp = input[payloadStart].toInt() and 0xFF
                         var scanCompOffset = payloadStart + 1
-                        for (i in 0 until numScanComp) {
+                        repeat(numScanComp) {
                             if (scanCompOffset + 2 <= payloadStart + payloadLen) {
                                 val cId = input[scanCompOffset].toInt() and 0xFF
                                 val tableMapping = input[scanCompOffset + 1].toInt() and 0xFF
                                 val dcTable = (tableMapping shr 4) and 0x0F
                                 val acTable = tableMapping and 0x0F
-                                components.find { it.id == cId }?.let {
-                                    it.dcTableId = dcTable
-                                    it.acTableId = acTable
+                                components.find { comp -> comp.id == cId }?.let { comp ->
+                                    comp.dcTableId = dcTable
+                                    comp.acTableId = acTable
                                 }
                                 scanCompOffset += 2
                             }
@@ -601,7 +601,7 @@ public class JpegDecoder(
         fun readSignedBits(n: Int): Int {
             if (n <= 0) return 0
             var v = 0
-            for (i in 0 until n) {
+            repeat(n) {
                 v = (v shl 1) or readBit()
             }
             val signBit = 1 shl (n - 1)

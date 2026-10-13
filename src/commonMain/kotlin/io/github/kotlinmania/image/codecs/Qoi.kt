@@ -132,7 +132,7 @@ public class QoiDecoder internal constructor(
         var p = 0
 
         val byteBuf = ByteArray(1)
-        for (pxIndex in 0 until totalPixels) {
+        repeat(totalPixels) {
             if (run > 0) {
                 run--
             } else {

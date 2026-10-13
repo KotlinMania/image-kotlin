@@ -140,7 +140,7 @@ public class FarbfeldReader(
             currentOffset += 1uL
         } else {
             val pairs = remaining / 2
-            for (i in 0 until pairs) {
+            repeat(pairs) {
                 consumeChannel(inner, buffer, curOffset)
                 curOffset += 2
                 bytesWritten += 2
