@@ -34,7 +34,7 @@ public class OpenExrDecoder internal constructor(
     private var height: UInt = 0u
     private var alphaPresentInFile: Boolean = false
     private var limits: Limits = Limits.noLimits()
-    private var rawData: ByteArray = ByteArray(0)
+    private val rawData: ByteArray = ByteArray(0)
 
     public constructor(bytes: ByteArray) : this(BufferIoRead(bytes), null)
 

@@ -86,7 +86,7 @@ public class IcoDecoder(
             throw ImageError.Decoding(
                 DecodingError(
                     ImageFormatHint.Exact(ImageFormat.Ico),
-                    DecoderError.InvalidDataSize.message ?: "",
+                    DecoderError.InvalidDataSize.message.orEmpty(),
                 ),
             )
         }
@@ -99,7 +99,7 @@ public class IcoDecoder(
                 throw ImageError.Decoding(
                     DecodingError(
                         ImageFormatHint.Exact(ImageFormat.Ico),
-                        DecoderError.PngShorterThanHeader.message ?: "",
+                        DecoderError.PngShorterThanHeader.message.orEmpty(),
                     ),
                 )
             }
@@ -128,17 +128,18 @@ public class IcoDecoder(
     override fun readImage(buf: ByteArray) {
         val (w, h) = innerDecoder.dimensions()
         if (!selectedEntry.matchesDimensions(w, h)) {
+            val mismatch =
+                DecoderError.ImageEntryDimensionMismatch(
+                    "BMP",
+                    selectedEntry.realWidth(),
+                    selectedEntry.realHeight(),
+                    w,
+                    h,
+                )
             throw ImageError.Decoding(
                 DecodingError(
                     ImageFormatHint.Exact(ImageFormat.Ico),
-                    DecoderError
-                        .ImageEntryDimensionMismatch(
-                            "BMP",
-                            selectedEntry.realWidth(),
-                            selectedEntry.realHeight(),
-                            w,
-                            h,
-                        ).message ?: "",
+                    mismatch.message.orEmpty(),
                 ),
             )
         }
@@ -163,7 +164,7 @@ public class IcoDecoder(
                 throw ImageError.Decoding(
                     DecodingError(
                         ImageFormatHint.Exact(ImageFormat.Ico),
-                        DecoderError.NoEntries.message ?: "",
+                        DecoderError.NoEntries.message.orEmpty(),
                     ),
                 )
             }
@@ -173,19 +174,19 @@ public class IcoDecoder(
                 throw ImageError.Decoding(
                     DecodingError(
                         ImageFormatHint.Exact(ImageFormat.Ico),
-                        DecoderError.NoEntries.message ?: "",
+                        DecoderError.NoEntries.message.orEmpty(),
                     ),
                 )
             }
 
             val entries = ArrayList<DirEntry>(count)
             var pos = 6
-            for (i in 0 until count) {
+            repeat(count) {
                 if (pos + 16 > bytes.size) {
                     throw ImageError.Decoding(
                         DecodingError(
                             ImageFormatHint.Exact(ImageFormat.Ico),
-                            DecoderError.InvalidDataSize.message ?: "",
+                            DecoderError.InvalidDataSize.message.orEmpty(),
                         ),
                     )
                 }
@@ -198,7 +199,7 @@ public class IcoDecoder(
                     throw ImageError.Decoding(
                         DecodingError(
                             ImageFormatHint.Exact(ImageFormat.Ico),
-                            DecoderError.IcoEntryTooManyPlanesOrHotspot.message ?: "",
+                            DecoderError.IcoEntryTooManyPlanesOrHotspot.message.orEmpty(),
                         ),
                     )
                 }
@@ -207,7 +208,7 @@ public class IcoDecoder(
                     throw ImageError.Decoding(
                         DecodingError(
                             ImageFormatHint.Exact(ImageFormat.Ico),
-                            DecoderError.IcoEntryTooManyBitsPerPixelOrHotspot.message ?: "",
+                            DecoderError.IcoEntryTooManyBitsPerPixelOrHotspot.message.orEmpty(),
                         ),
                     )
                 }
@@ -236,7 +237,7 @@ public class IcoDecoder(
                 throw ImageError.Decoding(
                     DecodingError(
                         ImageFormatHint.Exact(ImageFormat.Ico),
-                        DecoderError.NoEntries.message ?: "",
+                        DecoderError.NoEntries.message.orEmpty(),
                     ),
                 )
             }

@@ -806,8 +806,8 @@ public fun filter2dSeparableF32(
     require(rowKernel.size % 2 != 0) { "Row kernel length must be odd" }
     require(columnKernel.size % 2 != 0) { "Column kernel length must be odd" }
 
-    var scannedRowKernel = prepareSymmetricKernel(rowKernel)
-    var scannedColumnKernel = prepareSymmetricKernel(columnKernel)
+    val scannedRowKernel = prepareSymmetricKernel(rowKernel)
+    val scannedColumnKernel = prepareSymmetricKernel(columnKernel)
 
     if (scannedRowKernel.size <= 1 && scannedColumnKernel.size <= 1) {
         image.copyInto(destination)

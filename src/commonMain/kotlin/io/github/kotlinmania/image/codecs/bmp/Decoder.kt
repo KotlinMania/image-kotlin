@@ -140,7 +140,7 @@ public sealed class DecoderError(
         public val bitCount: UShort,
     ) : DecoderError("Palette size $colorsUsed exceeds maximum size for BMP with bit count of $bitCount")
 
-    public fun fmt(): String = message ?: ""
+    public fun fmt(): String = message.orEmpty()
 
     public fun toImageError(): ImageError =
         ImageError.Decoding(DecodingError(ImageFormatHint.Exact(ImageFormat.Bmp), this))
@@ -992,7 +992,7 @@ public class BmpDecoder(
                     }
                     else -> {
                         // Absolute mode: b1 pixels follow
-                        for (i in 0 until b1) {
+                        repeat(b1) {
                             if (srcIdx < rawImageData.size) {
                                 val colorIdx = rawImageData[srcIdx++].toInt() and 0xFF
                                 setPixel(buf, w, h, x, y, outChannels, pal, colorIdx)
@@ -1006,7 +1006,7 @@ public class BmpDecoder(
                 }
             } else {
                 // Encoded mode: repeat pixel b1, b0 times
-                for (i in 0 until b0) {
+                repeat(b0) {
                     setPixel(buf, w, h, x, y, outChannels, pal, b1)
                     x++
                 }
@@ -1043,7 +1043,7 @@ public class BmpDecoder(
                         // Absolute mode: b1 4-bit pixels follow
                         val bytesToRead = (b1 + 1) / 2
                         var pixelCount = 0
-                        for (i in 0 until bytesToRead) {
+                        repeat(bytesToRead) {
                             if (srcIdx < rawImageData.size) {
                                 val byteVal = rawImageData[srcIdx++].toInt() and 0xFF
                                 val c0 = (byteVal ushr 4) and 0x0F

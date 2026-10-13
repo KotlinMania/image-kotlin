@@ -199,7 +199,7 @@ public class PngEncoder internal constructor(
         val rawData = ByteArray(height * (1 + scanlineLength))
         var srcPos = 0
         var dstPos = 0
-        for (y in 0 until height) {
+        repeat(height) {
             rawData[dstPos++] = 0 // Filter type 0 (None)
             data.copyInto(rawData, dstPos, srcPos, srcPos + scanlineLength)
             dstPos += scanlineLength
@@ -307,7 +307,7 @@ public class PngEncoder internal constructor(
         val CRC_TABLE: IntArray =
             IntArray(256) { i ->
                 var c = i
-                for (j in 0 until 8) {
+                repeat(8) {
                     c = if ((c and 1) != 0) -0x124774cd xor (c ushr 1) else c ushr 1
                 }
                 c

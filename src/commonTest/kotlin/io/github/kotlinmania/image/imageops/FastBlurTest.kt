@@ -66,14 +66,14 @@ class FastBlurTest {
     @Test
     fun testBoxBlur() {
         val rng = Rng(1234567890123456789uL)
-        for (iter in 0 until 35) {
+        repeat(35) {
             val width = rng.nextU8()
             val height = rng.nextU8()
             val sigma = rng.nextF32InRange(0.1f, 100.0f)
             val px = rng.nextU8().toByte()
             val cn = rng.nextU8()
             if (width == 0 || height == 0 || sigma <= 0f) {
-                continue
+                return@repeat
             }
             when (cn % 4) {
                 0 -> {

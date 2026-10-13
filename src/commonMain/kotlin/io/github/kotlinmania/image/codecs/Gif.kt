@@ -49,8 +49,8 @@ public class GifDecoder internal constructor(
     private val width: UInt
     private val height: UInt
     private val globalColorTable: ByteArray?
-    private var iccProfileData: ByteArray? = null
-    private var xmpMetadataData: ByteArray? = null
+    private val iccProfileData: ByteArray? = null
+    private val xmpMetadataData: ByteArray? = null
     private val framesList = mutableListOf<Frame>()
 
     public constructor(bytes: ByteArray) : this(BufferIoRead(bytes))

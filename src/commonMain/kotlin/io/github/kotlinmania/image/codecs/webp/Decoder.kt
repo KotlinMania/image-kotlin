@@ -113,10 +113,7 @@ public class WebPDecoder(
                     // Extended format
                     if (chunkSize >= 10) {
                         val flags = input[chunkDataStart].toInt() and 0xFF
-                        val hasIccFlag = (flags and 0x20) != 0
                         val hasAlphaFlag = (flags and 0x10) != 0
-                        val hasExifFlag = (flags and 0x08) != 0
-                        val hasXmpFlag = (flags and 0x04) != 0
                         val hasAnimFlag = (flags and 0x02) != 0
 
                         val w =
@@ -258,7 +255,7 @@ public class FramesInner(
 ) : Iterator<io.github.kotlinmania.image.Frame> {
     public typealias Item = io.github.kotlinmania.image.Frame
 
-    private var current: UInt = 0u
+    private val current: UInt = 0u
 
     override fun hasNext(): Boolean = false
 

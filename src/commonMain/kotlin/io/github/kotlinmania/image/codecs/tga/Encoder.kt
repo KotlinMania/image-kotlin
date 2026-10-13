@@ -17,7 +17,7 @@ import io.github.kotlinmania.image.io.writeAll
 public sealed class EncoderError(
     message: String,
 ) : Exception(message) {
-    public fun fmt(): String = message ?: ""
+    public fun fmt(): String = message.orEmpty()
 
     public companion object {
         public fun from(e: EncoderError): ImageError =

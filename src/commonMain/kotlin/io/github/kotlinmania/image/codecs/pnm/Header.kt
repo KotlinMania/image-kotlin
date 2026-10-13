@@ -236,7 +236,8 @@ public class PnmHeader(
                 is HeaderRecord.Graymap -> "\n${decoded.header.width} ${decoded.header.height} ${decoded.header.maxwhite}\n"
                 is HeaderRecord.Pixmap -> "\n${decoded.header.width} ${decoded.header.height} ${decoded.header.maxval}\n"
                 is HeaderRecord.Arbitrary -> {
-                    val tuplStr = decoded.header.tupltype?.let { "TUPLTYPE ${it.name()}\n" } ?: ""
+                    val tupl = decoded.header.tupltype
+                    val tuplStr = if (tupl != null) "TUPLTYPE ${tupl.name()}\n" else ""
                     "\nWIDTH ${decoded.header.width}\nHEIGHT ${decoded.header.height}\nDEPTH ${decoded.header.depth}\nMAXVAL ${decoded.header.maxval}\n${tuplStr}ENDHDR\n"
                 }
             }

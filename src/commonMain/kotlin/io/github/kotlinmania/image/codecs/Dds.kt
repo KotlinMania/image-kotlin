@@ -30,7 +30,7 @@ private fun IoRead.readU32Le(): UInt {
 public sealed class DecoderError(
     message: String,
 ) : Exception(message) {
-    public fun fmt(): String = message ?: ""
+    public fun fmt(): String = message.orEmpty()
 
     public fun toImageError(): ImageError =
         ImageError.Decoding(DecodingError(ImageFormatHint.Exact(ImageFormat.Dds), this))

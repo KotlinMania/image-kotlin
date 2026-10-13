@@ -139,7 +139,7 @@ enum class Orientation {
             pos = ifdOffset.toInt()
             val entries = readU16(chunk, pos, endian) ?: return null
             pos += 2
-            for (i in 0 until entries) {
+            repeat(entries) {
                 val tag = readU16(chunk, pos, endian) ?: return null
                 pos += 2
                 val format = readU16(chunk, pos, endian) ?: return null
@@ -148,13 +148,13 @@ enum class Orientation {
                 pos += 4
                 val value = readU16(chunk, pos, endian) ?: return null
                 pos += 2
-                val padding = readU16(chunk, pos, endian) ?: return null
+                readU16(chunk, pos, endian) ?: return null
                 pos += 2
                 if (tag == 0x112 && format == 3 && count == 1u) {
                     // we've read 4 bytes (2 * u16) past the start of the value
                     val offset = pos - 4
                     val orientation = fromExif(minOf(value, 255))
-                    return orientation?.let { it to offset }
+                    return if (orientation != null) orientation to offset else null
                 }
             }
             // If we reached this point without returning early, there was no orientation

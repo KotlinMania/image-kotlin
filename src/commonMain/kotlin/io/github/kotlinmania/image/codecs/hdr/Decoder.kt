@@ -23,7 +23,7 @@ public sealed class DecoderError(
     message: String,
     cause: Throwable? = null,
 ) : Exception(message, cause) {
-    public fun fmt(): String = message ?: ""
+    public fun fmt(): String = message.orEmpty()
 
     public fun source(): Throwable? = cause
 
