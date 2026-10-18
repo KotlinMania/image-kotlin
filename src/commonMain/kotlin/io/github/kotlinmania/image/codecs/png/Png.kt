@@ -1,17 +1,23 @@
 // port-lint: source codecs/png.rs
 package io.github.kotlinmania.image.codecs.png
 
+import io.github.kotlinmania.image.ColorType
+import io.github.kotlinmania.image.DecodingError
 import io.github.kotlinmania.image.ExtendedColorType
 import io.github.kotlinmania.image.ImageError
 import io.github.kotlinmania.image.ImageFormatHint
 import io.github.kotlinmania.image.UnsupportedError
 import io.github.kotlinmania.image.UnsupportedErrorKind
 import io.github.kotlinmania.image.images.DynamicImage
+import io.github.kotlinmania.image.io.BufferIoRead
 import io.github.kotlinmania.image.io.BufferIoWrite
+import io.github.kotlinmania.image.io.ImageDecoder
 import io.github.kotlinmania.image.io.ImageEncoder
 import io.github.kotlinmania.image.io.ImageFormat
+import io.github.kotlinmania.image.io.IoRead
 import io.github.kotlinmania.image.io.IoWrite
 import io.github.kotlinmania.image.io.MethodSealedToImage
+import io.github.kotlinmania.image.io.readExact
 import io.github.kotlinmania.image.io.writeAll
 
 /**
@@ -312,5 +318,452 @@ public class PngEncoder internal constructor(
                 }
                 c
             }
+    }
+}
+
+/**
+ * PNG image decoder.
+ */
+public class PngDecoder internal constructor(
+    private val reader: IoRead,
+) : ImageDecoder {
+    public constructor(bytes: ByteArray) : this(BufferIoRead(bytes))
+
+    private var width: UInt = 0u
+    private var height: UInt = 0u
+    private var colorType: ColorType = ColorType.Rgba8
+    private var bitDepth: Int = 8
+    private var pngColorTypeByte: Int = 6
+    private var palette: ByteArray? = null
+    private val idatChunks: MutableList<ByteArray> = mutableListOf()
+    private var iccProfileData: ByteArray? = null
+    private var exifData: ByteArray? = null
+
+    init {
+        parseChunks()
+    }
+
+    private fun parseChunks() {
+        val sig = ByteArray(8)
+        reader.readExact(sig)
+        if (!sig.contentEquals(PNG_SIGNATURE)) {
+            throw ImageError.Decoding(
+                DecodingError(
+                    ImageFormatHint.Exact(ImageFormat.Png),
+                    IllegalArgumentException("Invalid PNG signature"),
+                ),
+            )
+        }
+
+        while (true) {
+            val lenBuf = ByteArray(4)
+            val n =
+                try {
+                    reader.read(lenBuf)
+                } catch (_: Throwable) {
+                    0
+                }
+            if (n < 4) break
+            val len =
+                ((lenBuf[0].toInt() and 0xFF) shl 24) or
+                    ((lenBuf[1].toInt() and 0xFF) shl 16) or
+                    ((lenBuf[2].toInt() and 0xFF) shl 8) or
+                    (lenBuf[3].toInt() and 0xFF)
+
+            val typeBuf = ByteArray(4)
+            reader.readExact(typeBuf)
+            val type = typeBuf.decodeToString()
+
+            val data = ByteArray(len)
+            if (len > 0) {
+                reader.readExact(data)
+            }
+            val crc = ByteArray(4)
+            reader.readExact(crc)
+
+            when (type) {
+                "IHDR" -> {
+                    width =
+                        (
+                            ((data[0].toInt() and 0xFF) shl 24) or
+                                ((data[1].toInt() and 0xFF) shl 16) or
+                                ((data[2].toInt() and 0xFF) shl 8) or
+                                (data[3].toInt() and 0xFF)
+                        ).toUInt()
+                    height =
+                        (
+                            ((data[4].toInt() and 0xFF) shl 24) or
+                                ((data[5].toInt() and 0xFF) shl 16) or
+                                ((data[6].toInt() and 0xFF) shl 8) or
+                                (data[7].toInt() and 0xFF)
+                        ).toUInt()
+                    bitDepth = data[8].toInt() and 0xFF
+                    pngColorTypeByte = data[9].toInt() and 0xFF
+                    colorType =
+                        when (pngColorTypeByte) {
+                            0 -> if (bitDepth == 16) ColorType.L16 else ColorType.L8
+                            2 -> if (bitDepth == 16) ColorType.Rgb16 else ColorType.Rgb8
+                            3 -> ColorType.Rgb8
+                            4 -> if (bitDepth == 16) ColorType.La16 else ColorType.La8
+                            6 -> if (bitDepth == 16) ColorType.Rgba16 else ColorType.Rgba8
+                            else -> ColorType.Rgba8
+                        }
+                }
+                "PLTE" -> palette = data
+                "IDAT" -> idatChunks.add(data)
+                "iCCP" -> iccProfileData = data
+                "eXIf" -> exifData = data
+                "IEND" -> break
+            }
+        }
+    }
+
+    override fun dimensions(): Pair<UInt, UInt> = Pair(width, height)
+
+    override fun colorType(): ColorType = colorType
+
+    override fun iccProfile(): ByteArray? = iccProfileData
+
+    override fun exifMetadata(): ByteArray? = exifData
+
+    override fun readImage(buf: ByteArray) {
+        val totalIdatSize = idatChunks.sumOf { it.size }
+        val compressed = ByteArray(totalIdatSize)
+        var offset = 0
+        for (chunk in idatChunks) {
+            chunk.copyInto(compressed, offset)
+            offset += chunk.size
+        }
+
+        val uncompressed = PngInflate.decompressZlib(compressed)
+
+        val bytesPerPixel =
+            when (pngColorTypeByte) {
+                0 -> if (bitDepth == 16) 2 else 1
+                2 -> if (bitDepth == 16) 6 else 3
+                3 -> 1
+                4 -> if (bitDepth == 16) 4 else 2
+                6 -> if (bitDepth == 16) 8 else 4
+                else -> 4
+            }
+        val scanlineBytes =
+            if (bitDepth < 8) {
+                (width.toInt() * bitDepth + 7) / 8
+            } else {
+                width.toInt() * bytesPerPixel
+            }
+
+        val bpp = maxOf(1, bytesPerPixel)
+        val rawScanlines = ByteArray(height.toInt() * scanlineBytes)
+
+        var srcOff = 0
+        val prevScanline = ByteArray(scanlineBytes)
+        val currentScanline = ByteArray(scanlineBytes)
+
+        for (y in 0 until height.toInt()) {
+            if (srcOff >= uncompressed.size) break
+            val filterType = uncompressed[srcOff++].toInt() and 0xFF
+            for (x in 0 until scanlineBytes) {
+                val raw = uncompressed[srcOff++].toInt() and 0xFF
+                val a = if (x >= bpp) currentScanline[x - bpp].toInt() and 0xFF else 0
+                val b = prevScanline[x].toInt() and 0xFF
+                val c = if (x >= bpp) prevScanline[x - bpp].toInt() and 0xFF else 0
+                val recon =
+                    when (filterType) {
+                        0 -> raw
+                        1 -> (raw + a) and 0xFF
+                        2 -> (raw + b) and 0xFF
+                        3 -> (raw + ((a + b) / 2)) and 0xFF
+                        4 -> (raw + paethPredictor(a, b, c)) and 0xFF
+                        else -> raw
+                    }
+                currentScanline[x] = recon.toByte()
+            }
+            currentScanline.copyInto(rawScanlines, y * scanlineBytes)
+            currentScanline.copyInto(prevScanline)
+        }
+
+        if (pngColorTypeByte == 3) {
+            val pal = palette ?: ByteArray(0)
+            var dst = 0
+            for (i in 0 until (width * height).toInt()) {
+                val idx = (rawScanlines[i].toInt() and 0xFF) * 3
+                if (idx + 2 < pal.size) {
+                    buf[dst++] = pal[idx]
+                    buf[dst++] = pal[idx + 1]
+                    buf[dst++] = pal[idx + 2]
+                } else {
+                    buf[dst++] = 0
+                    buf[dst++] = 0
+                    buf[dst++] = 0
+                }
+            }
+        } else {
+            rawScanlines.copyInto(buf, 0, 0, minOf(rawScanlines.size, buf.size))
+        }
+    }
+
+    private fun paethPredictor(a: Int, b: Int, c: Int): Int {
+        val p = a + b - c
+        val pa = kotlin.math.abs(p - a)
+        val pb = kotlin.math.abs(p - b)
+        val pc = kotlin.math.abs(p - c)
+        return when {
+            pa <= pb && pa <= pc -> a
+            pb <= pc -> b
+            else -> c
+        }
+    }
+}
+
+internal object PngInflate {
+    private val BASE_LENGTH =
+        intArrayOf(
+            3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 15, 17, 19, 23, 27, 31,
+            35, 43, 51, 59, 67, 83, 99, 115, 131, 163, 195, 227, 258,
+        )
+    private val EXTRA_LENGTH_BITS =
+        intArrayOf(
+            0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2,
+            3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 0,
+        )
+    private val BASE_DIST =
+        intArrayOf(
+            1, 2, 3, 4, 5, 7, 9, 13, 17, 25, 33, 49, 65, 97, 129, 193,
+            257, 385, 513, 769, 1025, 1537, 2049, 3073, 4097, 6145, 8193, 12289, 16385, 24577,
+        )
+    private val EXTRA_DIST_BITS =
+        intArrayOf(
+            0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6,
+            7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13,
+        )
+    private val CODE_LENGTH_ORDER =
+        intArrayOf(
+            16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15,
+        )
+
+    private val FIXED_LIT_TREE: HuffmanTree by lazy {
+        val lengths = IntArray(288)
+        for (i in 0..143) lengths[i] = 8
+        for (i in 144..255) lengths[i] = 9
+        for (i in 256..279) lengths[i] = 7
+        for (i in 280..287) lengths[i] = 8
+        buildHuffmanTree(lengths)
+    }
+
+    private val FIXED_DIST_TREE: HuffmanTree by lazy {
+        val lengths = IntArray(32) { 5 }
+        buildHuffmanTree(lengths)
+    }
+
+    class BitReader(private val data: ByteArray, private var offset: Int = 0) {
+        private var bitBuf = 0
+        private var bitCount = 0
+
+        fun readBits(n: Int): Int {
+            while (bitCount < n) {
+                if (offset >= data.size) {
+                    throw IllegalArgumentException("Unexpected end of compressed stream")
+                }
+                bitBuf = bitBuf or ((data[offset++].toInt() and 0xFF) shl bitCount)
+                bitCount += 8
+            }
+            val mask = (1 shl n) - 1
+            val res = bitBuf and mask
+            bitBuf = bitBuf ushr n
+            bitCount -= n
+            return res
+        }
+
+        fun alignToByte() {
+            bitBuf = 0
+            bitCount = 0
+        }
+
+        fun readBytes(dest: ByteArray, count: Int) {
+            alignToByte()
+            if (offset + count > data.size) throw IllegalArgumentException("Unexpected end of compressed stream")
+            data.copyInto(dest, 0, offset, offset + count)
+            offset += count
+        }
+    }
+
+    class HuffmanTree(
+        private val left: IntArray,
+        private val right: IntArray,
+        private val symbol: IntArray,
+    ) {
+        fun decodeSymbol(reader: BitReader): Int {
+            var node = 0
+            while (symbol[node] < 0) {
+                val bit = reader.readBits(1)
+                node = if (bit == 0) left[node] else right[node]
+                if (node < 0) throw IllegalArgumentException("Invalid Huffman code in compressed stream")
+            }
+            return symbol[node]
+        }
+    }
+
+    private fun buildHuffmanTree(lengths: IntArray): HuffmanTree {
+        val maxLen = lengths.maxOrNull() ?: 0
+        if (maxLen == 0) {
+            return HuffmanTree(IntArray(1) { -1 }, IntArray(1) { -1 }, IntArray(1) { -1 })
+        }
+        val blCount = IntArray(maxLen + 1)
+        for (len in lengths) {
+            if (len > 0) blCount[len]++
+        }
+        val nextCode = IntArray(maxLen + 1)
+        var code = 0
+        for (bits in 1..maxLen) {
+            code = (code + blCount[bits - 1]) shl 1
+            nextCode[bits] = code
+        }
+
+        val maxNodes = lengths.size * 2 + 10
+        val left = IntArray(maxNodes) { -1 }
+        val right = IntArray(maxNodes) { -1 }
+        val symbol = IntArray(maxNodes) { -1 }
+        var nextNode = 1
+
+        for (sym in lengths.indices) {
+            val len = lengths[sym]
+            if (len == 0) continue
+            val c = nextCode[len]++
+            var node = 0
+            for (bit in len - 1 downTo 0) {
+                val b = (c ushr bit) and 1
+                if (b == 0) {
+                    if (left[node] == -1) {
+                        left[node] = nextNode++
+                    }
+                    node = left[node]
+                } else {
+                    if (right[node] == -1) {
+                        right[node] = nextNode++
+                    }
+                    node = right[node]
+                }
+            }
+            symbol[node] = sym
+        }
+        return HuffmanTree(left, right, symbol)
+    }
+
+    fun decompressZlib(input: ByteArray): ByteArray {
+        if (input.size < 6) throw IllegalArgumentException("Zlib data too short")
+        val cmf = input[0].toInt() and 0xFF
+        val flg = input[1].toInt() and 0xFF
+        if ((cmf * 256 + flg) % 31 != 0) {
+            throw IllegalArgumentException("Invalid zlib header checksum")
+        }
+        if ((cmf and 0x0F) != 8) {
+            throw IllegalArgumentException("Unsupported zlib compression method: ${cmf and 0x0F}")
+        }
+        var startOffset = 2
+        if ((flg and 0x20) != 0) {
+            startOffset += 4
+        }
+
+        val reader = BitReader(input, startOffset)
+        val out = mutableListOf<Byte>()
+
+        var isFinal = false
+        while (!isFinal) {
+            isFinal = reader.readBits(1) == 1
+            val btype = reader.readBits(2)
+            when (btype) {
+                0 -> {
+                    reader.alignToByte()
+                    val len = reader.readBits(8) or (reader.readBits(8) shl 8)
+                    val nlen = reader.readBits(8) or (reader.readBits(8) shl 8)
+                    if (len != (nlen.inv() and 0xFFFF)) {
+                        throw IllegalArgumentException("Invalid uncompressed block length in deflate")
+                    }
+                    val block = ByteArray(len)
+                    reader.readBytes(block, len)
+                    for (b in block) out.add(b)
+                }
+                1 -> {
+                    inflateBlock(reader, FIXED_LIT_TREE, FIXED_DIST_TREE, out)
+                }
+                2 -> {
+                    val hlit = reader.readBits(5) + 257
+                    val hdist = reader.readBits(5) + 1
+                    val hclen = reader.readBits(4) + 4
+
+                    val codeLengthLengths = IntArray(19)
+                    for (i in 0 until hclen) {
+                        codeLengthLengths[CODE_LENGTH_ORDER[i]] = reader.readBits(3)
+                    }
+                    val codeLengthTree = buildHuffmanTree(codeLengthLengths)
+
+                    val litDistLengths = IntArray(hlit + hdist)
+                    var idx = 0
+                    while (idx < hlit + hdist) {
+                        val sym = codeLengthTree.decodeSymbol(reader)
+                        when (sym) {
+                            in 0..15 -> litDistLengths[idx++] = sym
+                            16 -> {
+                                val repeat = 3 + reader.readBits(2)
+                                val prev = if (idx > 0) litDistLengths[idx - 1] else 0
+                                repeat(repeat) { litDistLengths[idx++] = prev }
+                            }
+                            17 -> {
+                                val repeat = 3 + reader.readBits(3)
+                                repeat(repeat) { litDistLengths[idx++] = 0 }
+                            }
+                            18 -> {
+                                val repeat = 11 + reader.readBits(7)
+                                repeat(repeat) { litDistLengths[idx++] = 0 }
+                            }
+                            else -> throw IllegalArgumentException("Invalid code length symbol: $sym")
+                        }
+                    }
+
+                    val litLengths = litDistLengths.copyOfRange(0, hlit)
+                    val distLengths = litDistLengths.copyOfRange(hlit, hlit + hdist)
+                    val litTree = buildHuffmanTree(litLengths)
+                    val distTree = buildHuffmanTree(distLengths)
+
+                    inflateBlock(reader, litTree, distTree, out)
+                }
+                else -> throw IllegalArgumentException("Invalid deflate block type: $btype")
+            }
+        }
+        return out.toByteArray()
+    }
+
+    private fun inflateBlock(
+        reader: BitReader,
+        litTree: HuffmanTree,
+        distTree: HuffmanTree,
+        out: MutableList<Byte>,
+    ) {
+        while (true) {
+            val sym = litTree.decodeSymbol(reader)
+            if (sym < 256) {
+                out.add(sym.toByte())
+            } else if (sym == 256) {
+                break
+            } else {
+                val lenIdx = sym - 257
+                if (lenIdx !in BASE_LENGTH.indices) throw IllegalArgumentException("Invalid length code: $sym")
+                val extraBits = EXTRA_LENGTH_BITS[lenIdx]
+                val length = BASE_LENGTH[lenIdx] + if (extraBits > 0) reader.readBits(extraBits) else 0
+
+                val distSym = distTree.decodeSymbol(reader)
+                if (distSym !in BASE_DIST.indices) throw IllegalArgumentException("Invalid distance code: $distSym")
+                val distExtraBits = EXTRA_DIST_BITS[distSym]
+                val distance = BASE_DIST[distSym] + if (distExtraBits > 0) reader.readBits(distExtraBits) else 0
+
+                if (distance > out.size) {
+                    throw IllegalArgumentException("Distance exceeds output buffer size: $distance > ${out.size}")
+                }
+                for (i in 0 until length) {
+                    out.add(out[out.size - distance])
+                }
+            }
+        }
     }
 }

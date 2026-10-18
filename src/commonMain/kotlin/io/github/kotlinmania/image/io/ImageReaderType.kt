@@ -10,8 +10,12 @@ import io.github.kotlinmania.image.codecs.FarbfeldDecoder
 import io.github.kotlinmania.image.codecs.QoiDecoder
 import io.github.kotlinmania.image.codecs.bmp.BmpDecoder
 import io.github.kotlinmania.image.codecs.hdr.HdrDecoder
+import io.github.kotlinmania.image.codecs.ico.IcoDecoder
+import io.github.kotlinmania.image.codecs.jpeg.JpegDecoder
+import io.github.kotlinmania.image.codecs.png.PngDecoder
 import io.github.kotlinmania.image.codecs.pnm.PnmDecoder
 import io.github.kotlinmania.image.codecs.tga.TgaDecoder
+import io.github.kotlinmania.image.images.DynamicImage
 
 /**
  * A multi-format image reader.
@@ -56,6 +60,9 @@ public class ImageReader(
 
         val decoder: ImageDecoder =
             when (fmt) {
+                ImageFormat.Png -> PngDecoder(BufferIoRead(data))
+                ImageFormat.Jpeg -> JpegDecoder.new(BufferIoRead(data))
+                ImageFormat.Ico -> IcoDecoder(BufferIoRead(data))
                 ImageFormat.Tga -> TgaDecoder(data)
                 ImageFormat.Farbfeld -> FarbfeldDecoder(data)
                 ImageFormat.Qoi -> QoiDecoder(data)
@@ -78,6 +85,11 @@ public class ImageReader(
     public fun dimensions(): Pair<UInt, UInt> {
         val decoder = intoDecoder()
         return decoder.dimensions()
+    }
+
+    public fun decode(): DynamicImage {
+        val decoder = intoDecoder()
+        return DynamicImage.fromDecoder(decoder)
     }
 
     public fun decode(outputBuf: ByteArray) {

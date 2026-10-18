@@ -1,10 +1,13 @@
 // port-lint: tests codecs/png.rs
 package io.github.kotlinmania.image.codecs.png
 
+import io.github.kotlinmania.image.ColorType
 import io.github.kotlinmania.image.ExtendedColorType
+import io.github.kotlinmania.image.images.loadFromMemory
 import io.github.kotlinmania.image.io.BufferIoWrite
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
+import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class PngTest {
@@ -63,5 +66,54 @@ class PngTest {
         val bytes = out.toByteArray()
         assertTrue(bytes.size > 8)
         assertContentEquals(PNG_SIGNATURE, bytes.copyOfRange(0, 8))
+    }
+
+    @Test
+    fun testDecodePngRgb8() {
+        val out = BufferIoWrite()
+        val encoder = PngEncoder(out)
+        val data =
+            byteArrayOf(
+                255.toByte(),
+                0,
+                0,
+                0,
+                255.toByte(),
+                0,
+                0,
+                0,
+                255.toByte(),
+                255.toByte(),
+                255.toByte(),
+                255.toByte(),
+            )
+        encoder.writeImage(data, 2u, 2u, ExtendedColorType.Rgb8)
+        val bytes = out.toByteArray()
+
+        val decoder = PngDecoder(bytes)
+        assertEquals(Pair(2u, 2u), decoder.dimensions())
+        assertEquals(ColorType.Rgb8, decoder.colorType())
+        val decoded = ByteArray(12)
+        decoder.readImage(decoded)
+        assertContentEquals(data, decoded)
+
+        val dynImg = loadFromMemory(bytes)
+        assertEquals(Pair(2u, 2u), dynImg.dimensions())
+        val rgbImg = dynImg.toRgb8()
+        assertContentEquals(data, rgbImg.asRaw())
+    }
+
+    @Test
+    fun testDecodePngL8() {
+        val out = BufferIoWrite()
+        val encoder = PngEncoder(out)
+        val data = byteArrayOf(10, 50, 100, 200.toByte())
+        encoder.writeImage(data, 2u, 2u, ExtendedColorType.L8)
+        val bytes = out.toByteArray()
+
+        val dynImg = loadFromMemory(bytes)
+        assertEquals(Pair(2u, 2u), dynImg.dimensions())
+        val lumaImg = dynImg.toLuma8()
+        assertContentEquals(data, lumaImg.asRaw())
     }
 }
