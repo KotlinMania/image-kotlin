@@ -1,4 +1,3 @@
-// port-lint: tests utils/mod.rs
 package io.github.kotlinmania.image.utils
 
 import kotlin.test.Test
