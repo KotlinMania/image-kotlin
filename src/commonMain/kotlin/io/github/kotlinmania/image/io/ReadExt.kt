@@ -4,11 +4,6 @@ package io.github.kotlinmania.image.io
 /**
  * Deprecated re-export of [ImageReader] as [Reader].
  */
-@Deprecated(
-    message = "this type has been moved and renamed to ImageReader",
-    replaceWith = ReplaceWith("ImageReader", "io.github.kotlinmania.image.io.ImageReader"),
-)
-public typealias Reader = ImageReader
 
 /**
  * Interface providing extension functions for byte-oriented reading.

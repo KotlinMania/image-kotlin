@@ -1,8 +1,8 @@
 // port-lint: tests imageops/colorops.rs
 package io.github.kotlinmania.image.imageops
 
-import io.github.kotlinmania.image.GrayImage
 import io.github.kotlinmania.image.images.GenericImageView
+import io.github.kotlinmania.image.images.GrayImage
 import io.github.kotlinmania.image.images.ImageBuffer
 import kotlin.test.Test
 import kotlin.test.assertEquals
