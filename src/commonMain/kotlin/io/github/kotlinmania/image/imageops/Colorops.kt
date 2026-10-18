@@ -1,14 +1,14 @@
 // port-lint: source imageops/colorops.rs
 package io.github.kotlinmania.image.imageops
 
-import io.github.kotlinmania.image.GrayAlphaImage
-import io.github.kotlinmania.image.GrayImage
 import io.github.kotlinmania.image.Luma
 import io.github.kotlinmania.image.LumaA
 import io.github.kotlinmania.image.Rgb
 import io.github.kotlinmania.image.Rgba
 import io.github.kotlinmania.image.images.GenericImage
 import io.github.kotlinmania.image.images.GenericImageView
+import io.github.kotlinmania.image.images.GrayAlphaImage
+import io.github.kotlinmania.image.images.GrayImage
 import io.github.kotlinmania.image.images.ImageBuffer
 import kotlin.math.cos
 import kotlin.math.sin
