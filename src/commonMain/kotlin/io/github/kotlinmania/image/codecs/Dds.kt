@@ -70,9 +70,6 @@ public sealed class DecoderError(
     public object DdsSignatureInvalid : DecoderError("DDS signature not found")
 }
 
-public typealias DdsDecoderError = DecoderError
-public typealias Header = DdsHeader
-
 /**
  * Extended DX10 header used by some DDS image files.
  */
@@ -83,8 +80,6 @@ public class DX10Header(
     public val arraySize: UInt,
     public val miscFlags2: UInt,
 )
-
-public typealias PixelFormat = DdsPixelFormat
 
 /**
  * DDS pixel format.
