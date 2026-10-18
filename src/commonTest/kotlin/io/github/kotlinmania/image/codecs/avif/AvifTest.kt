@@ -1,4 +1,3 @@
-// port-lint: tests codecs/avif/mod.rs
 package io.github.kotlinmania.image.codecs.avif
 
 import io.github.kotlinmania.image.ExtendedColorType

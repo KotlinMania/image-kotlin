@@ -106,6 +106,9 @@ public fun guessFormatImpl(buffer: ByteArray): ImageFormat? {
  */
 internal fun encoderForFormat(format: ImageFormat, writer: IoWrite): ImageEncoder =
     when (format) {
+        ImageFormat.Png ->
+            io.github.kotlinmania.image.codecs.png
+                .PngEncoder(writer)
         ImageFormat.Bmp -> BmpEncoder(writer)
         ImageFormat.Ico -> IcoEncoder(writer)
         ImageFormat.Tga -> TgaEncoder(writer)
@@ -129,6 +132,9 @@ internal fun encoderForFormat(format: ImageFormat, writer: IoWrite): ImageEncode
  */
 internal fun decoderForFormat(format: ImageFormat, reader: IoRead): ImageDecoder =
     when (format) {
+        ImageFormat.Png ->
+            io.github.kotlinmania.image.codecs.png
+                .PngDecoder(reader)
         ImageFormat.Bmp -> BmpDecoder(reader)
         ImageFormat.Ico -> IcoDecoder(reader)
         ImageFormat.Tga -> TgaDecoder(reader)

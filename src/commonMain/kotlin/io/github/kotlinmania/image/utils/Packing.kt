@@ -1,4 +1,3 @@
-// port-lint: source utils/mod.rs
 package io.github.kotlinmania.image.utils
 
 /**

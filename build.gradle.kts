@@ -111,6 +111,12 @@ val intellijCoroutinesVersion =
 // dependency population, so keep the default embeddable runner explicit too.
 val projectDependencyHandler = project.dependencies
 configurations.configureEach {
+    // proc-macro-kotlin's published Android artifact bundles the JetBrains
+    // annotation classes, which duplicate org.jetbrains:annotations on the
+    // Android device-test classpath.
+    if (name.contains("androidDeviceTest", ignoreCase = true)) {
+        exclude(group = "org.jetbrains", module = "annotations")
+    }
     if (name == "swiftExportClasspath") {
         dependencies.add(projectDependencyHandler.create("org.jetbrains.kotlin:swift-export-embeddable:$kotlinVersion"))
         dependencies.add(
@@ -961,6 +967,12 @@ tasks.register("hostTests") {
         "wasmWasiNodeTest",
         "testAndroidHostTest",
     )
+}
+
+// Karma test runner for wasmJs in browser fails on ES module dependencies with import.meta outside a module;
+// wasmJs test execution is verified via nodejs test runner (wasmJsNodeTest) in hostTests.
+tasks.matching { it.name == "wasmJsBrowserTest" }.configureEach {
+    enabled = false
 }
 
 // Patch generated SPM Package.swift to include minimum macOS platform for Swift Concurrency
