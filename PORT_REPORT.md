@@ -1,4 +1,4 @@
-=== Deep Analysis: tmp/image/src (rust) -> src/commonMain/kotlin/io/github/kotlinmania/image (kotlin) ===
+=== Deep Analysis: tmp/image/src (rust) -> src/common/commonMain/kotlin/io/github/kotlinmania/image (kotlin) ===
 
 Scanning source codebase (rust)...
 Codebase: tmp/image/src (rust)
@@ -7,7 +7,7 @@ Codebase: tmp/image/src (rust)
   Most depended: error (3 dependents)
 
 Scanning target codebase (kotlin)...
-Codebase: src/commonMain/kotlin/io/github/kotlinmania/image (kotlin)
+Codebase: src/common/commonMain/kotlin/io/github/kotlinmania/image (kotlin)
   Files: 129
   Total imports: 841
   Most depended: io.IoWrite (18 dependents)
@@ -18,7 +18,7 @@ Computing AST similarities...
 === Codebase Comparison Report ===
 
 Source: tmp/image/src (71 files)
-Target: src/commonMain/kotlin/io/github/kotlinmania/image (129 files)
+Target: src/common/commonMain/kotlin/io/github/kotlinmania/image (129 files)
 Scoring invariant: FnSim is required function body/parameter similarity. Class/type and symbol parity are reported beside it; whole-file shape is diagnostic only.
 
 Matched:   71 files
