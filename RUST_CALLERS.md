@@ -16,37 +16,76 @@ For every Rust crate this repo owns (under `tmp/`), this file lists every **cros
 
 | package | module | inbound use sites | distinct caller crates | distinct caller repos | codex sites |
 |---|---|---:|---:|---:|---:|
-| `image` | `image` | 41 | 6 | 4 | 29 |
+| `image` | `image` | 346 | 12 | 8 | 29 |
 
 ## `image`
 
-### Inbound symbols (21 distinct, 41 total `use` sites)
+### Inbound symbols (40 distinct, 346 total `use` sites)
 
 Sorted by codex demand, then total demand. The first symbols are the priority queue for porting `image`.
 
-#### `image::ImageBuffer` — 6 site(s) (5 codex, 1 other, 4 caller crates)
-
-- ✅ `codex-kotlin/codex-core` `src/context_manager/history_tests.rs:26` — `use image::ImageBuffer`
-- ✅ `codex-kotlin/codex-core` `tests/suite/image_rollout.rs:23` — `use image::ImageBuffer`
-- ✅ `codex-kotlin/codex-core` `tests/suite/view_image.rs:37` — `use image::ImageBuffer`
-- ✅ `codex-kotlin/codex-tui` `src/bottom_pane/chat_composer.rs:4612` — `use image::ImageBuffer`
-- ✅ `codex-kotlin/codex-utils-image` `src/lib.rs:203` — `use image::ImageBuffer`
-- `unicode-ident-kotlin/unicode-ident-diagram` `src/main.rs:2` — `use image::ImageBuffer`
-
-#### `image::Rgba` — 5 site(s) (5 codex, 0 other, 3 caller crates)
+#### `image::Rgba` — 14 site(s) (5 codex, 9 other, 5 caller crates)
 
 - ✅ `codex-kotlin/codex-core` `src/context_manager/history_tests.rs:29` — `use image::Rgba`
 - ✅ `codex-kotlin/codex-core` `tests/suite/image_rollout.rs:24` — `use image::Rgba`
 - ✅ `codex-kotlin/codex-core` `tests/suite/view_image.rs:38` — `use image::Rgba`
 - ✅ `codex-kotlin/codex-tui` `src/bottom_pane/chat_composer.rs:4613` — `use image::Rgba`
 - ✅ `codex-kotlin/codex-utils-image` `src/lib.rs:204` — `use image::Rgba`
+- `ab-glyph-kotlin/dev` `examples/image.rs:5` — `use image::Rgba`
+- `imageproc-kotlin/imageproc` `src/definitions.rs:4` — `use image::Rgba`
+- `imageproc-kotlin/imageproc` `src/drawing/rect.rs:77` — `use image::Rgba`
+- `imageproc-kotlin/imageproc` `src/integral_image.rs:6` — `use image::Rgba`
+- `imageproc-kotlin/imageproc` `src/map.rs:1` — `use image::Rgba`
+- `imageproc-kotlin/imageproc` `src/seam_carving.rs:56` — `use image::Rgba`
+- `imageproc-kotlin/imageproc` `src/utils.rs:313` — `use image::Rgba`
+- _… and 2 more site(s)._
 
-#### `image::DynamicImage` — 4 site(s) (3 codex, 1 other, 4 caller crates)
+#### `image::ImageBuffer` — 12 site(s) (5 codex, 7 other, 7 caller crates)
+
+- ✅ `codex-kotlin/codex-core` `src/context_manager/history_tests.rs:26` — `use image::ImageBuffer`
+- ✅ `codex-kotlin/codex-core` `tests/suite/image_rollout.rs:23` — `use image::ImageBuffer`
+- ✅ `codex-kotlin/codex-core` `tests/suite/view_image.rs:37` — `use image::ImageBuffer`
+- ✅ `codex-kotlin/codex-tui` `src/bottom_pane/chat_composer.rs:4612` — `use image::ImageBuffer`
+- ✅ `codex-kotlin/codex-utils-image` `src/lib.rs:203` — `use image::ImageBuffer`
+- `candle-kotlin/candle-examples` `examples/trocr/image_processor.rs:1` — `use image::ImageBuffer`
+- `candle-kotlin/candle-examples` `examples/yolo-v3/main.rs:14` — `use image::ImageBuffer`
+- `candle-ug-kotlin/candle-examples` `examples/trocr/image_processor.rs:1` — `use image::ImageBuffer`
+- `candle-ug-kotlin/candle-examples` `examples/yolo-v3/main.rs:14` — `use image::ImageBuffer`
+- `imageproc-kotlin/imageproc` `src/definitions.rs:4` — `use image::ImageBuffer`
+- `imageproc-kotlin/imageproc` `src/seam_carving.rs:56` — `use image::ImageBuffer`
+- `unicode-ident-kotlin/unicode-ident-diagram` `src/main.rs:2` — `use image::ImageBuffer`
+
+#### `image::GenericImageView` — 25 site(s) (3 codex, 22 other, 5 caller crates)
+
+- ✅ `codex-kotlin/codex-core` `tests/suite/view_image.rs:36` — `use image::GenericImageView`
+- ✅ `codex-kotlin/codex-utils-image` `src/lib.rs:11` — `use image::GenericImageView`
+- ✅ `codex-kotlin/codex-utils-image` `src/lib.rs:202` — `use image::GenericImageView`
+- `candle-kotlin/candle-examples` `examples/llava/image_processor.rs:9` — `use image::GenericImageView`
+- `candle-ug-kotlin/candle-examples` `examples/llava/image_processor.rs:9` — `use image::GenericImageView`
+- `imageproc-kotlin/imageproc` `src/binary_descriptors/brief.rs:1` — `use image::GenericImageView`
+- `imageproc-kotlin/imageproc` `src/corners.rs:7` — `use image::GenericImageView`
+- `imageproc-kotlin/imageproc` `src/distance_transform.rs:5` — `use image::GenericImageView`
+- `imageproc-kotlin/imageproc` `src/drawing/canvas.rs:1` — `use image::GenericImageView`
+- `imageproc-kotlin/imageproc` `src/edges.rs:6` — `use image::GenericImageView`
+- `imageproc-kotlin/imageproc` `src/filter/box_filter.rs:1` — `use image::GenericImageView`
+- `imageproc-kotlin/imageproc` `src/filter/median.rs:2` — `use image::GenericImageView`
+- _… and 13 more site(s)._
+
+#### `image::DynamicImage` — 21 site(s) (3 codex, 18 other, 10 caller crates)
 
 - ✅ `codex-kotlin/codex-core` `tests/suite/view_image.rs:35` — `use image::DynamicImage`
 - ✅ `codex-kotlin/codex-tui` `src/history_cell.rs:79` — `use image::DynamicImage`
 - ✅ `codex-kotlin/codex-utils-image` `src/lib.rs:10` — `use image::DynamicImage`
+- `ab-glyph-kotlin/dev` `examples/image.rs:5` — `use image::DynamicImage`
+- `ab-glyph-kotlin/dev` `tests/render_reference.rs:3` — `use image::DynamicImage`
 - `arboard-kotlin/arboard` `src/platform/windows.rs:33` — `use image::DynamicImage`
+- `candle-kotlin/candle-examples` `examples/colpali/main.rs:8` — `use image::DynamicImage`
+- `candle-kotlin/candle-examples` `examples/llava/image_processor.rs:9` — `use image::DynamicImage`
+- `candle-kotlin/candle-examples` `examples/trocr/image_processor.rs:1` — `use image::DynamicImage`
+- `candle-kotlin/candle-examples` `examples/yolo-v3/main.rs:14` — `use image::DynamicImage`
+- `candle-kotlin/candle-examples` `examples/yolo-v8/main.rs:14` — `use image::DynamicImage`
+- `candle-kotlin/candle-wasm-example-yolo` `src/model.rs:5` — `use image::DynamicImage`
+- _… and 9 more site(s)._
 
 #### `image::ImageFormat` — 4 site(s) (3 codex, 1 other, 3 caller crates)
 
@@ -55,11 +94,21 @@ Sorted by codex demand, then total demand. The first symbols are the priority qu
 - ✅ `codex-kotlin/codex-utils-image` `src/lib.rs:13` — `use image::ImageFormat`
 - `libwebrtc-kotlin/wgpu_room` `src/logo_track.rs:1` — `use image::ImageFormat`
 
-#### `image::GenericImageView` — 3 site(s) (3 codex, 0 other, 2 caller crates)
+#### `image::Luma` — 76 site(s) (1 codex, 75 other, 2 caller crates)
 
-- ✅ `codex-kotlin/codex-core` `tests/suite/view_image.rs:36` — `use image::GenericImageView`
-- ✅ `codex-kotlin/codex-utils-image` `src/lib.rs:11` — `use image::GenericImageView`
-- ✅ `codex-kotlin/codex-utils-image` `src/lib.rs:202` — `use image::GenericImageView`
+- ✅ `codex-kotlin/codex-core` `src/context_manager/history_tests.rs:28` — `use image::Luma`
+- `imageproc-kotlin/imageproc` `examples/color_effects.rs:1` — `use image::Luma`
+- `imageproc-kotlin/imageproc` `examples/template_matching.rs:1` — `use image::Luma`
+- `imageproc-kotlin/imageproc` `src/binary_descriptors/brief.rs:1` — `use image::Luma`
+- `imageproc-kotlin/imageproc` `src/compose.rs:448` — `use image::Luma`
+- `imageproc-kotlin/imageproc` `src/contours.rs:234` — `use image::Luma`
+- `imageproc-kotlin/imageproc` `src/contours.rs:369` — `use image::Luma`
+- `imageproc-kotlin/imageproc` `src/contours.rs:459` — `use image::Luma`
+- `imageproc-kotlin/imageproc` `src/contours.rs:537` — `use image::Luma`
+- `imageproc-kotlin/imageproc` `src/contrast.rs:4` — `use image::Luma`
+- `imageproc-kotlin/imageproc` `src/contrast.rs:465` — `use image::Luma`
+- `imageproc-kotlin/imageproc` `src/contrast.rs:672` — `use image::Luma`
+- _… and 64 more site(s)._
 
 #### `image::ImageEncoder` — 3 site(s) (1 codex, 2 other, 2 caller crates)
 
@@ -71,6 +120,11 @@ Sorted by codex demand, then total demand. The first symbols are the priority qu
 
 - ✅ `codex-kotlin/codex-utils-image` `src/lib.rs:15` — `use image::codecs::png::PngEncoder`
 - `arboard-kotlin/arboard` `src/platform/windows.rs:32` — `use image::codecs::png::PngEncoder`
+
+#### `image::imageops::FilterType` — 2 site(s) (1 codex, 1 other, 2 caller crates)
+
+- ✅ `codex-kotlin/codex-utils-image` `src/lib.rs:17` — `use image::imageops::FilterType`
+- `imageproc-kotlin/imageproc` `src/window.rs:1` — `use image::imageops::FilterType`
 
 #### `image::ColorType` — 1 site(s) (1 codex, 0 other, 1 caller crates)
 
@@ -84,10 +138,6 @@ Sorted by codex demand, then total demand. The first symbols are the priority qu
 
 - ✅ `codex-kotlin/codex-tui` `src/history_cell.rs:80` — `use image::ImageReader`
 
-#### `image::Luma` — 1 site(s) (1 codex, 0 other, 1 caller crates)
-
-- ✅ `codex-kotlin/codex-core` `src/context_manager/history_tests.rs:28` — `use image::Luma`
-
 #### `image::codecs::jpeg::JpegEncoder` — 1 site(s) (1 codex, 0 other, 1 caller crates)
 
 - ✅ `codex-kotlin/codex-utils-image` `src/lib.rs:14` — `use image::codecs::jpeg::JpegEncoder`
@@ -96,13 +146,141 @@ Sorted by codex demand, then total demand. The first symbols are the priority qu
 
 - ✅ `codex-kotlin/codex-utils-image` `src/lib.rs:16` — `use image::codecs::webp::WebPEncoder`
 
-#### `image::imageops::FilterType` — 1 site(s) (1 codex, 0 other, 1 caller crates)
-
-- ✅ `codex-kotlin/codex-utils-image` `src/lib.rs:17` — `use image::imageops::FilterType`
-
 #### `image::load_from_memory` — 1 site(s) (1 codex, 0 other, 1 caller crates)
 
 - ✅ `codex-kotlin/codex-core` `tests/suite/view_image.rs:39` — `use image::load_from_memory`
+
+#### `image::GrayImage` — 53 site(s) (0 codex, 53 other, 1 caller crates)
+
+- `imageproc-kotlin/imageproc` `examples/gradients.rs:1` — `use image::GrayImage`
+- `imageproc-kotlin/imageproc` `examples/template_matching.rs:1` — `use image::GrayImage`
+- `imageproc-kotlin/imageproc` `src/binary_descriptors/brief.rs:1` — `use image::GrayImage`
+- `imageproc-kotlin/imageproc` `src/contours.rs:4` — `use image::GrayImage`
+- `imageproc-kotlin/imageproc` `src/contours.rs:459` — `use image::GrayImage`
+- `imageproc-kotlin/imageproc` `src/contrast.rs:4` — `use image::GrayImage`
+- `imageproc-kotlin/imageproc` `src/contrast.rs:465` — `use image::GrayImage`
+- `imageproc-kotlin/imageproc` `src/contrast.rs:672` — `use image::GrayImage`
+- `imageproc-kotlin/imageproc` `src/corners.rs:7` — `use image::GrayImage`
+- `imageproc-kotlin/imageproc` `src/distance_transform.rs:5` — `use image::GrayImage`
+- `imageproc-kotlin/imageproc` `src/distance_transform.rs:444` — `use image::GrayImage`
+- `imageproc-kotlin/imageproc` `src/drawing/bezier.rs:84` — `use image::GrayImage`
+- _… and 41 more site(s)._
+
+#### `image::Rgb` — 26 site(s) (0 codex, 26 other, 4 caller crates)
+
+- `candle-kotlin/candle-examples` `examples/llava/image_processor.rs:9` — `use image::Rgb`
+- `candle-ug-kotlin/candle-examples` `examples/llava/image_processor.rs:9` — `use image::Rgb`
+- `imageproc-kotlin/imageproc` `examples/blend.rs:1` — `use image::Rgb`
+- `imageproc-kotlin/imageproc` `examples/brief.rs:1` — `use image::Rgb`
+- `imageproc-kotlin/imageproc` `examples/color_effects.rs:1` — `use image::Rgb`
+- `imageproc-kotlin/imageproc` `examples/drawing.rs:1` — `use image::Rgb`
+- `imageproc-kotlin/imageproc` `examples/font.rs:4` — `use image::Rgb`
+- `imageproc-kotlin/imageproc` `examples/hough.rs:1` — `use image::Rgb`
+- `imageproc-kotlin/imageproc` `examples/projection.rs:1` — `use image::Rgb`
+- `imageproc-kotlin/imageproc` `examples/template_matching.rs:1` — `use image::Rgb`
+- `imageproc-kotlin/imageproc` `src/definitions.rs:4` — `use image::Rgb`
+- `imageproc-kotlin/imageproc` `src/drawing/rect.rs:205` — `use image::Rgb`
+- _… and 14 more site(s)._
+
+#### `image::GenericImage` — 25 site(s) (0 codex, 25 other, 1 caller crates)
+
+- `imageproc-kotlin/imageproc` `examples/brief.rs:1` — `use image::GenericImage`
+- `imageproc-kotlin/imageproc` `examples/template_matching.rs:1` — `use image::GenericImage`
+- `imageproc-kotlin/imageproc` `src/distance_transform.rs:5` — `use image::GenericImage`
+- `imageproc-kotlin/imageproc` `src/drawing/bezier.rs:4` — `use image::GenericImage`
+- `imageproc-kotlin/imageproc` `src/drawing/canvas.rs:1` — `use image::GenericImage`
+- `imageproc-kotlin/imageproc` `src/drawing/conics.rs:5` — `use image::GenericImage`
+- `imageproc-kotlin/imageproc` `src/drawing/conics.rs:289` — `use image::GenericImage`
+- `imageproc-kotlin/imageproc` `src/drawing/cross.rs:3` — `use image::GenericImage`
+- `imageproc-kotlin/imageproc` `src/drawing/line.rs:3` — `use image::GenericImage`
+- `imageproc-kotlin/imageproc` `src/drawing/polygon.rs:5` — `use image::GenericImage`
+- `imageproc-kotlin/imageproc` `src/drawing/rect.rs:5` — `use image::GenericImage`
+- `imageproc-kotlin/imageproc` `src/drawing/text.rs:1` — `use image::GenericImage`
+- _… and 13 more site(s)._
+
+#### `image::Pixel` — 24 site(s) (0 codex, 24 other, 1 caller crates)
+
+- `imageproc-kotlin/imageproc` `src/compose.rs:4` — `use image::Pixel`
+- `imageproc-kotlin/imageproc` `src/contrast.rs:4` — `use image::Pixel`
+- `imageproc-kotlin/imageproc` `src/definitions.rs:4` — `use image::Pixel`
+- `imageproc-kotlin/imageproc` `src/drawing/canvas.rs:1` — `use image::Pixel`
+- `imageproc-kotlin/imageproc` `src/drawing/fill.rs:2` — `use image::Pixel`
+- `imageproc-kotlin/imageproc` `src/drawing/line.rs:3` — `use image::Pixel`
+- `imageproc-kotlin/imageproc` `src/drawing/rect.rs:77` — `use image::Pixel`
+- `imageproc-kotlin/imageproc` `src/drawing/text.rs:1` — `use image::Pixel`
+- `imageproc-kotlin/imageproc` `src/filter/bilateral.rs:1` — `use image::Pixel`
+- `imageproc-kotlin/imageproc` `src/filter/median.rs:2` — `use image::Pixel`
+- `imageproc-kotlin/imageproc` `src/filter/mod.rs:13` — `use image::Pixel`
+- `imageproc-kotlin/imageproc` `src/geometric_transformations.rs:5` — `use image::Pixel`
+- _… and 12 more site(s)._
+
+#### `image::RgbImage` — 10 site(s) (0 codex, 10 other, 3 caller crates)
+
+- `candle-kotlin/candle-examples` `examples/llava/image_processor.rs:9` — `use image::RgbImage`
+- `candle-ug-kotlin/candle-examples` `examples/llava/image_processor.rs:9` — `use image::RgbImage`
+- `imageproc-kotlin/imageproc` `examples/drawing.rs:1` — `use image::RgbImage`
+- `imageproc-kotlin/imageproc` `examples/font.rs:4` — `use image::RgbImage`
+- `imageproc-kotlin/imageproc` `examples/template_matching.rs:1` — `use image::RgbImage`
+- `imageproc-kotlin/imageproc` `src/drawing/rect.rs:205` — `use image::RgbImage`
+- `imageproc-kotlin/imageproc` `src/seam_carving.rs:1071` — `use image::RgbImage`
+- `imageproc-kotlin/imageproc` `src/stats.rs:405` — `use image::RgbImage`
+- `imageproc-kotlin/imageproc` `src/utils.rs:4` — `use image::RgbImage`
+- `imageproc-kotlin/imageproc` `tests/regression.rs:19` — `use image::RgbImage`
+
+#### `image::open` — 9 site(s) (0 codex, 9 other, 1 caller crates)
+
+- `imageproc-kotlin/imageproc` `examples/bilateral.rs:2` — `use image::open`
+- `imageproc-kotlin/imageproc` `examples/brief.rs:1` — `use image::open`
+- `imageproc-kotlin/imageproc` `examples/color_effects.rs:1` — `use image::open`
+- `imageproc-kotlin/imageproc` `examples/gradients.rs:1` — `use image::open`
+- `imageproc-kotlin/imageproc` `examples/hog.rs:1` — `use image::open`
+- `imageproc-kotlin/imageproc` `examples/hough.rs:1` — `use image::open`
+- `imageproc-kotlin/imageproc` `examples/projection.rs:1` — `use image::open`
+- `imageproc-kotlin/imageproc` `examples/template_matching.rs:1` — `use image::open`
+- `imageproc-kotlin/imageproc` `src/utils.rs:4` — `use image::open`
+
+#### `image::Primitive` — 8 site(s) (0 codex, 8 other, 1 caller crates)
+
+- `imageproc-kotlin/imageproc` `src/filter/mod.rs:13` — `use image::Primitive`
+- `imageproc-kotlin/imageproc` `src/integral_image.rs:6` — `use image::Primitive`
+- `imageproc-kotlin/imageproc` `src/map.rs:1` — `use image::Primitive`
+- `imageproc-kotlin/imageproc` `src/seam_carving.rs:56` — `use image::Primitive`
+- `imageproc-kotlin/imageproc` `src/stats.rs:4` — `use image::Primitive`
+- `imageproc-kotlin/imageproc` `src/suppress.rs:4` — `use image::Primitive`
+- `imageproc-kotlin/imageproc` `src/suppress.rs:178` — `use image::Primitive`
+- `imageproc-kotlin/imageproc` `src/template_matching.rs:3` — `use image::Primitive`
+
+#### `image::RgbaImage` — 4 site(s) (0 codex, 4 other, 2 caller crates)
+
+- `imageproc-kotlin/imageproc` `src/drawing/rect.rs:77` — `use image::RgbaImage`
+- `imageproc-kotlin/imageproc` `src/window.rs:1` — `use image::RgbaImage`
+- `imageproc-kotlin/imageproc` `tests/regression.rs:19` — `use image::RgbaImage`
+- `libwebrtc-kotlin/wgpu_room` `src/logo_track.rs:2` — `use image::RgbaImage`
+
+#### `image::LumaA` — 3 site(s) (0 codex, 3 other, 2 caller crates)
+
+- `ab-glyph-kotlin/dev` `tests/render_reference.rs:3` — `use image::LumaA`
+- `imageproc-kotlin/imageproc` `src/definitions.rs:4` — `use image::LumaA`
+- `imageproc-kotlin/imageproc` `src/map.rs:1` — `use image::LumaA`
+
+#### `image::imageops` — 2 site(s) (0 codex, 2 other, 1 caller crates)
+
+- `imageproc-kotlin/imageproc` `src/image_hash/average_hash.rs:3` — `use image::imageops`
+- `imageproc-kotlin/imageproc` `src/image_hash/phash.rs:3` — `use image::imageops`
+
+#### `image::imageops::overlay` — 2 site(s) (0 codex, 2 other, 2 caller crates)
+
+- `candle-kotlin/candle-examples` `examples/llava/image_processor.rs:9` — `use image::imageops::overlay`
+- `candle-ug-kotlin/candle-examples` `examples/llava/image_processor.rs:9` — `use image::imageops::overlay`
+
+#### `image::math::Rect` — 2 site(s) (0 codex, 2 other, 1 caller crates)
+
+- `imageproc-kotlin/imageproc` `src/compose.rs:6` — `use image::math::Rect`
+- `imageproc-kotlin/imageproc` `src/image_hash/phash.rs:3` — `use image::math::Rect`
+
+#### `image` — 1 site(s) (0 codex, 1 other, 1 caller crates)
+
+- `imageproc-kotlin/imageproc` `src/lib.rs:59` — `pub_use image`
 
 #### `image::ExtendedColorType` — 1 site(s) (0 codex, 1 other, 1 caller crates)
 
@@ -112,13 +290,17 @@ Sorted by codex demand, then total demand. The first symbols are the priority qu
 
 - `arboard-kotlin/arboard` `src/platform/windows.rs:35` — `use image::ImageDecoder`
 
-#### `image::Rgb` — 1 site(s) (0 codex, 1 other, 1 caller crates)
+#### `image::ImageResult` — 1 site(s) (0 codex, 1 other, 1 caller crates)
 
-- `unicode-ident-kotlin/unicode-ident-diagram` `src/main.rs:2` — `use image::Rgb`
+- `imageproc-kotlin/imageproc` `examples/brief.rs:1` — `use image::ImageResult`
 
-#### `image::RgbaImage` — 1 site(s) (0 codex, 1 other, 1 caller crates)
+#### `image::PixelWithColorType` — 1 site(s) (0 codex, 1 other, 1 caller crates)
 
-- `libwebrtc-kotlin/wgpu_room` `src/logo_track.rs:2` — `use image::RgbaImage`
+- `imageproc-kotlin/imageproc` `tests/regression.rs:19` — `use image::PixelWithColorType`
+
+#### `image::buffer::ConvertBuffer` — 1 site(s) (0 codex, 1 other, 1 caller crates)
+
+- `imageproc-kotlin/imageproc` `src/window.rs:1` — `use image::buffer::ConvertBuffer`
 
 #### `image::codecs::bmp::BmpDecoder` — 1 site(s) (0 codex, 1 other, 1 caller crates)
 
@@ -127,3 +309,23 @@ Sorted by codex demand, then total demand. The first symbols are the priority qu
 #### `image::codecs::png::PngDecoder` — 1 site(s) (0 codex, 1 other, 1 caller crates)
 
 - `arboard-kotlin/arboard` `src/platform/windows.rs:31` — `use image::codecs::png::PngDecoder`
+
+#### `image::error::ImageResult` — 1 site(s) (0 codex, 1 other, 1 caller crates)
+
+- `imageproc-kotlin/imageproc` `examples/projection.rs:1` — `use image::error::ImageResult`
+
+#### `image::imageops::blur` — 1 site(s) (0 codex, 1 other, 1 caller crates)
+
+- `imageproc-kotlin/imageproc` `src/filter/mod.rs:942` — `use image::imageops::blur`
+
+#### `image::imageops::resize` — 1 site(s) (0 codex, 1 other, 1 caller crates)
+
+- `imageproc-kotlin/imageproc` `src/window.rs:1` — `use image::imageops::resize`
+
+#### `image::imageops::rotate270` — 1 site(s) (0 codex, 1 other, 1 caller crates)
+
+- `imageproc-kotlin/imageproc` `src/drawing/line.rs:482` — `use image::imageops::rotate270`
+
+#### `image::imageops::rotate90` — 1 site(s) (0 codex, 1 other, 1 caller crates)
+
+- `imageproc-kotlin/imageproc` `src/drawing/line.rs:514` — `use image::imageops::rotate90`
