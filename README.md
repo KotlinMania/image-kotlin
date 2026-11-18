@@ -239,7 +239,7 @@ image::save_buffer("image.png", buffer, 800, 600, image::ExtendedColorType::Rgb8
 
 ```kotlin
 dependencies {
-    implementation("io.github.kotlinmania:image-kotlin:0.2.0")
+    implementation("io.github.kotlinmania:image-kotlin:0.2.1")
 }
 ```
 
@@ -252,17 +252,16 @@ dependencies {
 
 ### Targets
 
-- macOS arm64
-- Linux x64
-- Windows mingw-x64
-- iOS arm64 / simulator-arm64 (Swift export + XCFramework)
-- JS (browser + Node.js)
-- Wasm-JS (browser + Node.js)
-- Android (API 24+)
+- JVM & Android (API 24+)
+- Android Native (`androidNativeArm64`, `androidNativeX64`)
+- Apple (`macosArm64`, `iosArm64`, `iosSimulatorArm64`, `tvosArm64`, `tvosSimulatorArm64`, `watchosDeviceArm64`, `watchosSimulatorArm64`) + Swift Export (`Image`)
+- Linux (`linuxX64`, `linuxArm64`)
+- Windows (`mingwX64`)
+- JS & Wasm (`js`, `wasmJs`, `wasmWasi`)
 
 ### Porting guidelines
 
-See [AGENTS.md](AGENTS.md) and [CLAUDE.md](CLAUDE.md) for translator discipline, port-lint header convention, and Rust → Kotlin idiom mapping.
+See [AGENTS.md](AGENTS.md) for translator discipline, port-lint header convention, and Rust → Kotlin idiom mapping.
 
 ### License
 
