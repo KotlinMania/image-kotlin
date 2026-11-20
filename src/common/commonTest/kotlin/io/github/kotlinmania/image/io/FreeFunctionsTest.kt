@@ -162,12 +162,14 @@ class FreeFunctionsTest {
         val decoder = MockDecoder()
 
         fun singleSeekScanline(d: ImageDecoder, n: ULong) {
+            assertEquals(decoder, d)
             seeks += 1
             assertEquals(0uL, n)
             assertEquals(1, seeks)
         }
 
         fun singleReadScanline(d: ImageDecoder, buf: ByteArray) {
+            assertEquals(decoder, d)
             DATA.copyInto(buf)
         }
 

@@ -935,8 +935,14 @@ public class BmpDecoder(
         }
     }
 
-    private fun decodeBitfields16(buf: ByteArray, w: Int, h: Int, outChannels: Int) {
-        val bf = bitfields ?: R5_G5_B5_COLOR_MASK
+    private fun decodeBitfields16(
+        buf: ByteArray,
+        w: Int,
+        h: Int,
+        outChannels: Int,
+        bitfieldsOverride: Bitfields? = null,
+    ) {
+        val bf = bitfieldsOverride ?: bitfields ?: R5_G5_B5_COLOR_MASK
         val rowBytes = w * 2
         val paddedRowBytes = (rowBytes + 3) and 3.inv()
 
@@ -1158,7 +1164,7 @@ public class BmpDecoder(
         val w = width.toInt()
         val h = height.toInt()
         val outChannels = if (colorType() == ColorType.Rgba8) 4 else 3
-        decodeBitfields16(buf, w, h, outChannels)
+        decodeBitfields16(buf, w, h, outChannels, bitfields)
     }
 
     public fun read32BitPixelData(buf: ByteArray) {
