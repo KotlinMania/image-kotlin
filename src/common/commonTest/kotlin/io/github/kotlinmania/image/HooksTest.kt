@@ -28,7 +28,7 @@ class HooksTest {
         override fun colorType(): ColorType = ColorType.Rgb8
 
         override fun readImage(buf: ByteArray) {
-            // no-op
+            buf.fill(0)
         }
     }
 
